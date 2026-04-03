@@ -70,7 +70,7 @@ class PhoneFrameWrapper extends StatelessWidget {
               border: Border.all(color: Colors.grey.shade800, width: 8),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 30,
                   spreadRadius: 5,
                 ),

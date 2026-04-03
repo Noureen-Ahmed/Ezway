@@ -141,6 +141,7 @@ model User {
   academicYear          String?  @map("academic_year")
   advisorName           String?  @map("advisor_name")
   advisorEmail          String?  @map("advisor_email")
+  address               String?  @db.Text
   
   fcmToken              String?  @map("fcm_token")
   

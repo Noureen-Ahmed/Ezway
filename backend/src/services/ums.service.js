@@ -132,7 +132,11 @@ async function loginToUMS(loginName, password) {
         'موبايل': 'phone',
         'البريد الجامعى': 'email',
         'البريد الإلكتروني': 'email',
-        'البريد': 'email'
+        'البريد': 'email',
+        'العنوان': 'address',
+        'عنوان السكن': 'address',
+        'محل الاقامة': 'address',
+        'المحافظة': 'address'
       };
 
       for (const [arLabel, fieldName] of Object.entries(htmlFields)) {
@@ -159,7 +163,7 @@ async function loginToUMS(loginName, password) {
         if (m) result.profile.levelNum = parseInt(m[1]);
       }
 
-      logger.info(`[UMS] ✅ HTML: faculty=${result.profile.faculty}, level=${result.profile.level}, program=${result.profile.program}`);
+      logger.info(`[UMS] ✅ HTML: faculty=${result.profile.faculty}, level=${result.profile.level}, program=${result.profile.program}, phone=${result.profile.phone}, address=${result.profile.address}`);
     } catch (err) {
       logger.error(`[UMS] HTML profile error: ${err.message}`);
     }
