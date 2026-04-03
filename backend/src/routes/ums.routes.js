@@ -41,6 +41,7 @@ const formatUserResponse = (user, umsProfile = {}) => ({
   role: (user.role || 'STUDENT').toLowerCase(),
   studentId: user.studentId,
   phone: user.phone || umsProfile.phone || null,
+  address: user.address || umsProfile.address || null,
   gpa: user.gpa,
   level: user.level,
   department: user.department?.name || null,
@@ -90,11 +91,9 @@ router.post('/login', async (req, res, next) => {
       }
     });
 
-    if (localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0) {
+    // Temporarily disabled bypass to force re-scrape
+    if (false && localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0) {
       // Local auth successful and user has data, bypass Puppeteer scrape
-      
-      // Re-sync enrollments if user has UMS courses but no enrollments
-      // (this can happen if courses weren't in the DB during the original sync)
       if (localUser.enrollments.length === 0 && localUser._count.umsCourses > 0) {
         logger.info(`[UMS] User has ${localUser._count.umsCourses} UMS courses but 0 enrollments — re-syncing...`);
         const umsCourses = await prisma.umsCourse.findMany({
@@ -182,12 +181,11 @@ router.post('/login', async (req, res, next) => {
     const name = umsProfile.nameEn || umsProfile.nameAr || loginName;
     const nameAr = umsProfile.nameAr || null;
     
-    let studentId = umsProfile.ssn || loginName;
-    if (studentId.includes('@')) {
-      studentId = studentId.split('@')[0];
-    }
+    // studentId = the login ID (the number they used to log in)
+    let studentId = loginId;
     
     const phone = umsProfile.phone || null;
+    const address = umsProfile.address || null;
 
     let user = await prisma.user.findFirst({
       where: {
@@ -234,6 +232,9 @@ router.post('/login', async (req, res, next) => {
           enrollments: { select: { courseId: true } }
         }
       });
+      if (address) {
+        await prisma.$executeRaw`UPDATE users SET address = ${address} WHERE id = ${user.id}`;
+      }
     } else {
       // Create new user from UMS data
       user = await prisma.user.create({
@@ -263,6 +264,9 @@ router.post('/login', async (req, res, next) => {
           enrollments: { select: { courseId: true } }
         }
       });
+      if (address) {
+        await prisma.$executeRaw`UPDATE users SET address = ${address} WHERE id = ${user.id}`;
+      }
     }
 
     // Step 4: Save UMS session cookies

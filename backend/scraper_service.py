@@ -112,6 +112,24 @@ def perform_scrape(username, password):
         return result, None
 
 
+def sanitize_scraped_value(val):
+    """Remove DataTable/Kendo UI artifacts that leak into scraped text."""
+    if not val or not isinstance(val, str):
+        return val
+    # Remove 'activate to sort column ascending/descending' and surrounding junk
+    cleaned = re.sub(r'activate to sort column (ascending|descending)', '', val, flags=re.IGNORECASE)
+    # Remove HTML tags
+    cleaned = re.sub(r'<[^>]*>', '', cleaned)
+    # Remove leading/trailing quotes, >, colons and whitespace
+    cleaned = cleaned.strip(' \t\n\r">\':')
+    # Collapse multiple spaces
+    cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip()
+    # If empty or just punctuation, return None
+    if not cleaned or re.match(r'^[:\-,>"\s]+$', cleaned):
+        return None
+    return cleaned
+
+
 def parse_account_page(html):
     """Parse /UserInformation — extract full profile fields."""
     profile = {}
@@ -123,20 +141,34 @@ def parse_account_page(html):
         val_el = row.find('p') or row.find('span')
         if h5 and val_el:
             k = h5.get_text(strip=True)
-            v = val_el.get_text(strip=True)
+            raw_v = val_el.get_text(strip=True)
             
+            # Sanitize the value — strips DataTable column header artifacts
+            v = sanitize_scraped_value(raw_v)
+            if not v:
+                continue
+                
             if any(x in k for x in ['القومي', 'جواز']):
                 profile['studentId'] = v
+            elif any(x in k for x in ['بالعربية', 'الاسم بالعربية', 'Arabic']):
+                profile['nameAr'] = v
+            elif any(x in k for x in ['بالإنجليزية', 'English', 'الاسم بالإنجليزية']):
+                profile['nameEn'] = v
             elif any(x in k for x in ['اسم المستخدم', 'الطالب', 'Name']):
-                if 'nameAr' not in profile: profile['nameAr'] = v
+                # Generic name field — store as nameAr if no specific Arabic name yet
+                if 'nameAr' not in profile:
+                    profile['nameAr'] = v
             elif any(x in k for x in ['الإلكتروني', 'email', 'Email']):
-                if 'email' not in profile: profile['email'] = v
-            elif any(x in k for x in ['الهاتف', 'phone', 'Phone', 'تليفون']):
+                if 'email' not in profile:
+                    profile['email'] = v
+            elif any(x in k for x in ['الهاتف', 'phone', 'Phone', 'تليفون', 'موبايل', 'Mobile']):
                 profile['phone'] = v
             elif any(x in k for x in ['الكلية', 'Faculty', 'كلية']):
                 profile['faculty'] = v
             elif any(x in k for x in ['البرنامج', 'Program']):
                 profile['program'] = v
+            elif any(x in k for x in ['العنوان', 'address', 'Address', 'محل']):
+                profile['address'] = v
             elif any(x in k for x in ['الأكاديمية', 'academicYear', 'السنة']):
                 profile['academicYear'] = v
             elif any(x in k for x in ['المستوى', 'Level']):
@@ -149,8 +181,14 @@ def parse_account_page(html):
         for li in soup.find_all('li'):
             text = li.get_text(strip=True)
             if 'قسم' in text and len(text) < 50:
-                profile['department'] = text
+                profile['department'] = sanitize_scraped_value(text)
                 break
+
+    # Final sanitize pass on all profile values
+    for key in list(profile.keys()):
+        profile[key] = sanitize_scraped_value(profile[key])
+        if profile[key] is None:
+            del profile[key]
 
     logging.info(f"Profile parsed: {profile}")
     return profile

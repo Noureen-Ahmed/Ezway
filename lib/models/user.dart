@@ -27,6 +27,7 @@ class User {
   final bool isVerified;
   final String? advisorName;
   final String? advisorEmail;
+  final String? address;
 
   const User({
     required this.id,
@@ -51,7 +52,19 @@ class User {
     this.isVerified = false,
     this.advisorName,
     this.advisorEmail,
+    this.address,
   });
+
+  static String _cleanNameStr(String name) {
+    if (name.isEmpty) return name;
+    String clean = name;
+    if (clean.contains('activate to sort column')) {
+      clean = clean.replaceAll(RegExp(r'activate to sort column[ a-zA-Z]*"?\s*>?', caseSensitive: false), '');
+    }
+    clean = clean.replaceAll(RegExp(r'باللغة العربية ?:?', caseSensitive: false), '');
+    clean = clean.replaceAll(RegExp(r'الاسم باللغة العربية', caseSensitive: false), '');
+    return clean.trim().isNotEmpty ? clean.trim() : 'Student';
+  }
 
   /// Create from JSON (API response)
   factory User.fromJson(Map<String, dynamic> json) {
@@ -66,8 +79,8 @@ class User {
     return User(
       id: json['id']?.toString() ?? '',
       email: json['email'] ?? '',
-      name: json['name'] ?? '',
-      nameAr: json['nameAr'],
+      name: _cleanNameStr(json['name'] ?? ''),
+      nameAr: json['nameAr'] != null ? _cleanNameStr(json['nameAr']) : null,
       avatar: json['avatar'],
       studentId: json['studentId'],
       phone: json['phone'],
@@ -90,6 +103,7 @@ class User {
       isVerified: json['isVerified'] ?? false,
       advisorName: json['advisorName'],
       advisorEmail: json['advisorEmail'],
+      address: json['address'],
     );
   }
 
@@ -118,6 +132,7 @@ class User {
       'isVerified': isVerified,
       'advisorName': advisorName,
       'advisorEmail': advisorEmail,
+      'address': address,
     };
   }
 
@@ -145,6 +160,7 @@ class User {
     bool? isVerified,
     String? advisorName,
     String? advisorEmail,
+    String? address,
   }) {
     return User(
       id: id ?? this.id,
@@ -169,6 +185,7 @@ class User {
       isVerified: isVerified ?? this.isVerified,
       advisorName: advisorName ?? this.advisorName,
       advisorEmail: advisorEmail ?? this.advisorEmail,
+      address: address ?? this.address,
     );
   }
 

@@ -294,9 +294,21 @@ async function initDatabase() {
             )
         `);
         
-        try {
-            await connection.execute('ALTER TABLE users ADD COLUMN ums_username VARCHAR(100)');
-        } catch (e) {}
+        // Add columns that may not exist yet
+        const alterColumns = [
+            'ALTER TABLE users ADD COLUMN ums_username VARCHAR(100)',
+            'ALTER TABLE users ADD COLUMN name_ar VARCHAR(255)',
+            'ALTER TABLE users ADD COLUMN phone VARCHAR(50)',
+            'ALTER TABLE users ADD COLUMN address TEXT',
+            'ALTER TABLE users ADD COLUMN faculty VARCHAR(255)',
+            'ALTER TABLE users ADD COLUMN semester VARCHAR(50)',
+            'ALTER TABLE users ADD COLUMN academic_year VARCHAR(50)',
+            'ALTER TABLE users ADD COLUMN advisor_name VARCHAR(255)',
+            'ALTER TABLE users ADD COLUMN advisor_email VARCHAR(255)',
+        ];
+        for (const sql of alterColumns) {
+            try { await connection.execute(sql); } catch (e) { /* column already exists */ }
+        }
 
         connection.release();
         console.log('✅ Database tables initialized');
@@ -316,32 +328,49 @@ const transporter = nodemailer.createTransport({
 
 // ============ HELPER FUNCTIONS ============
 
+// Strip DataTable / Kendo UI artifacts that leak into scraped text
+function sanitizeValue(val) {
+    if (!val || typeof val !== 'string') return val;
+    // Remove "activate to sort column ascending/descending" and surrounding junk
+    let cleaned = val.replace(/activate to sort column (ascending|descending)/gi, '').trim();
+    // Remove stray HTML tags
+    cleaned = cleaned.replace(/<[^>]*>/g, '').trim();
+    // Remove leading/trailing quotes, >, and whitespace
+    cleaned = cleaned.replace(/^[">\s]+|[">\s]+$/g, '').trim();
+    // Collapse multiple spaces
+    cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+    // If the result is empty or just punctuation, return null
+    if (!cleaned || /^[:\-,>"\s]+$/.test(cleaned)) return null;
+    return cleaned;
+}
+
 function formatUser(row) {
     const coursesStr = row.enrolled_courses || '';
     const courses = coursesStr ? coursesStr.split(',').filter(s => s) : [];
 
     return {
         id: row.id,
-        name: row.name,
-        nameAr: row.name_ar || null,
+        name: sanitizeValue(row.name) || row.name,
+        nameAr: sanitizeValue(row.name_ar) || null,
         email: row.email,
         avatar: row.avatar,
         studentId: row.student_id,
-        phone: row.phone,
-        major: row.major,
-        department: row.department,
-        program: row.program,
-        faculty: row.faculty,
-        semester: row.semester,
-        academicYear: row.academic_year,
+        phone: sanitizeValue(row.phone) || null,
+        address: sanitizeValue(row.address) || null,
+        major: sanitizeValue(row.major) || null,
+        department: sanitizeValue(row.department) || null,
+        program: sanitizeValue(row.program) || null,
+        faculty: sanitizeValue(row.faculty) || null,
+        semester: sanitizeValue(row.semester) || null,
+        academicYear: sanitizeValue(row.academic_year) || null,
         gpa: row.gpa ? parseFloat(row.gpa) : null,
         level: row.level,
         mode: row.mode || 'student',
         isOnboardingComplete: !!row.is_onboarding_complete,
         isVerified: !!row.is_verified,
         enrolledCourses: courses,
-        advisorName: row.advisor_name,
-        advisorEmail: row.advisor_email
+        advisorName: sanitizeValue(row.advisor_name) || null,
+        advisorEmail: sanitizeValue(row.advisor_email) || null
     };
 }
 
@@ -1353,18 +1382,24 @@ app.post('/api/ums/sync', async (req, res) => {
             `, [userId, g.courseCode, g.courseName, g.grade, g.gradePoints, g.creditHours]);
         }
         const numericLevel = profile.level ? parseInt(profile.level.match(/\d+/)?.[0]) || null : null;
+        const nameEn = profile.nameEn || null;
+        const nameAr = profile.nameAr || null;
         await pool.execute(`
             UPDATE users 
-            SET ums_username = ?, department = ?, program = ?, level = ?,
-                faculty = ?, phone = ?, semester = ?, academic_year = ?
+            SET name = COALESCE(?, name), name_ar = COALESCE(?, name_ar),
+                ums_username = ?, department = ?, program = ?, level = ?,
+                faculty = ?, phone = ?, address = ?, semester = ?, academic_year = ?
             WHERE id = ?
         `, [
+            nameEn || nameAr,
+            nameAr,
             umsUsername,
             profile.department || null,
             profile.program || null,
             numericLevel,
             profile.faculty || null,
             profile.phone || null,
+            profile.address || null,
             profile.semester || null,
             profile.academicYear || null,
             userId
@@ -1490,9 +1525,9 @@ app.post('/api/ums/login', async (req, res) => {
             const id = generateId();
             const hashed = await bcrypt.hash(password, 10);
             await pool.execute(`
-                INSERT INTO users (id, name, email, password, mode, ums_username, is_verified, is_onboarding_complete)
-                VALUES (?, ?, ?, ?, 'student', ?, true, true)
-            `, [id, studentName, studentEmail, hashed, umsUsername]);
+                INSERT INTO users (id, name, email, password, mode, ums_username, is_verified, is_onboarding_complete, student_id)
+                VALUES (?, ?, ?, ?, 'student', ?, true, true, ?)
+            `, [id, studentName, studentEmail, hashed, umsUsername, loginName]);
             const [newRows] = await pool.execute(`
                 SELECT u.*, p.advisor_name, p.advisor_email 
                 FROM users u LEFT JOIN ums_profile p ON u.id = p.user_id 
@@ -1502,16 +1537,20 @@ app.post('/api/ums/login', async (req, res) => {
         }
 
         // ── 3. Save all scraped fields to users + ums_profile ──
+        // Also extract and sanitize nameEn from scraped profile
+        const nameEn = profile.nameEn || null;
+        const nameAr = profile.nameAr || null;
         await pool.execute(`
             UPDATE users 
-            SET name = ?, ums_username = ?, department = ?, program = ?, level = ?,
-                faculty = ?, phone = ?, semester = ?, academic_year = ?
+            SET name = ?, name_ar = ?, ums_username = ?, department = ?, program = ?, level = ?,
+                faculty = ?, phone = ?, address = ?, semester = ?, academic_year = ?, student_id = ?
             WHERE id = ?
         `, [
-            studentName, umsUsername,
+            nameEn || nameAr || studentName, nameAr,
+            umsUsername,
             profile.department || null, profile.program || null, numericLevel,
-            profile.faculty || null, profile.phone || null,
-            profile.semester || null, profile.academicYear || null,
+            profile.faculty || null, profile.phone || null, profile.address || null,
+            profile.semester || null, profile.academicYear || null, loginName,
             user.id
         ]);
 
