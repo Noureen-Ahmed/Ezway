@@ -258,6 +258,8 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
               
               const SizedBox(height: 8),
@@ -278,16 +280,19 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                   const SizedBox(width: 8),
                   Text('•', style: TextStyle(color: Colors.grey[400])),
                   const SizedBox(width: 8),
-                  Text(
-                    _formatDate(_task.dueDate),
-                    style: TextStyle(
-                      color: (_task.dueDate != null && 
-                             _task.dueDate!.isBefore(DateTime.now()) && 
-                             !isSubmitted)
-                          ? Colors.red 
-                          : Colors.grey[700],
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500
+                  Flexible(
+                    child: Text(
+                      _formatDate(_task.dueDate),
+                      style: TextStyle(
+                        color: (_task.dueDate != null && 
+                               _task.dueDate!.isBefore(DateTime.now()) && 
+                               !isSubmitted)
+                            ? Colors.red 
+                            : Colors.grey[700],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -454,6 +459,8 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                         color: Colors.green,
                         decoration: TextDecoration.underline,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -551,9 +558,15 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                         children: [
                           const Icon(Icons.insert_drive_file, size: 40, color: Color(0xFF2E6AFF)),
                           const SizedBox(height: 8),
-                          Text(
-                            _uploadedFileName ?? _uploadedFileUrl!.split('/').last,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              _uploadedFileName ?? _uploadedFileUrl!.split('/').last,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           const Text('Tap to change', style: TextStyle(color: Colors.grey)),
