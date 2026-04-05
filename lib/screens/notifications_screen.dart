@@ -188,7 +188,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             )
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              physics: const AlwaysScrollableScrollPhysics(),
               itemCount: announcements.length,
               itemBuilder: (context, index) {
                 final announcement = announcements[index];
@@ -316,11 +315,14 @@ class NotificationCard extends StatelessWidget {
                             style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            _getCourseName(announcement),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF6B7280),
+                          Expanded(
+                            child: Text(
+                              _getCourseName(announcement),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -367,19 +369,22 @@ class NotificationCard extends StatelessWidget {
                           ),
                           if (_hasDueDate(announcement)) ...[
                             const SizedBox(width: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF2F2),
-                                border: Border.all(color: const Color(0xFFFECACA)),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                _getDueDate(announcement),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFDC2626),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF2F2),
+                                  border: Border.all(color: const Color(0xFFFECACA)),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  _getDueDate(announcement),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFFDC2626),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
