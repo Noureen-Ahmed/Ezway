@@ -223,10 +223,6 @@ class ProfessorDashboard extends ConsumerWidget {
           Row(
             children: [
               _HeaderButton(
-                  icon: Icons.notifications_outlined,
-                  onTap: () => context.go('/notifications')),
-              const SizedBox(width: 12),
-              _HeaderButton(
                   icon: Icons.person_outline,
                   onTap: () => context.go('/profile')),
             ],
