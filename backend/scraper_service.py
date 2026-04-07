@@ -118,12 +118,20 @@ def sanitize_scraped_value(val):
         return val
     # Remove 'activate to sort column ascending/descending' and surrounding junk
     cleaned = re.sub(r'activate to sort column (ascending|descending)', '', val, flags=re.IGNORECASE)
+    # Target exact artifacts like found in the screenshot
+    cleaned = re.sub(r'activate\s+to\s+sort\s+column\s+(ascending|descending)[^>]*>', '', cleaned, flags=re.IGNORECASE)
     # Remove HTML tags
     cleaned = re.sub(r'<[^>]*>', '', cleaned)
     # Remove leading/trailing quotes, >, colons and whitespace
     cleaned = cleaned.strip(' \t\n\r">\':')
     # Collapse multiple spaces
     cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip()
+    
+    # If the value is literally "الاسم", "العنوان", "الهاتف" - it captured the header instead of the value
+    headers = ['الاسم', 'العنوان', 'الهاتف', 'الموبايل', 'تليفون', 'الكلية', 'البرنامج', 'القومي']
+    if cleaned in headers:
+        return None
+        
     # If empty or just punctuation, return None
     if not cleaned or re.match(r'^[:\-,>"\s]+$', cleaned):
         return None

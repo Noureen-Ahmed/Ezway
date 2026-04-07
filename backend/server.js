@@ -389,32 +389,47 @@ function parseJson(field) {
     }
 }
 
-// Send notification to students enrolled in a course
+// Send notification to students enrolled in a course (checks both legacy enrolled_courses and ums_courses)
 async function notifyStudentsInCourse(courseId, notification) {
     try {
-        // Get all students enrolled in this course
-        const [users] = await pool.execute(`
-            SELECT email, enrolled_courses FROM users 
+        // Legacy: students whose enrolled_courses CSV contains this courseId
+        const [legacyUsers] = await pool.execute(`
+            SELECT DISTINCT email FROM users 
             WHERE mode = 'student' AND enrolled_courses LIKE ?
         `, [`%${courseId}%`]);
 
-        for (const user of users) {
-            // Insert notification for each student
+        // UMS students: look up ums_courses by course_code matching the courseId
+        const [umsUsers] = await pool.execute(`
+            SELECT DISTINCT u.email
+            FROM users u
+            INNER JOIN ums_courses uc ON uc.user_id = u.id
+            WHERE u.mode = 'student'
+              AND (uc.course_code = ? OR uc.course_code LIKE ?)
+        `, [courseId, `%${courseId}%`]);
+
+        // Merge unique emails
+        const emailSet = new Set();
+        for (const u of legacyUsers) emailSet.add(u.email);
+        for (const u of umsUsers) emailSet.add(u.email);
+
+        let count = 0;
+        for (const email of emailSet) {
             await pool.execute(`
                 INSERT INTO notifications (user_email, title, message, type, reference_type, reference_id)
                 VALUES (?, ?, ?, ?, ?, ?)
             `, [
-                user.email,
+                email,
                 notification.title,
                 notification.message,
                 notification.type || 'general',
                 notification.referenceType || 'announcement',
                 notification.referenceId || null
             ]);
+            count++;
         }
 
-        console.log(`📢 Notified ${users.length} students about: ${notification.title}`);
-        return users.length;
+        console.log(`📢 Notified ${count} students about: ${notification.title}`);
+        return count;
     } catch (error) {
         console.error('Error sending notifications:', error);
         return 0;
@@ -1515,11 +1530,8 @@ app.post('/api/ums/login', async (req, res) => {
 
         if (rows.length > 0) {
             user = rows[0];
-            // Validate password (bcrypt or plain)
-            const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
-            if (!isMatch && password !== user.password) {
-                return res.status(401).json({ success: false, error: 'Invalid credentials' });
-            }
+            // For UMS login, credentials are already validated by the scraper above.
+            // No bcrypt re-check needed — the scraper would have returned 401 if wrong.
         } else {
             // New student — create account
             const id = generateId();
@@ -1537,13 +1549,13 @@ app.post('/api/ums/login', async (req, res) => {
         }
 
         // ── 3. Save all scraped fields to users + ums_profile ──
-        // Also extract and sanitize nameEn from scraped profile
         const nameEn = profile.nameEn || null;
         const nameAr = profile.nameAr || null;
         await pool.execute(`
             UPDATE users 
             SET name = ?, name_ar = ?, ums_username = ?, department = ?, program = ?, level = ?,
-                faculty = ?, phone = ?, address = ?, semester = ?, academic_year = ?, student_id = ?
+                faculty = ?, phone = ?, address = ?, semester = ?, academic_year = ?, student_id = ?,
+                is_onboarding_complete = 1, is_verified = 1
             WHERE id = ?
         `, [
             nameEn || nameAr || studentName, nameAr,

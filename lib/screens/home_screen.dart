@@ -6,6 +6,7 @@ import '../providers/app_session_provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/schedule_provider.dart';
+import '../providers/announcement_provider.dart';
 import '../models/user.dart';
 import '../models/task.dart';
 import 'assignment_detail_screen.dart';
@@ -24,12 +25,17 @@ class HomeScreen extends ConsumerWidget {
     final coursesAsync = ref.watch(enrolledCoursesProvider);
     final taskState = ref.watch(taskStateProvider);
     final scheduleAsync = ref.watch(scheduleEventsProvider);
+    final announcementsAsync = ref.watch(announcementsProvider);
+    final unreadCount = announcementsAsync.whenOrNull(
+      data: (list) => list.where((a) => !a.isRead).length,
+    ) ?? 0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(currentUserProvider);
+          ref.invalidate(announcementsProvider);
           ref.read(taskStateProvider.notifier).fetchTasks(force: true);
           await Future.wait([
             ref.refresh(enrolledCoursesProvider.future),
@@ -40,7 +46,7 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             // Header
             SliverToBoxAdapter(
-              child: _buildHeader(context, userAsync.valueOrNull),
+              child: _buildHeader(context, userAsync.valueOrNull, unreadCount),
             ),
 
             // Quick Stats
@@ -133,7 +139,7 @@ class HomeScreen extends ConsumerWidget {
                         return _NextClassCard(
                           title: next.title,
                           time: DateFormat('h:mm a').format(next.startTime),
-                          location: next.location ?? 'TBD',
+                          location: next.location,
                           onTap: () => context.go('/schedule'),
                         );
                       },
@@ -264,7 +270,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, User? user) {
+  Widget _buildHeader(BuildContext context, User? user, int unreadCount) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
       decoration: const BoxDecoration(
@@ -281,7 +287,7 @@ class HomeScreen extends ConsumerWidget {
                 Text(
                   'Welcome back,',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 14,
                   ),
                 ),
@@ -304,6 +310,7 @@ class HomeScreen extends ConsumerWidget {
             children: [
               _HeaderButton(
                 icon: Icons.notifications_outlined,
+                badge: unreadCount,
                 onTap: () => context.go('/notifications'),
               ),
               const SizedBox(width: 12),
@@ -339,21 +346,49 @@ class HomeScreen extends ConsumerWidget {
 class _HeaderButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
+  final int badge;
 
-  const _HeaderButton({required this.icon, required this.onTap});
+  const _HeaderButton({required this.icon, required this.onTap, this.badge = 0});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: Colors.white, size: 22),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          if (badge > 0)
+            Positioned(
+              top: -6,
+              right: -6,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEF4444),
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                child: Text(
+                  badge > 99 ? '99+' : '$badge',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -431,9 +466,9 @@ class _NextClassCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withOpacity(0.1),
+          color: const Color(0xFF10B981).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -508,7 +543,7 @@ class _CourseChip extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6).withOpacity(0.1),
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -598,7 +633,7 @@ class _TaskItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getTypeColor().withOpacity(0.15),
+                color: _getTypeColor().withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(

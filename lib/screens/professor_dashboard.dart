@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_session_provider.dart';
 import '../providers/course_provider.dart';
-import '../services/data_service.dart';
+
 import '../widgets/loading_shimmer.dart';
 import '../models/course.dart';
 
@@ -184,7 +184,7 @@ class ProfessorDashboard extends ConsumerWidget {
               Text(
                 'Welcome back,',
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.7), fontSize: 14),
+                    color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
               ),
               const SizedBox(height: 4),
               Text(
@@ -200,7 +200,7 @@ class ProfessorDashboard extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDC800).withOpacity(0.2),
+                  color: const Color(0xFFFDC800).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
@@ -294,83 +294,7 @@ class ProfessorDashboard extends ConsumerWidget {
     );
   }
 
-  void _showAnnouncementDialog(BuildContext context, WidgetRef ref) {
-    final titleController = TextEditingController();
-    final messageController = TextEditingController();
-    String? selectedCourseId;
-    final courses = ref.read(professorCoursesProvider).valueOrNull ?? [];
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('New Announcement'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  initialValue: selectedCourseId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Course', border: OutlineInputBorder()),
-                  items: [
-                    const DropdownMenuItem(
-                        value: null, child: Text('All courses')),
-                    ...courses.map((c) =>
-                        DropdownMenuItem(value: c.id, child: Text(c.code))),
-                  ],
-                  onChanged: (v) => setState(() => selectedCourseId = v),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                      labelText: 'Title', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: messageController,
-                  decoration: const InputDecoration(
-                      labelText: 'Message', border: OutlineInputBorder()),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.isEmpty ||
-                    messageController.text.isEmpty) {
-                  return;
-                }
-                final success = await DataService.createAnnouncement(
-                  title: titleController.text,
-                  message: messageController.text,
-                  courseId: selectedCourseId,
-                );
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                        success ? 'Announcement posted!' : 'Failed to post'),
-                    backgroundColor: success ? Colors.green : Colors.red,
-                  ));
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF002147)),
-              child: const Text('Post'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _HeaderButton extends StatelessWidget {
@@ -387,7 +311,7 @@ class _HeaderButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: Colors.white, size: 22),
@@ -413,9 +337,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -425,7 +349,7 @@ class _StatCard extends StatelessWidget {
               style: TextStyle(
                   fontSize: 24, fontWeight: FontWeight.bold, color: color)),
           Text(label,
-              style: TextStyle(fontSize: 12, color: color.withOpacity(0.8))),
+              style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.8))),
         ],
       ),
     );
@@ -461,7 +385,7 @@ class _ActionButton extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 24),

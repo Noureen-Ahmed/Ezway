@@ -24,7 +24,6 @@ class _VerificationPageState extends State<VerificationPage> {
       List.generate(4, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   bool _isLoading = false;
-  bool _codeSent = false;
 
   static const String _baseUrl = 'http://localhost:3000/api';
 
@@ -65,7 +64,6 @@ class _VerificationPageState extends State<VerificationPage> {
 
       setState(() {
         _isLoading = false;
-        _codeSent = response.statusCode == 200;
       });
 
       if (mounted) {

@@ -428,7 +428,7 @@ class _TaskCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(task.priority).withOpacity(0.1),
+                      color: _getPriorityColor(task.priority).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -495,7 +495,7 @@ class _TaskCard extends ConsumerWidget {
                 ? Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.1),
+                      color: typeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -548,30 +548,5 @@ class _TaskCard extends ConsumerWidget {
     return '${date.month}/${date.day}';
   }
 
-  Future<void> _showUnsubmitDialog(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unsubmit Assignment?'),
-        content: const Text('To unsubmit, please open the assignment details.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Go to Details'),
-          ),
-        ],
-      ),
-    );
 
-    if (confirmed == true && context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AssignmentDetailScreen(task: task)),
-      );
-    }
-  }
 }

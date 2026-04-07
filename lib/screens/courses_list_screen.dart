@@ -43,9 +43,9 @@ class CoursesListScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => _buildError(error.toString(), () {
             if (isProfessor) {
-              ref.refresh(professorCoursesProvider);
+              ref.invalidate(professorCoursesProvider);
             } else {
-              ref.refresh(enrolledCoursesProvider);
+              ref.invalidate(enrolledCoursesProvider);
             }
           }),
           data: (courses) {
@@ -184,7 +184,7 @@ class _CourseCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _categoryColor.withOpacity(0.1),
+                  color: _categoryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(

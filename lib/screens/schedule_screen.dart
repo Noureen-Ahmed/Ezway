@@ -34,14 +34,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   }
 
   Future<void> _refreshSchedule() async {
-    await ref.refresh(scheduleEventsProvider.future);
-    await ref.refresh(upcomingEventsProvider.future);
+    final _ = await ref.refresh(scheduleEventsProvider.future);
+    final __ = await ref.refresh(upcomingEventsProvider.future);
   }
 
-  List<ScheduleEvent> _getEventsForDay(DateTime day) {
-    // This would typically come from the repository
-    return [];
-  }
+
 
   /// Navigate to the appropriate detail screen based on event type
   void _navigateToEventDetail(ScheduleEvent event) {
@@ -158,7 +155,6 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final eventsAsync = ref.watch(scheduleEventsProvider);
-    final upcomingEventsAsync = ref.watch(upcomingEventsProvider);
     final eventsForDayAsync = ref.watch(eventsForDateProvider(_selectedWeekDay));
 
     return Scaffold(
@@ -304,7 +300,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                     width: 56,
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFDC800).withOpacity(0.2),
+                                      color: const Color(0xFFFDC800).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(Icons.schedule, color: Color(0xFFFDC800), size: 28),
@@ -321,7 +317,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           DateFormat('EEEE, MMMM d').format(DateTime.now()),
-                                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+                                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
                                         ),
                                       ],
                                     ),
@@ -612,7 +608,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             margin: const EdgeInsets.all(4.0),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFFDC800).withOpacity(0.2),
+              color: const Color(0xFFFDC800).withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFFFDC800), width: 2),
             ),
@@ -670,7 +666,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   width: isToday && !isSelected ? 2 : 1,
                 ),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: const Color(0xFF002147).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                    ? [BoxShadow(color: const Color(0xFF002147).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))]
                     : null,
               ),
               child: Column(
@@ -681,7 +677,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white.withOpacity(0.8) : const Color(0xFF6B7280),
+                      color: isSelected ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF6B7280),
                     ),
                   ),
                   const SizedBox(height: 2),

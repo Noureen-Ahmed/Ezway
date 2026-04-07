@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
@@ -37,9 +37,6 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
   
   // Submission
   bool _isSubmitting = false;
-  String? _uploadedFileUrl; 
-  String? _uploadedFileName;
-  bool _isUploading = false;
 
   @override
   void initState() {
@@ -355,7 +352,7 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     offset: const Offset(0, -2),
                     blurRadius: 10,
                   )
@@ -429,7 +426,7 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.white,
+                  color: isSelected ? Colors.blue.withValues(alpha: 0.1) : Colors.white,
                   border: Border.all(
                     color: isSelected ? const Color(0xFF2E6AFF) : Colors.grey[300]!,
                     width: isSelected ? 2 : 1,
@@ -526,88 +523,6 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
     }
   }
 
-  Widget _buildFileUploader() {
-    return InkWell(
-      onTap: _isUploading ? null : _pickAndUploadFile,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: const Color(0xFF2E6AFF).withOpacity(0.3), 
-            style: BorderStyle.solid
-          ),
-        ),
-        child: _isUploading
-          ? const Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)))
-          : Row(
-              children: [
-                const Icon(Icons.attach_file, color: Color(0xFF2E6AFF)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _uploadedFileName ?? 'Attach File',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2E6AFF)),
-                      ),
-                      if (_uploadedFileName == null)
-                        const Text('Click to upload', style: TextStyle(fontSize: 12, color: Colors.grey))
-                    ],
-                  ),
-                ),
-                if (_uploadedFileName != null)
-                   IconButton(
-                     icon: const Icon(Icons.close, color: Colors.red),
-                     onPressed: () {
-                       setState(() {
-                         _uploadedFileUrl = null;
-                         _uploadedFileName = null;
-                       });
-                     },
-                   )
-              ],
-            ),
-      ),
-    );
-  }
-  
-  Future<void> _pickAndUploadFile() async {
-    setState(() => _isUploading = true);
-    
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'zip'],
-      );
-
-      if (result != null && result.files.single.bytes != null) {
-        final file = result.files.single;
-        final url = await DataService.uploadFile(file.bytes!, file.name);
-        
-        if (url != null) {
-          setState(() {
-            _uploadedFileUrl = url;
-            _uploadedFileName = file.name;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File uploaded successfully')),
-          );
-        } else {
-          throw Exception('Upload failed');
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading file: $e')),
-      );
-    } finally {
-      setState(() => _isUploading = false);
-    }
-  }
 
   Future<void> _submitExam({bool autoSubmit = false}) async {
     // If autoSubmit is true (timer ran out), we proceed even if incomplete
@@ -620,7 +535,7 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
     final success = await DataService.submitTask(
       taskId: widget.taskId,
       answers: _answers,
-      fileUrl: _uploadedFileUrl,
+      fileUrl: null,
       startedAt: _startTime,
     );
     

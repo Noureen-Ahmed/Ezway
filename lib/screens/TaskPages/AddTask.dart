@@ -260,7 +260,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               color: isSelected ? color : Colors.transparent,
               width: 2,
             ),
-            color: isSelected ? color.withOpacity(0.1) : const Color(0xFFF3F4F6),
+            color: isSelected ? color.withValues(alpha: 0.1) : const Color(0xFFF3F4F6),
           ),
           child: Text(
             text,

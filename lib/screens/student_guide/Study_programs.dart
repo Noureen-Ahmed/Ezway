@@ -80,9 +80,9 @@ final List<Map<String, dynamic>> Departments = [
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-       'جيولوجيا منفردة'
-       'جيولوجيا- كيمياء'
-        'جيولوجيا- جيوفيزياء'
+       'جيولوجيا منفردة',
+       'جيولوجيا- كيمياء',
+        'جيولوجيا- جيوفيزياء',
        
       ],
       'finalProgramsEN':[ 
