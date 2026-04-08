@@ -7,7 +7,9 @@ A comprehensive Flutter mobile application for Egyptian science faculty students
 The College Guide app helps students and professors in Egyptian science faculties manage their academic activities including courses, assignments, schedules, and announcements.
 
 
-m
+## doctor test acc 
+- **doctor@college.edu** 
+- password : doctor123
 
 ## 📋 Prerequisites
 
