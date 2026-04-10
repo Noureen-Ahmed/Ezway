@@ -178,22 +178,6 @@ class ProfessorDashboard extends ConsumerWidget {
         color: Color(0xFF002147),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome back,',
-              style:
-                  TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              name,
-              style: const TextStyle(
-                color: Color(0xFFFDC800),
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -205,36 +189,15 @@ class ProfessorDashboard extends ConsumerWidget {
                 style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
               ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDC800).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 4),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: Color(0xFFFDC800),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.school, size: 14, color: Color(0xFFFDC800)),
-                  SizedBox(width: 4),
-                  Text(
-                    'Professor',
-                    style: TextStyle(
-                        color: Color(0xFFFDC800),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        _HeaderButton(
-          icon: Icons.person_outline,
-          onTap: () => context.go('/profile'),
-        ),
-      ]),
               const SizedBox(height: 8),
               Container(
                 padding:
@@ -261,8 +224,9 @@ class ProfessorDashboard extends ConsumerWidget {
             ],
           ),
           _HeaderButton(
-              icon: Icons.person_outline,
-              onTap: () => context.go('/profile')),
+            icon: Icons.person_outline,
+            onTap: () => context.go('/profile'),
+          ),
         ],
       ),
     );

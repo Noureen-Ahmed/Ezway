@@ -1519,14 +1519,18 @@ app.post('/api/ums/login', async (req, res) => {
         const studentEmail = profile.email || umsUsername;
         const numericLevel = profile.level ? parseInt(profile.level.match(/\d+/)?.[0]) || null : null;
 
+        // Derive the student ID — UMS may return it in profile, or it's the loginName itself
+        const derivedStudentId = profile.studentId || loginName;
+
         // ── 2. Find or create user in DB ──
+        // Search by email, ums_username, OR student_id (SSN/passport)
         let user;
         const [rows] = await pool.execute(`
             SELECT u.*, p.advisor_name, p.advisor_email 
             FROM users u 
             LEFT JOIN ums_profile p ON u.id = p.user_id 
-            WHERE u.email = ? OR u.ums_username = ? OR u.ums_username = ?
-        `, [studentEmail, loginName, umsUsername]);
+            WHERE u.email = ? OR u.ums_username = ? OR u.ums_username = ? OR u.student_id = ?
+        `, [studentEmail, loginName, umsUsername, derivedStudentId]);
 
         if (rows.length > 0) {
             user = rows[0];
@@ -1539,7 +1543,7 @@ app.post('/api/ums/login', async (req, res) => {
             await pool.execute(`
                 INSERT INTO users (id, name, email, password, mode, ums_username, is_verified, is_onboarding_complete, student_id)
                 VALUES (?, ?, ?, ?, 'student', ?, true, true, ?)
-            `, [id, studentName, studentEmail, hashed, umsUsername, loginName]);
+            `, [id, studentName, studentEmail, hashed, umsUsername, derivedStudentId]);
             const [newRows] = await pool.execute(`
                 SELECT u.*, p.advisor_name, p.advisor_email 
                 FROM users u LEFT JOIN ums_profile p ON u.id = p.user_id 
@@ -1551,18 +1555,25 @@ app.post('/api/ums/login', async (req, res) => {
         // ── 3. Save all scraped fields to users + ums_profile ──
         const nameEn = profile.nameEn || null;
         const nameAr = profile.nameAr || null;
+        // Use profile phone/address from scrape; also check the raw UMS API fields
+        const phoneNumber = profile.phone || profile.PhoneNo || null;
+        const addressStr = profile.address || profile.Address || null;
         await pool.execute(`
             UPDATE users 
-            SET name = ?, name_ar = ?, ums_username = ?, department = ?, program = ?, level = ?,
-                faculty = ?, phone = ?, address = ?, semester = ?, academic_year = ?, student_id = ?,
+            SET name = COALESCE(?, name), name_ar = COALESCE(?, name_ar), 
+                ums_username = ?, department = COALESCE(?, department), 
+                program = COALESCE(?, program), level = COALESCE(?, level),
+                faculty = COALESCE(?, faculty), phone = COALESCE(?, phone), 
+                address = COALESCE(?, address), semester = COALESCE(?, semester), 
+                academic_year = COALESCE(?, academic_year), student_id = COALESCE(?, student_id),
                 is_onboarding_complete = 1, is_verified = 1
             WHERE id = ?
         `, [
             nameEn || nameAr || studentName, nameAr,
             umsUsername,
             profile.department || null, profile.program || null, numericLevel,
-            profile.faculty || null, profile.phone || null, profile.address || null,
-            profile.semester || null, profile.academicYear || null, loginName,
+            profile.faculty || null, phoneNumber, addressStr,
+            profile.semester || null, profile.academicYear || null, derivedStudentId,
             user.id
         ]);
 

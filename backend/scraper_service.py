@@ -156,8 +156,13 @@ def parse_account_page(html):
             if not v:
                 continue
                 
-            if any(x in k for x in ['القومي', 'جواز']):
+            if any(x in k for x in ['القومي', 'SSN', 'الرقم القومي', 'رقم قومي']):
                 profile['studentId'] = v
+            elif any(x in k for x in ['جواز', 'Passport', 'passport']):
+                # Passport number — only set studentId if SSN wasn't found
+                if 'studentId' not in profile:
+                    profile['studentId'] = v
+                profile['passportNumber'] = v
             elif any(x in k for x in ['بالعربية', 'الاسم بالعربية', 'Arabic']):
                 profile['nameAr'] = v
             elif any(x in k for x in ['بالإنجليزية', 'English', 'الاسم بالإنجليزية']):
@@ -169,7 +174,7 @@ def parse_account_page(html):
             elif any(x in k for x in ['الإلكتروني', 'email', 'Email']):
                 if 'email' not in profile:
                     profile['email'] = v
-            elif any(x in k for x in ['الهاتف', 'phone', 'Phone', 'تليفون', 'موبايل', 'Mobile']):
+            elif any(x in k for x in ['الهاتف', 'phone', 'Phone', 'تليفون', 'موبايل', 'Mobile', 'الموبايل']):
                 profile['phone'] = v
             elif any(x in k for x in ['الكلية', 'Faculty', 'كلية']):
                 profile['faculty'] = v

@@ -1,0 +1,57 @@
+=== FINDING NAME AND PHONE ===
+
+--- MATCH IN <a> ---
+Text: نورين احمد على محمد
+Parent HTML: 
+                                        <a href="#" dir="rtl"><i class="fa-solid fa-user" style="padding: 0 8px;"></i>نورين احمد على محمد</a>
+                                        <ul>
+                                            <li><a href="/UserInformation">الصفحة الشخصية</a></li>
+             
+
+--- MATCH IN <a> ---
+Text: نورين احمد على محمد
+Parent HTML: 
+                                            <a href="#"><i class="fa-solid fa-user"></i>نورين احمد على محمد</a>
+                                            <ul>
+                                                <li><a href="/UserInformation">الصفحة الشخصية</a></li>
+                                   
+
+--- MATCH IN <h2> ---
+Text: نورين احمد على محمد
+Parent HTML: 
+                
+                <div class="col-lg-4 col-md-5">
+                    <div class="hoverbox h-md-100 mb-3">
+                        <button type="button" id="qrcode" class="p-0 border-0 h-100 btn btn-link">
+                            <div class="k-qrcode" id="qrUrl_25101" data-role="
+
+--- MATCH IN <p> ---
+Text: نورين احمد على محمد
+Parent HTML: <p style="">نورين احمد على محمد</p>
+
+--- MATCH IN <td> ---
+Text: نورين احمد على محمد
+Parent HTML: <td class="sorting_1">قيد الإنتظار</td><td></td><td>نورين احمد على محمد</td><td>Noureen Ahmed Ali </td><td>30410030100903@sci.asu.edu.eg</td><td>noureenahmed1610@gmail.com</td><td>03-10-2004</td><td>القاهرة</td><td>13ش الحسين ابراهيم  ش جمال عبد الناصر</td><td>01013229538</td><td>مصرى</td><td>304100
+
+--- MATCH IN <td> ---
+Text: 01013229538
+Parent HTML: <td class="sorting_1">قيد الإنتظار</td><td></td><td>نورين احمد على محمد</td><td>Noureen Ahmed Ali </td><td>30410030100903@sci.asu.edu.eg</td><td>noureenahmed1610@gmail.com</td><td>03-10-2004</td><td>القاهرة</td><td>13ش الحسين ابراهيم  ش جمال عبد الناصر</td><td>01013229538</td><td>مصرى</td><td>304100
+
+=== KENDO DATA IN JS ===
+
+    var isRTL = 'True';
+
+    function formatDate(jsonDate) {
+        if (jsonDate != null) {
+            var date = new Date(parseInt(jsonDate.substr(6)));
+            var month = ("0" + (date.getMonth() + 1)).slice(-2);
+            return ("0" + date.getDate()).slice(-2) + '-' + month + '-' + date.getFullYear();
+        }
+        return "";
+    }
+
+
+    $(document).ready(function () {
+        $('#collapseOne').on('hidden.bs.collapse', function () {
+            console.log('hiiiiiii');
+         

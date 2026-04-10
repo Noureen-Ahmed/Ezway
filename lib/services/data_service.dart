@@ -15,20 +15,22 @@ import '../models/user.dart';
 class DataService {
   static Future<User?> login(String email, String password) async {
     try {
-      final emailLower = email.toLowerCase().trim();
+      final input = email.trim();
+      final inputLower = input.toLowerCase();
+      
       // Determine if this is a professor login:
       // Only explicit professor email patterns go to /auth/login
-      // Everything else (student IDs, passport IDs, student emails) goes to /ums/login
-      final isDoctor = emailLower.contains('doctor') || 
-                        emailLower.contains('professor') || 
-                        emailLower.contains('dr.');
+      // Everything else (SSN, passport IDs, student emails) goes to /ums/login
+      final isDoctor = inputLower.contains('doctor') || 
+                        inputLower.contains('professor') || 
+                        inputLower.contains('dr.');
       final isStudent = !isDoctor;
       final endpoint = isStudent ? '/ums/login' : '/auth/login';
       final body = isStudent 
-          ? {'loginName': email.trim(), 'password': password}
-          : {'email': email.trim(), 'password': password};
+          ? {'loginName': input, 'password': password}
+          : {'email': input, 'password': password};
 
-      print('[DataService] Routing login to $endpoint for email: $email');
+      print('[DataService] Routing login to $endpoint for input: $input (isStudent: $isStudent)');
 
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}$endpoint'),

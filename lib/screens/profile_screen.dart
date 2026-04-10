@@ -237,14 +237,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ? user.phone!
                 : 'Not available — sync UMS to retrieve',
           ),
-          const SizedBox(height: 10),
-          _buildInfoCard(
-            icon: Icons.location_on_outlined,
-            title: 'Address',
-            value: user.address != null && user.address!.isNotEmpty
-                ? user.address!
-                : 'Not available — sync UMS to retrieve',
-          ),
+
           const SizedBox(height: 100),
         ],
       ),

@@ -110,60 +110,64 @@ async function loginToUMS(loginName, password) {
       grades: []
     };
 
-    // Fetch HTML page for all profile data
+    // ── Extract profile from /UserInformation using page.evaluate() ──
     try {
-      await page.goto(`${UMS_BASE}/UserInformation`, { waitUntil: 'networkidle2', timeout: 20000 });
-      const htmlContent = await page.content();
+      await page.goto(`${UMS_BASE}/UserInformation`, { waitUntil: 'networkidle2', timeout: 30000 });
+      // Wait for content to render
+      await new Promise(r => setTimeout(r, 3000));
 
-      const htmlFields = {
-        'اسم الكلية': 'faculty',
-        'اسم البرنامج': 'program', 
-        'السنة الأكاديمية': 'academicYear',
-        'المستوى': 'level',
-        'الاسم': 'nameAr',
-        'الإسم': 'nameAr',
-        'اسم الطالب': 'nameAr',
-        'الرقم القومى': 'ssn',
-        'بطاقة الرقم القومى': 'ssn',
-        'رقم جواز السفر': 'ssn',
-        'رقم التليفون': 'phone',
-        'تليفون محمول': 'phone',
-        'التليفون': 'phone',
-        'موبايل': 'phone',
-        'البريد الجامعى': 'email',
-        'البريد الإلكتروني': 'email',
-        'البريد': 'email',
-        'العنوان': 'address',
-        'عنوان السكن': 'address',
-        'محل الاقامة': 'address',
-        'المحافظة': 'address'
-      };
+      // Save debug HTML for inspection
+      const fs = require('fs');
+      const debugHtml = await page.content();
+      fs.writeFileSync('ums_profile_debug.html', debugHtml, 'utf-8');
+      logger.info(`[UMS] Saved profile page HTML to ums_profile_debug.html (${debugHtml.length} chars)`);
 
-      for (const [arLabel, fieldName] of Object.entries(htmlFields)) {
-        const patterns = [
-          new RegExp(arLabel + '[\\s:]*(?:<[^>]*>\\s*)*?([^<]{2,80}?)\\s*</', 'g'),
-          new RegExp(arLabel + '\\s*:?\\s*</[^>]+>\\s*<[^>]+>\\s*([^<]+)', 'g'),
-        ];
-        for (const regex of patterns) {
-          const match = regex.exec(htmlContent);
-          if (match && match[1]) {
-            const val = match[1].trim();
-            if (val && val !== ':' && !val.startsWith('<') && val.length > 1 && val.length < 200) {
-              if (!result.profile[fieldName]) { // Fallback, don't overwrite JSON 
-                result.profile[fieldName] = val;
-              }
+      // Extract profile data straight from the rendered DataTable row or labels
+      const profileData = await page.evaluate(() => {
+        const profile = {};
+        const clean = (s) => s ? s.replace(/<[^>]*>/g, '').trim().replace(/\s{2,}/g, ' ') : null;
+
+        // STRATEGY 1: Extract from the DataTable row if it exists (very reliable)
+        // The data row looks like: <td>Status</td><td></td><td>NameAr</td><td>NameEn</td><td>Email</td><td>AltEmail</td><td>DOB</td><td>City</td><td>Address</td><td>Phone</td>
+        const tableRows = document.querySelectorAll('table tbody tr');
+        for (const row of tableRows) {
+          const cells = row.querySelectorAll('td');
+          // Check if this row looks like the main student profile row (has > 10 columns and contains an email)
+          if (cells.length >= 12 && Array.from(cells).some(c => c.textContent.includes('@'))) {
+            profile.nameAr = clean(cells[2]?.textContent);
+            profile.nameEn = clean(cells[3]?.textContent);
+            profile.email = clean(cells[4]?.textContent);
+            profile.address = clean(cells[8]?.textContent);
+            profile.phone = clean(cells[9]?.textContent);
+            break;
+          }
+        }
+
+        // STRATEGY 2: Fallback to the top nav link / welcome message for the name
+        if (!profile.nameAr || profile.nameAr.length < 3) {
+          const navLinks = document.querySelectorAll('a');
+          for (const a of navLinks) {
+            const text = a.textContent.trim();
+            if (a.querySelector('.fa-user') && text !== 'الصفحة الشخصية') {
+              profile.nameAr = text;
               break;
             }
           }
         }
-      }
 
+        return profile;
+      });
+
+      // Merge the extracted data into result.profile
+      Object.assign(result.profile, profileData);
+
+      // Parse level number
       if (result.profile.level) {
         const m = result.profile.level.match(/(\d+)/);
         if (m) result.profile.levelNum = parseInt(m[1]);
       }
 
-      logger.info(`[UMS] ✅ HTML: faculty=${result.profile.faculty}, level=${result.profile.level}, program=${result.profile.program}, phone=${result.profile.phone}, address=${result.profile.address}`);
+      logger.info(`[UMS] ✅ Profile extracted: nameAr=${result.profile.nameAr}, nameEn=${result.profile.nameEn}, phone=${result.profile.phone}, address=${result.profile.address}, ssn=${result.profile.ssn}`);
     } catch (err) {
       logger.error(`[UMS] HTML profile error: ${err.message}`);
     }

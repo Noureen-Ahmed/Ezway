@@ -128,7 +128,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     SizedBox(height: 12),
                     Text(
-                      'Login with your UMS portal credentials',
+                      'Login with your SSN, Passport number, or Email',
                       style: TextStyle(color: Color(0xFFd1d5db)),
                     ),
                   ],
@@ -172,11 +172,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           TextFormField(
                             controller: emailController,
-                            decoration: _buildInputDecoration('Student ID or Email'),
-                            keyboardType: TextInputType.emailAddress,
+                            decoration: _buildInputDecoration('SSN / Passport No. / Email'),
+                            keyboardType: TextInputType.text,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
+                                return 'Please enter your SSN, Passport No., or Email';
                               }
                               return null;
                             },

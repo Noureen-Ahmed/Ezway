@@ -66,6 +66,24 @@ class User {
     return clean.trim().isNotEmpty ? clean.trim() : 'Student';
   }
 
+  /// Clean scraped field values — remove DataTable/Kendo artifacts
+  static String? _cleanScrapedValue(dynamic val) {
+    if (val == null) return null;
+    String s = val.toString();
+    // Remove DataTable artifacts like "activate to sort column ascending"
+    s = s.replaceAll(RegExp('activate\\s+to\\s+sort\\s+column\\s+(ascending|descending)[^>]*', caseSensitive: false), '');
+    // Remove HTML tags
+    s = s.replaceAll(RegExp('<[^>]*>'), '');
+    // Remove trailing/leading quotes and angle brackets
+    s = s.replaceAll(RegExp('[">]+\$'), '');
+    s = s.replaceAll(RegExp('^[">]+'), '');
+    s = s.trim().replaceAll(RegExp('\\s{2,}'), ' ');
+    // If it's just a known label, return null
+    const labels = ['الاسم', 'العنوان', 'الهاتف', 'الموبايل', 'تليفون', 'الكلية', 'البرنامج'];
+    if (labels.contains(s) || s.isEmpty) return null;
+    return s;
+  }
+
   /// Create from JSON (API response)
   factory User.fromJson(Map<String, dynamic> json) {
     // Handle mode/role conversion
@@ -83,7 +101,7 @@ class User {
       nameAr: json['nameAr'] != null ? _cleanNameStr(json['nameAr']) : null,
       avatar: json['avatar'],
       studentId: json['studentId'],
-      phone: json['phone'],
+      phone: _cleanScrapedValue(json['phone']),
       department: json['department'] is Map ? json['department']['name'] : json['department'],
       departmentId: json['departmentId'],
       program: json['program'] is Map 
@@ -103,7 +121,7 @@ class User {
       isVerified: json['isVerified'] ?? false,
       advisorName: json['advisorName'],
       advisorEmail: json['advisorEmail'],
-      address: json['address'],
+      address: _cleanScrapedValue(json['address']),
     );
   }
 

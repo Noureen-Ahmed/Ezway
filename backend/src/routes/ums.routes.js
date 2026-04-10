@@ -174,18 +174,37 @@ router.post('/login', async (req, res, next) => {
       throw err;
     }
 
+
     const umsProfile = umsResult.profile || {};
 
-    // Step 2: Map profile fields
+    // Sanitize scraped values — remove DataTable/Kendo UI artifacts
+    const sanitizeValue = (val) => {
+      if (!val || typeof val !== 'string') return null;
+      let cleaned = val
+        .replace(/activate\s+to\s+sort\s+column\s+(ascending|descending)[^>]*/gi, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/["'>:]+$/g, '')
+        .replace(/^["'>:]+/g, '')
+        .trim()
+        .replace(/\s{2,}/g, ' ');
+      // If it's just a known label (not actual data), return null
+      const labels = ['الاسم', 'العنوان', 'الهاتف', 'الموبايل', 'تليفون', 'الكلية', 'البرنامج', 'Name', 'Address', 'Phone'];
+      if (labels.includes(cleaned) || !cleaned || /^[:\-,>"'\s]+$/.test(cleaned)) return null;
+      return cleaned;
+    };
+
+    // Step 2: Map profile fields (with sanitization)
     const email = umsProfile.email || (loginName.includes('@') ? loginName : `${loginName}@asu.edu.eg`);
-    const name = umsProfile.nameEn || umsProfile.nameAr || loginName;
-    const nameAr = umsProfile.nameAr || null;
+    const name = sanitizeValue(umsProfile.nameEn) || sanitizeValue(umsProfile.nameAr) || loginName;
+    const nameAr = sanitizeValue(umsProfile.nameAr) || null;
     
-    // studentId = the login ID (the number they used to log in)
-    let studentId = loginId;
+    // studentId = SSN/passport from UMS, or the login ID
+    let studentId = umsProfile.studentId || umsProfile.ssn || loginId;
     
-    const phone = umsProfile.phone || null;
-    const address = umsProfile.address || null;
+    const phone = sanitizeValue(umsProfile.phone) || null;
+    const address = sanitizeValue(umsProfile.address) || null;
+
+    logger.info(`[UMS Route] Mapped profile: name=${name}, nameAr=${nameAr}, phone=${phone}, address=${address}, studentId=${studentId}`);
 
     let user = await prisma.user.findFirst({
       where: {
