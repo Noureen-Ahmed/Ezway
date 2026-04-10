@@ -13,7 +13,7 @@ class ScheduleEventCard extends StatelessWidget {
   });
 
   static const Color _navyColor = Color(0xFF002147);
-  static const Color _goldColor = Color(0xFFFDC800);
+
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class ScheduleEventCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -45,7 +45,7 @@ class ScheduleEventCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _getEventColor().withOpacity(0.1),
+                    color: _getEventColor().withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -81,7 +81,7 @@ class ScheduleEventCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: _getEventColor().withOpacity(0.1),
+                              color: _getEventColor().withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

@@ -327,14 +327,11 @@ void main() {
   group('Tab Navigation Tests', () {
     testWidgets('Tapping home tab navigates to home',
         (WidgetTester tester) async {
-      bool navigatedToHome = false;
+
 
       await tester.pumpWidget(
         MaterialApp(
           onGenerateRoute: (settings) {
-            if (settings.name == '/home') {
-              navigatedToHome = true;
-            }
             return null;
           },
           home: const Scaffold(

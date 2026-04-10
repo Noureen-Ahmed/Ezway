@@ -173,7 +173,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
             border: Border.all(
               color: isSelected ? color : const Color(0xFFE5E7EB),
             ),
-            color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
+            color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
           ),
           child: Text(
             text,

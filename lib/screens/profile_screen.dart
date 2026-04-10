@@ -24,7 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -64,9 +64,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       fontSize: 14,
                     ),
                     tabs: const [
-                      Tab(text: 'Personal'),
                       Tab(text: 'Academic'),
-                      Tab(text: 'Contact'),
+                      Tab(text: 'Personal'),
                       Tab(text: 'Settings'),
                     ],
                   ),
@@ -76,9 +75,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             body: TabBarView(
               controller: _tabController,
               children: [
-                _buildPersonalTab(user),
                 _buildAcademicTab(context, user, ref),
-                _buildContactTab(user),
+                _buildPersonalTab(user),
                 _buildSettingsTab(context, user, ref),
               ],
             ),
@@ -223,39 +221,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             title: 'Student ID',
             value: user.studentId ?? user.email.split('@').first,
           ),
-          const SizedBox(height: 100),
-        ],
-      ),
-    );
-  }
-
-  // ============ CONTACT INFO TAB ============
-
-  Widget _buildContactTab(User user) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          _buildSectionHeader('CONTACT INFORMATION'),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           _buildInfoCard(
             icon: Icons.email_outlined,
             title: 'Email',
             value: user.email,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 24),
+          _buildSectionHeader('CONTACT DETAILS'),
+          const SizedBox(height: 16),
           _buildInfoCard(
             icon: Icons.phone_outlined,
             title: 'Phone Number',
-            value: user.phone ?? 'Not available',
+            value: user.phone != null && user.phone!.isNotEmpty
+                ? user.phone!
+                : 'Not available — sync UMS to retrieve',
           ),
           const SizedBox(height: 10),
           _buildInfoCard(
             icon: Icons.location_on_outlined,
             title: 'Address',
-            value: user.address ?? 'Not available',
+            value: user.address != null && user.address!.isNotEmpty
+                ? user.address!
+                : 'Not available — sync UMS to retrieve',
           ),
           const SizedBox(height: 100),
         ],

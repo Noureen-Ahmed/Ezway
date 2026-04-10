@@ -80,7 +80,11 @@ class CustomBottomNavigation extends ConsumerWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: tabs.map((tab) {
+        children: tabs.where((tab) {
+          // Hide navigate (AR) tab for doctors
+          if (isDoctor && tab['route'] == '/navigate') return false;
+          return true;
+        }).map((tab) {
           final isHomeTab = tab['route'] == '/home';
           final isActive = isHomeTab 
               ? currentRoute.startsWith('/home') 

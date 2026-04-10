@@ -642,15 +642,15 @@ class DataService {
   }
   
   // ============ NOTIFICATIONS ============
-  
-  /// Get notifications
-  static Future<List<Map<String, dynamic>>> getNotifications() async {
+
+  /// Get notifications for a user by email (from the notifications table)
+  static Future<List<Map<String, dynamic>>> getNotifications({String? email}) async {
     try {
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/notifications'),
         headers: ApiConfig.authHeaders,
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return List<Map<String, dynamic>>.from(data['notifications'] ?? []);
@@ -661,7 +661,7 @@ class DataService {
       return [];
     }
   }
-  
+
   /// Mark notification as read
   static Future<bool> markNotificationRead(String id) async {
     try {
@@ -672,6 +672,20 @@ class DataService {
       return response.statusCode == 200;
     } catch (e) {
       print('[DataService] Mark notification read error: $e');
+      return false;
+    }
+  }
+
+  /// Mark all notifications as read for a user
+  static Future<bool> markAllNotificationsRead(String email) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all/${Uri.encodeComponent(email)}'),
+        headers: ApiConfig.authHeaders,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('[DataService] Mark all notifications read error: $e');
       return false;
     }
   }

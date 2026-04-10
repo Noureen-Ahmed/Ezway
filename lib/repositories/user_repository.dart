@@ -15,7 +15,7 @@ class MockUserRepository implements UserRepository {
     avatar: 'https://picsum.photos/seed/user123/200/200.jpg',
     studentId: 'STU001234',
     program: 'Computer Science',
-    enrolledCourses: const ['1', '4'], // Enrolled in COMP101 and COMP201
+    enrolledCourses: ['1', '4'], // Enrolled in COMP101 and COMP201
     mode: AppMode.student,
   );
 
