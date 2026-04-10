@@ -120,12 +120,12 @@ async function main() {
   // Professors
   const profData = [
     { email: 'doctor@college.edu', name: 'Dr. Smith', deptCode: 'MATH' },
-    { email: 'dr.ahmed@college.edu', name: 'د. أحمد حسن', deptCode: 'MATH' },
-    { email: 'dr.mohamed@college.edu', name: 'د. محمد علي', deptCode: 'MATH' },
-    { email: 'dr.fatma@college.edu', name: 'د. فاطمة سالم', deptCode: 'PHYS' },
-    { email: 'dr.khaled@college.edu', name: 'د. خالد مصطفى', deptCode: 'CHEM' },
-    { email: 'dr.rania@college.edu', name: 'د. رانيا حسن', deptCode: 'BIO' },
-    { email: 'dr.sami@college.edu', name: 'د. سامي عثمان', deptCode: 'GEOL' }
+    { email: 'dr.ahmed@college.edu', name: 'Dr. Ahmed Hassan', nameAr: 'د. أحمد حسن', deptCode: 'MATH' },
+    { email: 'dr.mohamed@college.edu', name: 'Dr. Mohamed Ali', nameAr: 'د. محمد علي', deptCode: 'MATH' },
+    { email: 'dr.fatma@college.edu', name: 'Dr. Fatma Salem', nameAr: 'د. فاطمة سالم', deptCode: 'PHYS' },
+    { email: 'dr.khaled@college.edu', name: 'Dr. Khaled Mostafa', nameAr: 'د. خالد مصطفى', deptCode: 'CHEM' },
+    { email: 'dr.rania@college.edu', name: 'Dr. Rania Hassan', nameAr: 'د. رانيا حسن', deptCode: 'BIO' },
+    { email: 'dr.sami@college.edu', name: 'Dr. Sami Osman', nameAr: 'د. سامي عثمان', deptCode: 'GEOL' }
   ];
 
   const professors = [];
