@@ -227,6 +227,28 @@ class AppSessionController extends StateNotifier<AppSessionState> {
     }
   }
 
+  /// Refresh current user profile from API
+  Future<void> refreshProfile() async {
+    if (state is! AppSessionAuthenticated) return;
+    final currentUser = (state as AppSessionAuthenticated).user;
+    
+    try {
+      final updatedUser = await DataService.getUser(currentUser.email);
+      if (updatedUser != null) {
+        // preserve some local state if needed (like mode)
+        final mergedUser = updatedUser.copyWith(
+          mode: currentUser.mode,
+          isOnboardingComplete: updatedUser.isOnboardingComplete || currentUser.isOnboardingComplete,
+        );
+        state = AppSessionAuthenticated(mergedUser);
+        await _saveSession(mergedUser);
+        print('[AppSession] Profile refreshed for ${currentUser.email}');
+      }
+    } catch (e) {
+      print('[AppSession] Profile refresh error: $e');
+    }
+  }
+
   /// Change password
   Future<bool> changePassword(String currentPassword, String newPassword) async {
     if (state is! AppSessionAuthenticated) return false;

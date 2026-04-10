@@ -19,7 +19,10 @@ class ProfessorDashboard extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(professorCoursesProvider.future),
+        onRefresh: () async {
+          await ref.read(appSessionControllerProvider.notifier).refreshProfile();
+          await ref.refresh(professorCoursesProvider.future);
+        },
         child: CustomScrollView(
           slivers: [
             // Header
