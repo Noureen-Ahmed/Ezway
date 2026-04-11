@@ -51,7 +51,7 @@ const formatUserResponse = (user) => ({
   major: user.major,
   department: user.department?.name || null,
   departmentId: user.departmentId,
-  program: user.program?.name || null,
+  program: user.program?.name || user.major || null,
   programId: user.programId,
   semester: user.semester,
   academicYear: user.academicYear,

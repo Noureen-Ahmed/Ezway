@@ -44,12 +44,12 @@ const formatUserResponse = (user, umsProfile = {}) => ({
   address: user.address || umsProfile.address || null,
   gpa: user.gpa,
   level: user.level,
-  department: user.department?.name || null,
+  department: user.department?.name || umsProfile.department || null,
   departmentId: user.departmentId,
-  program: user.program?.name || umsProfile.program || user.major || user.program || null,
+  program: user.program?.name || umsProfile.program || user.major || null,
   programId: user.programId,
   faculty: user.faculty || umsProfile.faculty || null,
-  major: user.major || umsProfile.major || null,
+  major: user.major || umsProfile.program || umsProfile.major || null,
   semester: user.semester || umsProfile.semester || null,
   academicYear: user.academicYear || umsProfile.academicYear || null,
   advisorName: umsProfile.advisorName || user.advisorName || null,
@@ -176,16 +176,36 @@ router.post('/login', async (req, res, next) => {
 
     const umsProfile = umsResult.profile || {};
 
-    // Step 2: Map profile fields
+    // Step 2: Map profile fields from REAL scraped data
     const email = umsProfile.email || (loginName.includes('@') ? loginName : `${loginName}@asu.edu.eg`);
-    const name = umsProfile.nameEn || umsProfile.nameAr || loginName;
+    // Use Arabic name (first + last) as the primary display name
+    const name = umsProfile.nameAr || umsProfile.nameEn || loginName;
     const nameAr = umsProfile.nameAr || null;
     
     // studentId = the login ID (the number they used to log in)
     let studentId = loginId;
     
     const phone = umsProfile.phone || null;
-    const address = umsProfile.address || null;
+    const department = umsProfile.department || null;
+    const program = umsProfile.program || umsProfile.major || null;
+    const semester = umsProfile.semester || null;
+    const academicYear = umsProfile.academicYear || null;
+    const faculty = umsProfile.faculty || null;
+    const levelNum = umsProfile.levelNum || null;
+
+    // Log all scraped fields for verification
+    logger.info(`[UMS Route] ═══ SCRAPED DATA TO SAVE ═══`);
+    logger.info(`[UMS Route]   name       = "${name}"`);
+    logger.info(`[UMS Route]   nameAr     = "${nameAr}"`);
+    logger.info(`[UMS Route]   email      = "${email}"`);
+    logger.info(`[UMS Route]   phone      = "${phone}"`);
+    logger.info(`[UMS Route]   faculty    = "${faculty}"`);
+    logger.info(`[UMS Route]   department = "${department}"`);
+    logger.info(`[UMS Route]   program    = "${program}"`);
+    logger.info(`[UMS Route]   level      = "${levelNum}"`);
+    logger.info(`[UMS Route]   semester   = "${semester}"`);
+    logger.info(`[UMS Route]   acadYear   = "${academicYear}"`);
+    logger.info(`[UMS Route] ═══════════════════════════════`);
 
     let user = await prisma.user.findFirst({
       where: {
@@ -203,60 +223,45 @@ router.post('/login', async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Build the data object with ALL scraped fields
+    const userData = {
+      name: name,
+      nameAr: nameAr,
+      email: email,
+      phone: phone,
+      studentId: studentId,
+      password: hashedPassword,
+      level: levelNum || (user ? user.level : null),
+      faculty: faculty || (user ? user.faculty : null),
+      major: program || (user ? user.major : null),
+      semester: semester || (user ? user.semester : null),
+      academicYear: academicYear || (user ? user.academicYear : null),
+      advisorName: umsProfile.advisorName || (user ? user.advisorName : null),
+      advisorEmail: umsProfile.advisorEmail || (user ? user.advisorEmail : null),
+      isVerified: true,
+      isOnboardingComplete: true,
+      isActive: true,
+      lastLoginAt: new Date()
+    };
+
     if (user) {
-      // Update existing user with latest UMS data
+      // Update existing user with latest REAL UMS data
       user = await prisma.user.update({
         where: { id: user.id },
-        data: {
-          name: name,
-          nameAr: nameAr,
-          email: email,
-          phone: phone,
-          studentId: studentId,
-          password: hashedPassword,
-          level: umsProfile.levelNum || user.level,
-          faculty: umsProfile.faculty || user.faculty,
-          major: umsProfile.program || umsProfile.major || user.major,
-          semester: umsProfile.semester || user.semester,
-          academicYear: umsProfile.academicYear || user.academicYear,
-          advisorName: umsProfile.advisorName || user.advisorName,
-          advisorEmail: umsProfile.advisorEmail || user.advisorEmail,
-          isVerified: true,
-          isOnboardingComplete: true,
-          isActive: true,
-          lastLoginAt: new Date()
-        },
+        data: userData,
         include: {
           department: { select: { id: true, name: true, code: true } },
           program: { select: { id: true, name: true, code: true } },
           enrollments: { select: { courseId: true } }
         }
       });
-      if (address) {
-        await prisma.$executeRaw`UPDATE users SET address = ${address} WHERE id = ${user.id}`;
-      }
+      logger.info(`[UMS Route] ✅ Updated existing user: ${user.id}`);
     } else {
-      // Create new user from UMS data
+      // Create new user from REAL UMS data
       user = await prisma.user.create({
         data: {
-          email: email,
-          password: hashedPassword,
-          name: name,
-          nameAr: nameAr,
-          phone: phone,
+          ...userData,
           role: 'STUDENT',
-          studentId: studentId,
-          level: umsProfile.levelNum || null,
-          faculty: umsProfile.faculty || null,
-          major: umsProfile.program || umsProfile.major || null,
-          semester: umsProfile.semester || null,
-          academicYear: umsProfile.academicYear || null,
-          advisorName: umsProfile.advisorName || null,
-          advisorEmail: umsProfile.advisorEmail || null,
-          isVerified: true,
-          isOnboardingComplete: true,
-          isActive: true,
-          lastLoginAt: new Date()
         },
         include: {
           department: { select: { id: true, name: true, code: true } },
@@ -264,9 +269,7 @@ router.post('/login', async (req, res, next) => {
           enrollments: { select: { courseId: true } }
         }
       });
-      if (address) {
-        await prisma.$executeRaw`UPDATE users SET address = ${address} WHERE id = ${user.id}`;
-      }
+      logger.info(`[UMS Route] ✅ Created new user: ${user.id}`);
     }
 
     // Step 4: Save UMS session cookies

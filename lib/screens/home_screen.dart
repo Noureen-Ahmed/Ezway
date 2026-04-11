@@ -6,6 +6,8 @@ import '../providers/app_session_provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/schedule_provider.dart';
+import '../providers/announcement_provider.dart';
+import '../models/announcement.dart';
 import '../models/user.dart';
 import '../models/task.dart';
 import 'assignment_detail_screen.dart';
@@ -24,6 +26,7 @@ class HomeScreen extends ConsumerWidget {
     final coursesAsync = ref.watch(enrolledCoursesProvider);
     final taskState = ref.watch(taskStateProvider);
     final scheduleAsync = ref.watch(scheduleEventsProvider);
+    final announcementsAsync = ref.watch(announcementsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -31,6 +34,7 @@ class HomeScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(currentUserProvider);
           ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+          ref.invalidate(announcementsProvider);
           await Future.wait([
             ref.refresh(enrolledCoursesProvider.future),
             ref.refresh(scheduleEventsProvider.future),
@@ -40,7 +44,7 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             // Header
             SliverToBoxAdapter(
-              child: _buildHeader(context, userAsync.valueOrNull),
+              child: _buildHeader(context, userAsync.valueOrNull, announcementsAsync),
             ),
 
             // Quick Stats
@@ -264,7 +268,11 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, User? user) {
+  Widget _buildHeader(BuildContext context, User? user, AsyncValue<List<Announcement>> announcementsAsync) {
+    final unreadCount = announcementsAsync.whenOrNull(
+      data: (announcements) => announcements.where((a) => !a.isRead).length,
+    ) ?? 0;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
       decoration: const BoxDecoration(
@@ -302,8 +310,8 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(width: 12),
           Row(
             children: [
-              _HeaderButton(
-                icon: Icons.notifications_outlined,
+              _NotificationBellButton(
+                unreadCount: unreadCount,
                 onTap: () => context.go('/notifications'),
               ),
               const SizedBox(width: 12),
@@ -354,6 +362,61 @@ class _HeaderButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: Colors.white, size: 22),
+      ),
+    );
+  }
+}
+
+class _NotificationBellButton extends StatelessWidget {
+  final int unreadCount;
+  final VoidCallback onTap;
+
+  const _NotificationBellButton({required this.unreadCount, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Stack(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF002147), width: 1.5),
+                  ),
+                  child: Center(
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
