@@ -730,7 +730,54 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (isProfessor)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16.0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF4FF),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF2E6AFF).withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E6AFF).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.people_alt_rounded, color: Color(0xFF2E6AFF), size: 24),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Enrolled Students',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${course.stats?['students'] ?? 0} Students taking this exam',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
         if (isProfessor)
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),

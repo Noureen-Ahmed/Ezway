@@ -447,6 +447,53 @@ class DataService {
     }
   }
 
+  /// Get professor's created exams/assignments with enrolled student counts
+  static Future<Map<String, dynamic>> getProfessorExams() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/tasks/professor-exams'),
+        headers: ApiConfig.authHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List rawExams = data['exams'] ?? [];
+        final List rawDaily = data['dailySummary'] ?? [];
+
+        final exams = rawExams.map((e) {
+          return {
+            'id': e['id']?.toString() ?? '',
+            'title': e['title']?.toString() ?? '',
+            'description': e['description']?.toString(),
+            'taskType': e['taskType']?.toString() ?? 'EXAM',
+            'dueDate': e['dueDate']?.toString(),
+            'course': e['course'],
+            'enrolledStudentCount': (e['enrolledStudentCount'] as num?)?.toInt() ?? 0,
+            'submissionCount': (e['submissionCount'] as num?)?.toInt() ?? 0,
+            'maxPoints': (e['maxPoints'] as num?)?.toInt() ?? 100,
+            'status': e['status']?.toString() ?? 'PENDING',
+            'published': e['published'] as bool? ?? false,
+          };
+        }).toList();
+
+        final daily = rawDaily.map((d) {
+          return {
+            'date': d['date']?.toString() ?? '',
+            'totalStudents': (d['totalStudents'] as num?)?.toInt() ?? 0,
+            'exams': List<String>.from((d['exams'] as List?)?.map((x) => x.toString()) ?? []),
+          };
+        }).toList();
+
+        return {'exams': exams, 'dailySummary': daily};
+      }
+      print('[DataService] getProfessorExams failed: ${response.statusCode} ${response.body}');
+      return {'exams': [], 'dailySummary': []};
+    } catch (e) {
+      print('[DataService] getProfessorExams error: $e');
+      return {'exams': [], 'dailySummary': []};
+    }
+  }
+
   /// Submit task (assignment)
   static Future<bool> submitTask({
     required String taskId,
