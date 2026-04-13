@@ -444,7 +444,7 @@ class _TaskCard extends ConsumerWidget {
           child: Checkbox(
             value: isCompleted,
             onChanged: (val) {
-              // Prevent unchecking submitted/completed assignments only
+              // Prevent unchecking submitted/graded ASSIGNMENTS only
               if (val == false &&
                   task.taskType == TaskType.assignment &&
                   (task.status == TaskStatus.submitted ||
@@ -454,6 +454,17 @@ class _TaskCard extends ConsumerWidget {
                   const SnackBar(
                       content: Text(
                           'Marking cannot be removed from submitted assignments.')),
+                );
+                return;
+              }
+
+              // Prevent toggling overdue tasks (they've expired)
+              if (task.status == TaskStatus.pending && isOverdue) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('This task has expired and cannot be changed.'),
+                    backgroundColor: Colors.red,
+                  ),
                 );
                 return;
               }
@@ -524,13 +535,36 @@ class _TaskCard extends ConsumerWidget {
             }
           }
         },
-        title: Text(
-          task.title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            decoration: isCompleted ? TextDecoration.lineThrough : null,
-            color: isCompleted ? Colors.grey : const Color(0xFF1F2937),
-          ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                task.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                  color: isCompleted ? Colors.grey : const Color(0xFF1F2937),
+                ),
+              ),
+            ),
+            if (task.status == TaskStatus.pending && isOverdue)
+              Container(
+                margin: const EdgeInsets.only(left: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Expired',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade700,
+                  ),
+                ),
+              ),
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
