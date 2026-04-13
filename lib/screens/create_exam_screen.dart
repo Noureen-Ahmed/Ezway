@@ -341,7 +341,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          initialValue: _selectedCourseId,
+          value: _selectedCourseId,
           isExpanded: true,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
@@ -434,7 +434,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
-          initialValue: _durationMinutes,
+          value: _durationMinutes,
           decoration: const InputDecoration(
             labelText: 'Duration',
             border: OutlineInputBorder(),
@@ -587,7 +587,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             value: _shuffleQuestions,
             onChanged: (v) => setState(() => _shuffleQuestions = v),
             contentPadding: EdgeInsets.zero,
-            activeThumbColor: const Color(0xFF002147),
+            activeColor: const Color(0xFF002147),
           ),
           // Only show if there are NO written questions (auto-grading only works for MCQ/True-False)
           if (!hasWrittenQuestions)
@@ -598,7 +598,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
               value: _showResultsImmediately,
               onChanged: (v) => setState(() => _showResultsImmediately = v),
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: const Color(0xFF002147),
+              activeColor: const Color(0xFF002147),
             )
           else
             Container(
@@ -627,7 +627,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             value: _isPublished,
             onChanged: (v) => setState(() => _isPublished = v),
             contentPadding: EdgeInsets.zero,
-            activeThumbColor: const Color(0xFF002147),
+            activeColor: const Color(0xFF002147),
           ),
         ],
       ),

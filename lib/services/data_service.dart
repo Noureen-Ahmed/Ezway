@@ -363,23 +363,26 @@ class DataService {
     String type = 'PERSONAL',
   }) async {
     try {
+      final body = <String, dynamic>{
+        'title': title,
+        'priority': priority,
+        'taskType': type,
+      };
+      if (description != null && description.isNotEmpty) body['description'] = description;
+      if (dueDate != null) body['dueDate'] = dueDate.toIso8601String();
+      if (courseId != null) body['courseId'] = courseId;
+
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}/tasks'),
         headers: ApiConfig.authHeaders,
-        body: jsonEncode({
-          'title': title,
-          'description': description,
-          'priority': priority,
-          'dueDate': dueDate?.toIso8601String(),
-          'courseId': courseId,
-          'taskType': type,
-        }),
+        body: jsonEncode(body),
       );
       
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return _parseTask(data['task']);
       }
+      print('[DataService] Create task failed: ${response.statusCode} ${response.body}');
       return null;
     } catch (e) {
       print('[DataService] Create task error: $e');

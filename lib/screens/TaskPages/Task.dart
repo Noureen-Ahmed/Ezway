@@ -9,6 +9,7 @@ import '../../providers/task_provider.dart';
 import '../../providers/app_mode_provider.dart';
 import '../../models/task.dart';
 import '../../models/user.dart';
+import 'AddNote.dart';
 
 class TasksPage extends ConsumerWidget {
   const TasksPage({super.key});
@@ -37,11 +38,15 @@ class TasksPage extends ConsumerWidget {
     final personalTasks = tasks.where((t) => t.taskType == TaskType.personal).toList();
     final courseTasks = tasks.where((t) => t.taskType != TaskType.personal).toList();
     
+    // Helper: check if a task is overdue (deadline has passed)
+    bool isOverdue(Task t) => t.dueDate != null && t.dueDate!.isBefore(DateTime.now());
+    
     // Separate pending and completed
-    final pendingPersonal = personalTasks.where((t) => t.status == TaskStatus.pending).toList();
-    final completedPersonal = personalTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.submitted || t.status == TaskStatus.graded).toList();
-    final pendingCourse = courseTasks.where((t) => t.status == TaskStatus.pending).toList();
-    final completedCourse = courseTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.submitted || t.status == TaskStatus.graded).toList();
+    // Overdue pending tasks are treated as "ended" and moved to completed section
+    final pendingPersonal = personalTasks.where((t) => t.status == TaskStatus.pending && !isOverdue(t)).toList();
+    final completedPersonal = personalTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.submitted || t.status == TaskStatus.graded || (t.status == TaskStatus.pending && isOverdue(t))).toList();
+    final pendingCourse = courseTasks.where((t) => t.status == TaskStatus.pending && !isOverdue(t)).toList();
+    final completedCourse = courseTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.submitted || t.status == TaskStatus.graded || (t.status == TaskStatus.pending && isOverdue(t))).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -131,7 +136,14 @@ class TasksPage extends ConsumerWidget {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton.icon(
-                  onPressed: () => _addTask(context, ref),
+                  onPressed: () {
+                    final appMode = ref.read(appModeControllerProvider);
+                    if (appMode == AppMode.professor){
+                      _addNote(context, ref);
+                      } else {
+                        _addTask(context, ref);
+                        }
+                },
                   icon: const Icon(Icons.add),
                   label: Text(isProfessor ? 'Add New Note' : 'Add New Task', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
@@ -228,6 +240,31 @@ class TasksPage extends ConsumerWidget {
     );
   }
 
+
+  Future<void> _addNote(BuildContext context, WidgetRef ref) async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const AddNotePage()),
+  );
+
+  if (result != null && result is Map) {
+    final task = Task(
+      id: '',
+      title: result['title'] ?? '',
+      description: result['description'],
+      priority: TaskPriority.medium,
+      dueDate: null,
+      status: TaskStatus.pending,
+      createdAt: DateTime.now(),
+      subject: 'Note',
+      taskType: TaskType.personal,
+    );
+
+    ref.read(taskStateProvider.notifier).addTask(task);
+  }
+}
+
+
   Future<void> _addTask(BuildContext context, WidgetRef ref) async {
     final result = await Navigator.push(
       context,
@@ -323,7 +360,8 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCompleted = task.status == TaskStatus.completed || task.status == TaskStatus.submitted || task.status == TaskStatus.graded;
+    final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
+    final isCompleted = task.status == TaskStatus.completed || task.status == TaskStatus.submitted || task.status == TaskStatus.graded || (task.status == TaskStatus.pending && isOverdue);
     final typeColor = _getTypeColor(task.taskType);
 
     return Card(
@@ -340,12 +378,12 @@ class _TaskCard extends ConsumerWidget {
           child: Checkbox(
             value: isCompleted,
             onChanged: (val) {
-              // Prevent unchecking submitted/completed assignments or exams
+              // Prevent unchecking submitted/completed assignments only (exams/quizzes can be unchecked)
               if (val == false && 
-                  (task.taskType == TaskType.assignment || task.taskType == TaskType.exam) && 
+                  task.taskType == TaskType.assignment && 
                   (task.status == TaskStatus.submitted || task.status == TaskStatus.graded || task.status == TaskStatus.completed)) {
                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Marking cannot be removed from submitted tasks.')),
+                    const SnackBar(content: Text('Marking cannot be removed from submitted assignments.')),
                  );
                  return;
               }
@@ -538,7 +576,11 @@ class _TaskCard extends ConsumerWidget {
 
   String _getDueDateText(DateTime date) {
     final now = DateTime.now();
-    if (date.isBefore(now)) return 'Overdue';
+    if (date.isBefore(now)) {
+      // If task is still pending but overdue, it's auto-ended
+      if (task.status == TaskStatus.pending) return 'Ended';
+      return 'Overdue';
+    }
     
     final diff = date.difference(now);
     if (diff.inDays == 0) return 'Today';
