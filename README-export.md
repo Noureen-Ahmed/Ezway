@@ -1,8 +1,4 @@
-# Antigravity Gemini Pro 🚀
 
-Antigravity Gemini Pro is a powerful Python-based intelligent assistant project that leverages the capabilities of the Google Gemini Pro model combined with the `antigravity` framework. It is designed to provide seamless AI interactions, automate complex tasks, and act as a highly capable AI agent for your workflow.
-
----
 
 ## 📋 Prerequisites
 
@@ -25,7 +21,7 @@ cd antigravity-gemini-pro
 ```
 
 ### 2. Create a Virtual Environment
-It is highly recommended to use a virtual environment to keep dependencies isolated so they don't interfere with other Python projects.
+It is highly recommended to use a virtual environment to keep dependencies isolated so they don't interfere with other Python projects.git 
 
 **For Windows:**
 ```bash
@@ -46,25 +42,6 @@ With the virtual environment activated, install the required libraries:
 pip install -r requirements.txt
 ```
 
-### 4. Set Up Your Gemini API Key
-This project requires a Google Gemini API key to function. You need to set it as an environment variable.
-
-**For Windows (Command Prompt):**
-```cmd
-set GEMINI_API_KEY=your_api_key_here
-```
-**For Windows (PowerShell):**
-```powershell
-$env:GEMINI_API_KEY="your_api_key_here"
-```
-
-**For macOS and Linux:**
-```bash
-export GEMINI_API_KEY="your_api_key_here"
-```
-*(Note: To make this permanent, you can add the export command to your `.bashrc` or `.zshrc` file, or use a `.env` file if supported by the project).*
-
----
 
 ## 🚀 How to Run
 
@@ -76,15 +53,23 @@ python main.py
 *(If your main execution file has a different name, replace `main.py` with the correct filename).*
 
 ---
+open 2 terminal :
+first one :
+cd backend
+npm run dev (for db)
+
+second one :
+flutter run -d chrome 
+or ur phone
 
 ## 📂 Project Structure
 
 Here is a brief overview of the main files and folders in this repository:
 
 ```text
-antigravity-gemini-pro/
+Ezway/
 │
-├── main.py              # The main entry point to run the application
+├── backend/             # The main entry point to run the application
 ├── requirements.txt     # List of required Python libraries
 ├── .gitignore           # Specifies files that Git should ignore (like the venv folder)
 ├── README.md            # Project documentation (this file)
@@ -95,14 +80,7 @@ antigravity-gemini-pro/
 
 ---
 
-## 📦 Dependencies
 
-The core libraries powering this project are:
-- `google-generativeai`: The official SDK to interact with the Google Gemini AI models.
-- `antigravity`: The agentic coding framework used to structure the AI's capabilities.
-- *(Any other core libraries will be listed in `requirements.txt`)*
-
----
 
 ## 🛠️ Troubleshooting
 
@@ -112,9 +90,6 @@ Here are some common issues you might run into and how to fix them:
 - **Cause:** The dependencies were not installed properly, or the virtual environment is not activated.
 - **Fix:** Make sure your virtual environment is activated `(venv)` and run `pip install -r requirements.txt` again.
 
-**2. Error: `google.api_core.exceptions.PermissionDenied: API key not valid` or `API_KEY is missing`**
-- **Cause:** The `GEMINI_API_KEY` environment variable is either not set or is incorrect.
-- **Fix:** Double-check that you have entered the exact API key provided by Google AI Studio without any extra spaces, and ensure you ran the correct environment variable setup command for your operating system.
 
 **3. Error: `python: command not found`**
 - **Cause:** Python is not installed, or it is not added to your system's PATH.
