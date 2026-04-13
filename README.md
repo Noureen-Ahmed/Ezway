@@ -5,7 +5,7 @@ A comprehensive Flutter mobile application for Egyptian science faculty students
 ## 📱 Overview
 
 The College Guide app helps students and professors in Egyptian science faculties manage their academic activities including courses, assignments, schedules, and announcements.
-## ENV FILE DONT FORGET 
+## ENV FILE DONT FORGET  env.txt
 
 ## doctor test acc 
 - **doctor@college.edu** 
