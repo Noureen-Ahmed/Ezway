@@ -197,10 +197,10 @@ router.post('/',
   authenticate,
   [
     body('title').trim().notEmpty().withMessage('Title is required'),
-    body('description').optional().isString(),
-    body('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
-    body('dueDate').optional().isISO8601(),
-    body('points').optional().isInt({ min: 0 }),
+    body('description').optional({ nullable: true }).isString(),
+    body('priority').optional({ nullable: true }).isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+    body('dueDate').optional({ nullable: true }).isISO8601(),
+    body('points').optional({ nullable: true }).isInt({ min: 0 }),
     validate
   ],
   async (req, res, next) => {
@@ -212,11 +212,16 @@ router.post('/',
           title,
           description,
           taskType: 'PERSONAL',
-          priority,
+          priority: priority || 'MEDIUM',
           dueDate: dueDate ? new Date(dueDate) : null,
-          points,
+          maxPoints: points || 100,
           createdById: req.user.id,
-
+          status: 'PENDING',
+        },
+        include: {
+          createdBy: {
+            select: { name: true }
+          }
         }
       });
 
@@ -224,7 +229,23 @@ router.post('/',
 
       res.status(201).json({
         success: true,
-        task
+        task: {
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          type: task.taskType,
+          taskType: task.taskType,
+          priority: task.priority,
+          status: task.status || 'PENDING',
+          dueDate: task.dueDate,
+          maxPoints: task.maxPoints,
+          attachments: task.attachments,
+          course: null,
+          createdBy: task.createdBy?.name,
+          createdAt: task.createdAt,
+          completedAt: task.completedAt,
+          submission: null
+        }
       });
     } catch (error) {
       next(error);
@@ -291,7 +312,7 @@ router.put('/:id',
   }
 );
 
-// ============ MARK TASK COMPLETE ============
+// ============ MARK TASK COMPLETE / TOGGLE ============
 
 router.post('/:id/complete',
   authenticate,
@@ -317,11 +338,15 @@ router.post('/:id/complete',
         throw new ApiError(400, 'Assignments must be submitted before marking as complete');
       }
 
+      // Toggle: if already completed, set back to pending; otherwise set to completed
+      const currentStatus = task.status || 'PENDING';
+      const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+
       const updated = await prisma.task.update({
         where: { id },
         data: {
-          status: 'COMPLETED',
-          completedAt: new Date()
+          status: newStatus,
+          completedAt: newStatus === 'COMPLETED' ? new Date() : null
         }
       });
 
