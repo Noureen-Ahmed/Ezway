@@ -130,6 +130,129 @@ router.get('/', optionalAuth, async (req, res, next) => {
   }
 });
 
+// ============ GET COURSE BY CODE (for UMS course bridge) ============
+
+router.get('/by-code/:code',
+  optionalAuth,
+  async (req, res, next) => {
+    try {
+      const { code } = req.params;
+
+      // Bring all courses and match with JS to handle space issues (e.g. COMP 404 vs COMP404)
+      const allCourses = await prisma.course.findMany({
+        include: {
+          instructors: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true, avatar: true }
+              }
+            }
+          },
+          scheduleSlots: true,
+          content: {
+            where: { isPublished: true },
+            orderBy: [{ weekNumber: 'asc' }, { orderIndex: 'asc' }]
+          },
+          tasks: {
+            orderBy: { dueDate: 'asc' },
+            include: {
+              submissions: req.user ? {
+                where: { studentId: req.user.id }
+              } : false
+            }
+          },
+          _count: {
+            select: {
+              enrollments: true,
+              tasks: true,
+              announcements: true
+            }
+          }
+        }
+      });
+      
+      const normalizedQueryCode = code.replace(/\s/g, '').toLowerCase();
+      const course = allCourses.find(c => c.code.replace(/\s/g, '').toLowerCase() === normalizedQueryCode);
+
+      if (!course) {
+        return res.json({ success: false, course: null });
+      }
+
+      res.json({
+        success: true,
+        course: formatCourse(course, req.user ? req.user.id : null)
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============ GET PROFESSOR'S COURSES ============
+
+router.get('/professor/:email',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const { email } = req.params;
+
+      // Find professor
+      const professor = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, role: true }
+      });
+
+      if (!professor || professor.role !== 'PROFESSOR') {
+        throw new ApiError(404, 'Professor not found');
+      }
+
+      // Get assigned courses with full task data
+      const assignments = await prisma.courseInstructor.findMany({
+        where: { userId: professor.id },
+        include: {
+          course: {
+            include: {
+              instructors: {
+                include: {
+                  user: {
+                    select: { name: true, email: true }
+                  }
+                }
+              },
+              scheduleSlots: true,
+              tasks: {
+                orderBy: { dueDate: 'asc' }
+              },
+              _count: {
+                select: {
+                  enrollments: true,
+                  tasks: true,
+                  content: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      res.json({
+        success: true,
+        courses: assignments.map(a => ({
+          ...formatCourse(a.course),
+          isPrimary: a.isPrimary,
+          stats: {
+            students: a.course._count.enrollments,
+            tasks: a.course._count.tasks,
+            content: a.course._count.content
+          }
+        }))
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ GET COURSE BY ID ============
 
 router.get('/:id',
@@ -390,6 +513,8 @@ router.get('/:id/exam-conflicts',
           dueDate: true,
           course: {
             select: {
+              code: true,
+              name: true,
               enrollments: {
                 where: {
                   userId: { in: studentIds },
@@ -404,6 +529,8 @@ router.get('/:id/exam-conflicts',
 
       // Group by date and count unique students
       const conflictsByDate = {};
+      const conflictingCoursesByDate = {};
+
       for (const task of examTasks) {
         if (!task.dueDate) continue;
 
@@ -412,6 +539,12 @@ router.get('/:id/exam-conflicts',
 
         if (!conflictsByDate[dateKey]) {
           conflictsByDate[dateKey] = new Set();
+          conflictingCoursesByDate[dateKey] = new Set();
+        }
+
+        // Add course info
+        if (task.course && task.course.code) {
+          conflictingCoursesByDate[dateKey].add(task.course.code);
         }
 
         // Add all students enrolled in this exam's course
@@ -420,77 +553,18 @@ router.get('/:id/exam-conflicts',
         }
       }
 
-      // Convert sets to counts
+      // Convert sets to detailed objects
       const conflicts = {};
-      for (const [date, studentSet] of Object.entries(conflictsByDate)) {
-        conflicts[date] = studentSet.size;
+      for (const date of Object.keys(conflictsByDate)) {
+        conflicts[date] = {
+          count: conflictsByDate[date].size,
+          courses: Array.from(conflictingCoursesByDate[date])
+        };
       }
 
       res.json({
         success: true,
         conflicts: conflicts
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// ============ GET PROFESSOR'S COURSES ============
-
-router.get('/professor/:email',
-  authenticate,
-  async (req, res, next) => {
-    try {
-      const { email } = req.params;
-
-      // Find professor
-      const professor = await prisma.user.findUnique({
-        where: { email },
-        select: { id: true, role: true }
-      });
-
-      if (!professor || professor.role !== 'PROFESSOR') {
-        throw new ApiError(404, 'Professor not found');
-      }
-
-      // Get assigned courses
-      const assignments = await prisma.courseInstructor.findMany({
-        where: { userId: professor.id },
-        include: {
-          course: {
-            include: {
-              instructors: {
-                include: {
-                  user: {
-                    select: { name: true, email: true }
-                  }
-                }
-              },
-              scheduleSlots: true,
-              _count: {
-                select: {
-                  enrollments: true,
-                  tasks: true,
-                  content: true
-                }
-              }
-            }
-          }
-        }
-      });
-
-      res.json({
-        success: true,
-        courses: assignments.map(a => ({
-          ...formatCourse(a.course),
-          isPrimary: a.isPrimary,
-          stats: {
-            students: a.course._count.enrollments,
-            tasks: a.course._count.tasks,
-            content: a.course._count.content
-          }
-        }))
       });
     } catch (error) {
       next(error);

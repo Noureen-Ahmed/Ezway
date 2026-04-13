@@ -377,6 +377,11 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
             '${_contentTypeLabels[_selectedType]} created! Students have been notified.',
             isError: false);
         _resetForm();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
       }
     } else {
       if (mounted) {
