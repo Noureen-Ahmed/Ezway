@@ -569,6 +569,11 @@ router.post('/:id/unsubmit',
         throw new ApiError(404, 'No submission found for this task');
       }
 
+      // DISABLED: Students are no longer allowed to unsubmit their work.
+      throw new ApiError(403, 'Unsubmitting assignments is disabled. Please contact your professor if you need to resubmit.');
+
+      /* 
+      // Original logic removed as per requirement
       // Delete submission
       await prisma.taskSubmission.delete({
         where: {
@@ -576,16 +581,13 @@ router.post('/:id/unsubmit',
         }
       });
 
-      // If the task was marked as completed, we might want to reset it?
-      // For now, let's just delete the submission. 
-      // The status will fall back to the task's status (PENDING).
-
       logger.info(`✅ Assignment unsubmitted: ${req.user.email} -> Task ID ${id}`);
 
       res.json({
         success: true,
         message: 'Submission removed'
       });
+      */
     } catch (error) {
       next(error);
     }

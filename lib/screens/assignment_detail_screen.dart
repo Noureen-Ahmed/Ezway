@@ -521,14 +521,6 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
         ],
 
         const SizedBox(height: 20),
-        if (_task.status != TaskStatus.graded)
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: (_isUploading || _isSubmitting) ? null : _unsubmitAssignment,
-              child: const Text('Unsubmit'),
-            ),
-          )
       ],
     );
   }
