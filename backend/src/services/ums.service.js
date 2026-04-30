@@ -13,25 +13,51 @@ const UMS_BASE = 'https://ums.asu.edu.eg';
 // Detect Chrome/Chromium path based on platform
 function getChromePath() {
   const { execSync } = require('child_process');
+
+  // Allow override via Railway environment variable
+  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+
   if (process.platform === 'win32') {
     return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   }
-  // Linux: try common paths
+
+  // Nix profile paths — Railway nixpacks installs chromium here
+  const nixProfilePaths = [
+    '/root/.nix-profile/bin/chromium',
+    '/nix/var/nix/profiles/default/bin/chromium',
+  ];
+  for (const p of nixProfilePaths) {
+    try { execSync(`test -f "${p}"`); return p; } catch {}
+  }
+
+  // Search nix store directly (avoids Ubuntu snap stubs in /usr/bin)
+  try {
+    const found = execSync(
+      'find /nix/store -maxdepth 5 -name "chromium" -type f 2>/dev/null | head -1'
+    ).toString().trim();
+    if (found) return found;
+  } catch {}
+
+  // Standard Linux paths — intentionally skip /usr/bin/chromium-browser
+  // because on Ubuntu it is a snap stub that cannot run without snapd
   const linuxPaths = [
     '/usr/bin/chromium',
-    '/usr/bin/chromium-browser',
     '/usr/bin/google-chrome',
     '/usr/bin/google-chrome-stable',
   ];
   for (const p of linuxPaths) {
-    try { execSync(`test -f ${p}`); return p; } catch {}
+    try { execSync(`test -f "${p}"`); return p; } catch {}
   }
-  // Nix store (Railway nixpacks)
+
+  // Last resort: which, but reject snap stubs
   try {
-    const p = execSync('which chromium 2>/dev/null || which chromium-browser 2>/dev/null').toString().trim();
-    if (p) return p;
+    const p = execSync('which chromium 2>/dev/null').toString().trim();
+    if (p && !p.includes('snap')) return p;
   } catch {}
-  throw new Error('Chrome/Chromium not found. Install chromium on this server.');
+
+  throw new Error(
+    'Chromium not found. Set the CHROMIUM_PATH environment variable in your Railway service settings.'
+  );
 }
 
 // ============ BROWSER LOGIN ============

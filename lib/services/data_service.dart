@@ -14,43 +14,66 @@ import '../models/user.dart';
 
 class DataService {
   static Future<User?> login(String email, String password) async {
-    try {
-      final input = email.trim();
-      final inputLower = input.toLowerCase();
-      
-      // Determine if this is a professor login:
-      // Only explicit professor email patterns go to /auth/login
-      // Everything else (SSN, passport IDs, student emails) goes to /ums/login
-      final isDoctor = inputLower.contains('doctor') || 
-                        inputLower.contains('professor') || 
-                        inputLower.contains('dr.');
-      final isStudent = !isDoctor;
-      final endpoint = isStudent ? '/ums/login' : '/auth/login';
-      final body = isStudent 
-          ? {'loginName': input, 'password': password}
-          : {'email': input, 'password': password};
+    final input = email.trim();
+    final inputLower = input.toLowerCase();
 
-      print('[DataService] Routing login to $endpoint for input: $input (isStudent: $isStudent)');
+    // Determine if this is a professor login:
+    // Only explicit professor email patterns go to /auth/login
+    // Everything else (SSN, passport IDs, student emails) goes to /ums/login
+    final isDoctor = inputLower.contains('doctor') ||
+        inputLower.contains('professor') ||
+        inputLower.contains('dr.');
+    final isStudent = !isDoctor;
+    final endpoint = isStudent ? '/ums/login' : '/auth/login';
+    final body = isStudent
+        ? {'loginName': input, 'password': password}
+        : {'email': input, 'password': password};
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-        headers: ApiConfig.headers,
-        body: jsonEncode(body),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['token'] != null) {
-          ApiConfig.setAuthToken(data['token']);
-        }
-        // /api/ums/login already scrapes+saves all data and returns the full user
-        return _parseUser(data['user']);
+    print('[DataService] Routing login to $endpoint for input: $input (isStudent: $isStudent)');
+
+    // UMS login launches headless Chrome on the server — allow up to 2 minutes
+    final timeout = isStudent ? const Duration(seconds: 120) : const Duration(seconds: 30);
+
+    final response = await http
+        .post(
+          Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+          headers: ApiConfig.headers,
+          body: jsonEncode(body),
+        )
+        .timeout(timeout, onTimeout: () {
+      throw Exception(
+          'The university portal is taking too long to respond. Please try again.');
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['token'] != null) {
+        ApiConfig.setAuthToken(data['token']);
       }
-      return null;
-    } catch (e) {
-      print('[DataService] Login error: $e');
-      return null;
+      return _parseUser(data['user']);
     }
+
+    // Surface the real error from the backend
+    String errorMsg = 'Login failed. Please check your credentials and try again.';
+    try {
+      final errorData = jsonDecode(response.body);
+      final raw = errorData['error'];
+      if (raw is String && raw.isNotEmpty) {
+        errorMsg = raw;
+      } else if (raw is Map && raw['message'] != null) {
+        errorMsg = raw['message'].toString();
+      } else if (errorData['message'] != null) {
+        errorMsg = errorData['message'].toString();
+      }
+    } catch (_) {}
+
+    if (response.statusCode == 401) {
+      throw Exception('Invalid UMS credentials. Please check your SSN/Passport and password.');
+    }
+    if (response.statusCode == 502 || response.statusCode == 503) {
+      throw Exception('Cannot reach the university portal right now. Please try again later.');
+    }
+    throw Exception(errorMsg);
   }
   
   /// Register new user
