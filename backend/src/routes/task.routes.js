@@ -11,6 +11,102 @@ const { authenticate } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
+// ============ GET PROFESSOR EXAM OVERVIEW ============
+// Returns exams/assignments created by professor with enrolled student counts
+
+router.get('/professor-exams',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      // Get all exams and assignments created by this professor
+      const exams = await prisma.task.findMany({
+        where: {
+          createdById: req.user.id,
+          taskType: { in: ['EXAM', 'ASSIGNMENT', 'QUIZ', 'LAB'] }
+        },
+        include: {
+          course: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              // Count enrolled students for this course
+              _count: {
+                select: {
+                  enrollments: {
+                    where: { status: 'ENROLLED' }
+                  }
+                }
+              }
+            }
+          },
+          // Count submissions for this exam
+          _count: {
+            select: {
+              submissions: true
+            }
+          }
+        },
+        orderBy: [
+          { dueDate: 'asc' }
+        ]
+      });
+
+      // Build daily summary: date -> total enrolled students who have exams
+      const dailySummaryMap = {};
+
+      const formattedExams = exams.map(e => {
+        const enrolledCount = e.course?._count?.enrollments ?? 0;
+        const submissionCount = e._count?.submissions ?? 0;
+
+        // Group by exam date (day only)
+        if (e.dueDate) {
+          const dayKey = e.dueDate.toISOString().split('T')[0];
+          if (!dailySummaryMap[dayKey]) {
+            dailySummaryMap[dayKey] = { date: dayKey, totalStudents: 0, exams: [] };
+          }
+          dailySummaryMap[dayKey].totalStudents += enrolledCount;
+          dailySummaryMap[dayKey].exams.push(e.id);
+        }
+
+        return {
+          id: e.id,
+          title: e.title,
+          description: e.description,
+          taskType: e.taskType,
+          type: e.taskType,
+          priority: e.priority,
+          status: e.status,
+          dueDate: e.dueDate,
+          maxPoints: e.maxPoints,
+          published: e.published,
+          questions: e.questions,
+          course: e.course ? {
+            id: e.course.id,
+            code: e.course.code,
+            name: e.course.name
+          } : null,
+          enrolledStudentCount: enrolledCount,
+          submissionCount: submissionCount,
+          createdAt: e.createdAt,
+        };
+      });
+
+      const dailySummary = Object.values(dailySummaryMap).sort((a, b) =>
+        new Date(a.date) - new Date(b.date)
+      );
+
+      res.json({
+        success: true,
+        exams: formattedExams,
+        dailySummary // [{date, totalStudents, exams:[ids]}]
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ GET ALL TASKS ============
 
 router.get('/',
@@ -197,10 +293,10 @@ router.post('/',
   authenticate,
   [
     body('title').trim().notEmpty().withMessage('Title is required'),
-    body('description').optional().isString(),
-    body('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
-    body('dueDate').optional().isISO8601(),
-    body('points').optional().isInt({ min: 0 }),
+    body('description').optional({ nullable: true }).isString(),
+    body('priority').optional({ nullable: true }).isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+    body('dueDate').optional({ nullable: true }).isISO8601(),
+    body('points').optional({ nullable: true }).isInt({ min: 0 }),
     validate
   ],
   async (req, res, next) => {
@@ -212,11 +308,16 @@ router.post('/',
           title,
           description,
           taskType: 'PERSONAL',
-          priority,
+          priority: priority || 'MEDIUM',
           dueDate: dueDate ? new Date(dueDate) : null,
-          points,
+          maxPoints: points || 100,
           createdById: req.user.id,
-
+          status: 'PENDING',
+        },
+        include: {
+          createdBy: {
+            select: { name: true }
+          }
         }
       });
 
@@ -224,7 +325,23 @@ router.post('/',
 
       res.status(201).json({
         success: true,
-        task
+        task: {
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          type: task.taskType,
+          taskType: task.taskType,
+          priority: task.priority,
+          status: task.status || 'PENDING',
+          dueDate: task.dueDate,
+          maxPoints: task.maxPoints,
+          attachments: task.attachments,
+          course: null,
+          createdBy: task.createdBy?.name,
+          createdAt: task.createdAt,
+          completedAt: task.completedAt,
+          submission: null
+        }
       });
     } catch (error) {
       next(error);
@@ -291,7 +408,7 @@ router.put('/:id',
   }
 );
 
-// ============ MARK TASK COMPLETE ============
+// ============ MARK TASK COMPLETE / TOGGLE ============
 
 router.post('/:id/complete',
   authenticate,
@@ -317,11 +434,15 @@ router.post('/:id/complete',
         throw new ApiError(400, 'Assignments must be submitted before marking as complete');
       }
 
+      // Toggle: if already completed, set back to pending; otherwise set to completed
+      const currentStatus = task.status || 'PENDING';
+      const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+
       const updated = await prisma.task.update({
         where: { id },
         data: {
-          status: 'COMPLETED',
-          completedAt: new Date()
+          status: newStatus,
+          completedAt: newStatus === 'COMPLETED' ? new Date() : null
         }
       });
 

@@ -377,6 +377,11 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
             '${_contentTypeLabels[_selectedType]} created! Students have been notified.',
             isError: false);
         _resetForm();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
       }
     } else {
       if (mounted) {
@@ -599,7 +604,7 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            initialValue: _selectedCourseId,
+            value: _selectedCourseId,
             isExpanded: true,
             decoration: _roundedFieldDecoration.copyWith(
               hintText: 'Choose a course',

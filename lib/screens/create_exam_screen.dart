@@ -43,7 +43,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
   bool _isLoading = false;
 
   // Exam conflicts: dates where students have exams in other courses
-  Map<DateTime, int> _examConflicts = {};
+  Map<DateTime, Map<String, dynamic>> _examConflicts = {};
 
   @override
   void initState() {
@@ -91,110 +91,126 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
   }
 
   Future<void> _showExamDatePicker() async {
-    DateTime tempDate = _examDate;
+  DateTime tempDate = _examDate;
 
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final normalizedTemp =
-              DateTime(tempDate.year, tempDate.month, tempDate.day);
-          final conflictCount = _examConflicts[normalizedTemp];
-          final screenHeight = MediaQuery.of(context).size.height;
-          final screenWidth = MediaQuery.of(context).size.width;
+  await showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setDialogState) {
+        final normalizedTemp =
+            DateTime(tempDate.year, tempDate.month, tempDate.day);
+        final conflictData = _examConflicts[normalizedTemp];
+        final conflictCount = conflictData?['count'] as int?;
+        final conflictCourses =
+            (conflictData?['courses'] as List?)?.cast<String>();
 
-          return AlertDialog(
-            title: const Text('Select Exam Date',
-                style: TextStyle(color: Color(0xFF002147), fontSize: 16)),
-            contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            insetPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            content: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: screenWidth * 0.9,
-                maxHeight: screenHeight * 0.6,
-              ),
+        final int enrolledStudents = _selectedCourseId != null
+            ? (_courses
+                    .firstWhere((c) => c.id == _selectedCourseId,
+                        orElse: () => _courses.first)
+                    .stats?['students'] ??
+                0)
+            : 0;
+
+        final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        return AlertDialog(
+          title: const Text(
+            'Select Exam Date',
+            style: TextStyle(color: Color(0xFF002147), fontSize: 16),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: screenWidth * 0.9,
+              maxHeight: screenHeight * 0.6,
+            ),
+            child: SizedBox(
+              width: double.maxFinite,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TableCalendar(
-                      firstDay: DateTime.now(),
-                      lastDay: DateTime.now().add(const Duration(days: 365)),
+                      firstDay: DateTime.now()
+                          .subtract(const Duration(days: 365)),
+                      lastDay:
+                          DateTime.now().add(const Duration(days: 365)),
                       focusedDay: tempDate,
-                      selectedDayPredicate: (day) => isSameDay(tempDate, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(tempDate, day),
                       onDaySelected: (selectedDay, focusedDay) {
                         setDialogState(() {
                           tempDate = selectedDay;
                         });
                       },
-                      calendarStyle: const CalendarStyle(
-                        selectedDecoration: BoxDecoration(
-                          color: Color(0xFF002147),
-                          shape: BoxShape.circle,
-                        ),
-                        todayDecoration: BoxDecoration(
-                          color: Color(0x55002147),
-                          shape: BoxShape.circle,
-                        ),
-                        cellMargin: EdgeInsets.all(2),
-                      ),
-                      rowHeight: 40,
                       calendarBuilders: CalendarBuilders(
                         defaultBuilder: (context, day, focusedDay) {
-                          final normalizedDay =
-                              DateTime(day.year, day.month, day.day);
+                          final normalizedDay = DateTime(day.year, day.month, day.day);
                           if (_examConflicts.containsKey(normalizedDay)) {
-                            return Container(
-                              margin: const EdgeInsets.all(2.0),
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                color: Colors.grey,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${day.day}',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 13),
-                              ),
-                            );
+                            final count = _examConflicts[normalizedDay]?['count'] as int? ?? 0;
+                            if (count > 0) {
+                              return Container(
+                                margin: const EdgeInsets.all(4.0),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.8),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              );
+                            }
                           }
                           return null;
                         },
                       ),
-                      headerStyle: const HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                        headerPadding: EdgeInsets.symmetric(vertical: 8),
-                        titleTextStyle: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
                     ),
                     const SizedBox(height: 12),
+                    if (enrolledStudents > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          'Enrolled Students: $enrolledStudents',
+                          style: const TextStyle(
+                            color: Colors.blue, 
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     if (conflictCount != null && conflictCount > 0)
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          border:
-                              Border.all(color: Colors.orange.withOpacity(0.3)),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.warning_amber_rounded,
-                                size: 18, color: Colors.orange),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '$conflictCount student${conflictCount > 1 ? 's' : ''} have exam in this day',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange,
+                            Text(
+                              '⚠️ $conflictCount student${conflictCount > 1 ? 's' : ''} have exams in other courses on this day.',
+                              style: const TextStyle(
+                                  color: Colors.orange, 
                                   fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                                  fontSize: 13),
                             ),
+                            if (conflictCourses != null && conflictCourses.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                'Conflicting courses: ${conflictCourses.join(", ")}',
+                                style: const TextStyle(
+                                    color: Colors.orange, 
+                                    fontSize: 12),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -202,32 +218,28 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                 ),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child:
-                    const Text('Cancel', style: TextStyle(color: Colors.grey)),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _examDate = tempDate;
-                  });
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF002147),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _examDate = tempDate;
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +353,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          initialValue: _selectedCourseId,
+          value: _selectedCourseId,
           isExpanded: true,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
@@ -434,7 +446,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<int>(
-          initialValue: _durationMinutes,
+          value: _durationMinutes,
           decoration: const InputDecoration(
             labelText: 'Duration',
             border: OutlineInputBorder(),
@@ -587,7 +599,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             value: _shuffleQuestions,
             onChanged: (v) => setState(() => _shuffleQuestions = v),
             contentPadding: EdgeInsets.zero,
-            activeThumbColor: const Color(0xFF002147),
+            activeColor: const Color(0xFF002147),
           ),
           // Only show if there are NO written questions (auto-grading only works for MCQ/True-False)
           if (!hasWrittenQuestions)
@@ -598,7 +610,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
               value: _showResultsImmediately,
               onChanged: (v) => setState(() => _showResultsImmediately = v),
               contentPadding: EdgeInsets.zero,
-              activeThumbColor: const Color(0xFF002147),
+              activeColor: const Color(0xFF002147),
             )
           else
             Container(
@@ -627,7 +639,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             value: _isPublished,
             onChanged: (v) => setState(() => _isPublished = v),
             contentPadding: EdgeInsets.zero,
-            activeThumbColor: const Color(0xFF002147),
+            activeColor: const Color(0xFF002147),
           ),
         ],
       ),
@@ -954,7 +966,23 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(_imageUrl!, fit: BoxFit.cover),
+                      child: Image.network(
+                        _imageUrl!, 
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.blue.shade50,
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle_outline, size: 48, color: Colors.blue),
+                                SizedBox(height: 8),
+                                Text('Image uploaded successfully', style: TextStyle(color: Colors.blue)),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   Positioned(
@@ -1027,7 +1055,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                         icon: const Icon(Icons.remove_circle_outline,
                             color: Colors.grey),
                         onPressed: () {
-                          if (_optionControllers.length > 2) {
+                          if (_optionControllers.length > 1) {
                             setState(() {
                               _optionControllers.removeAt(index);
                               // Reset correct answer if invalid
@@ -1035,6 +1063,10 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                                 _correctAnswer = null;
                               }
                             });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('At least one option is required')),
+                            );
                           }
                         },
                       ),

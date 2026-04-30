@@ -9,17 +9,20 @@ import '../../providers/task_provider.dart';
 import '../../providers/app_mode_provider.dart';
 import '../../models/task.dart';
 import '../../models/user.dart';
+import '../../services/data_service.dart';
+import 'AddNote.dart';
+import 'package:intl/intl.dart';
 
+// ── Main page ────────────────────────────────────────────────────────────────
 class TasksPage extends ConsumerWidget {
   const TasksPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Check if professor mode
     final appMode = ref.watch(appModeControllerProvider);
     final isProfessor = appMode == AppMode.professor;
-    final pageTitle = isProfessor ? 'Notes' : 'Tasks';
-    
+    final pageTitle = isProfessor ? 'Notes & Exams' : 'Tasks';
+
     // Use direct provider (not async) for instant updates
     final taskState = ref.watch(taskStateProvider);
     final tasks = List<Task>.from(taskState.tasks);
@@ -34,14 +37,36 @@ class TasksPage extends ConsumerWidget {
     final error = taskState.error;
 
     // Separate personal and course tasks
-    final personalTasks = tasks.where((t) => t.taskType == TaskType.personal).toList();
-    final courseTasks = tasks.where((t) => t.taskType != TaskType.personal).toList();
-    
-    // Separate pending and completed
-    final pendingPersonal = personalTasks.where((t) => t.status == TaskStatus.pending).toList();
-    final completedPersonal = personalTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.submitted || t.status == TaskStatus.graded).toList();
-    final pendingCourse = courseTasks.where((t) => t.status == TaskStatus.pending).toList();
-    final completedCourse = courseTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.submitted || t.status == TaskStatus.graded).toList();
+    final personalTasks =
+        tasks.where((t) => t.taskType == TaskType.personal).toList();
+    final courseTasks =
+        tasks.where((t) => t.taskType != TaskType.personal).toList();
+
+    // Helper: check if a task is overdue
+    bool isOverdue(Task t) =>
+        t.dueDate != null && t.dueDate!.isBefore(DateTime.now());
+
+    // Pending / completed splits
+    final pendingPersonal = personalTasks
+        .where((t) => t.status == TaskStatus.pending && !isOverdue(t))
+        .toList();
+    final completedPersonal = personalTasks
+        .where((t) =>
+            t.status == TaskStatus.completed ||
+            t.status == TaskStatus.submitted ||
+            t.status == TaskStatus.graded ||
+            (t.status == TaskStatus.pending && isOverdue(t)))
+        .toList();
+    final pendingCourse = courseTasks
+        .where((t) => t.status == TaskStatus.pending && !isOverdue(t))
+        .toList();
+    final completedCourse = courseTasks
+        .where((t) =>
+            t.status == TaskStatus.completed ||
+            t.status == TaskStatus.submitted ||
+            t.status == TaskStatus.graded ||
+            (t.status == TaskStatus.pending && isOverdue(t)))
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -51,7 +76,8 @@ class TasksPage extends ConsumerWidget {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
         ),
         actions: [
           if (isLoading)
@@ -60,20 +86,23 @@ class TasksPage extends ConsumerWidget {
               child: SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
               ),
             ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(taskStateProvider.notifier).fetchTasks(force: true),
+        onRefresh: () async {
+          await ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Error Banner
+              // ── Error Banner ──────────────────────────────────────────────
               if (error != null)
                 Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -85,17 +114,18 @@ class TasksPage extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                      Icon(Icons.error_outline,
+                          color: Colors.red.shade700, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          error,
-                          style: TextStyle(color: Colors.red.shade700, fontSize: 13),
-                        ),
+                        child: Text(error,
+                            style: TextStyle(
+                                color: Colors.red.shade700, fontSize: 13)),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => ref.read(taskStateProvider.notifier).clearError(),
+                        onPressed: () =>
+                            ref.read(taskStateProvider.notifier).clearError(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -103,107 +133,143 @@ class TasksPage extends ConsumerWidget {
                   ),
                 ),
 
-              // Stats Cards
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Pending Tasks',
-                      value: (pendingPersonal.length + pendingCourse.length).toString(),
-                      color: const Color(0xFF3B82F6),
+              // ── Stats Cards (only for students) ───────────────────────
+              if (!isProfessor) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        label: 'Pending Tasks',
+                        value: (pendingPersonal.length + pendingCourse.length)
+                            .toString(),
+                        color: const Color(0xFF3B82F6),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Completed',
-                      value: (completedPersonal.length + completedCourse.length).toString(),
-                      color: const Color(0xFF10B981),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatCard(
+                        label: 'Completed',
+                        value:
+                            (completedPersonal.length + completedCourse.length)
+                                .toString(),
+                        color: const Color(0xFF10B981),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Add New Task/Note Button
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
+
+              // ── Add New Task/Note Button ───────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton.icon(
-                  onPressed: () => _addTask(context, ref),
+                  onPressed: () {
+                    final mode = ref.read(appModeControllerProvider);
+                    if (mode == AppMode.professor) {
+                      _addNote(context, ref);
+                    } else {
+                      _addTask(context, ref);
+                    }
+                  },
                   icon: const Icon(Icons.add),
-                  label: Text(isProfessor ? 'Add New Note' : 'Add New Task', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  label: Text(
+                    isProfessor ? 'Add New Note' : 'Add New Task',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF002147),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
-              // Pending Section
+
+              // ── Pending Section ────────────────────────────────────────
               Text(
                 isProfessor ? 'Pending Notes' : 'Pending Tasks',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937)),
               ),
               const SizedBox(height: 12),
-              
+
               if (pendingPersonal.isEmpty && pendingCourse.isEmpty)
-                _buildEmptyState(isProfessor ? 'No pending notes' : 'No pending tasks')
+                _buildEmptyState(
+                    isProfessor ? 'No pending notes' : 'No pending tasks')
               else ...[
                 ...pendingCourse.map((task) => _TaskCard(
-                  key: ValueKey(task.id),
-                  task: task,
-                  isPersonal: false,
-                  onToggle: () => ref.read(taskStateProvider.notifier).toggleTaskStatus(task.id),
-                  onDelete: null,
-                  onEdit: null,
-                )),
+                      key: ValueKey(task.id),
+                      task: task,
+                      isPersonal: false,
+                      onToggle: () => ref
+                          .read(taskStateProvider.notifier)
+                          .toggleTaskStatus(task.id),
+                      onDelete: null,
+                      onEdit: null,
+                    )),
                 ...pendingPersonal.map((task) => _TaskCard(
-                  key: ValueKey(task.id),
-                  task: task,
-                  isPersonal: true,
-                  onToggle: () => ref.read(taskStateProvider.notifier).toggleTaskStatus(task.id),
-                  onDelete: () => ref.read(taskStateProvider.notifier).deleteTask(task.id),
-                  onEdit: () => _editTask(context, ref, task),
-                )),
+                      key: ValueKey(task.id),
+                      task: task,
+                      isPersonal: true,
+                      onToggle: () => ref
+                          .read(taskStateProvider.notifier)
+                          .toggleTaskStatus(task.id),
+                      onDelete: () => ref
+                          .read(taskStateProvider.notifier)
+                          .deleteTask(task.id),
+                      onEdit: () => _editTask(context, ref, task),
+                    )),
               ],
-              
+
               const SizedBox(height: 32),
-              
-              // Completed Section
+
+              // ── Completed Section ──────────────────────────────────────
               Text(
                 isProfessor ? 'Completed Notes' : 'Completed Tasks',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937)),
               ),
               const SizedBox(height: 12),
-              
+
               if (completedPersonal.isEmpty && completedCourse.isEmpty)
-                _buildEmptyState(isProfessor ? 'No completed notes' : 'No completed tasks')
+                _buildEmptyState(
+                    isProfessor ? 'No completed notes' : 'No completed tasks')
               else ...[
                 ...completedCourse.map((task) => _TaskCard(
-                  key: ValueKey(task.id),
-                  task: task,
-                  isPersonal: false,
-                  onToggle: () => ref.read(taskStateProvider.notifier).toggleTaskStatus(task.id),
-                  onDelete: null,
-                  onEdit: null,
-                )),
+                      key: ValueKey(task.id),
+                      task: task,
+                      isPersonal: false,
+                      onToggle: () => ref
+                          .read(taskStateProvider.notifier)
+                          .toggleTaskStatus(task.id),
+                      onDelete: null,
+                      onEdit: null,
+                    )),
                 ...completedPersonal.map((task) => _TaskCard(
-                  key: ValueKey(task.id),
-                  task: task,
-                  isPersonal: true,
-                  onToggle: () => ref.read(taskStateProvider.notifier).toggleTaskStatus(task.id),
-                  onDelete: () => ref.read(taskStateProvider.notifier).deleteTask(task.id),
-                  onEdit: null,
-                )),
+                      key: ValueKey(task.id),
+                      task: task,
+                      isPersonal: true,
+                      onToggle: () => ref
+                          .read(taskStateProvider.notifier)
+                          .toggleTaskStatus(task.id),
+                      onDelete: () => ref
+                          .read(taskStateProvider.notifier)
+                          .deleteTask(task.id),
+                      onEdit: null,
+                    )),
               ],
-              
-              const SizedBox(height: 100), // Bottom padding
+
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -228,6 +294,29 @@ class TasksPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _addNote(BuildContext context, WidgetRef ref) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddNotePage()),
+    );
+
+    if (result != null && result is Map) {
+      final task = Task(
+        id: '',
+        title: result['title'] ?? '',
+        description: result['description'],
+        priority: TaskPriority.medium,
+        dueDate: null,
+        status: TaskStatus.pending,
+        createdAt: DateTime.now(),
+        subject: 'Note',
+        taskType: TaskType.personal,
+      );
+
+      ref.read(taskStateProvider.notifier).addTask(task);
+    }
+  }
+
   Future<void> _addTask(BuildContext context, WidgetRef ref) async {
     final result = await Navigator.push(
       context,
@@ -246,12 +335,13 @@ class TasksPage extends ConsumerWidget {
         subject: 'Personal',
         taskType: TaskType.personal,
       );
-      
+
       ref.read(taskStateProvider.notifier).addTask(task);
     }
   }
 
-  Future<void> _editTask(BuildContext context, WidgetRef ref, Task task) async {
+  Future<void> _editTask(
+      BuildContext context, WidgetRef ref, Task task) async {
     final updatedTask = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => TaskDetailsPage(task: task)),
@@ -264,19 +354,25 @@ class TasksPage extends ConsumerWidget {
 
   TaskPriority _parsePriority(String? p) {
     switch (p?.toLowerCase()) {
-      case 'high': return TaskPriority.high;
-      case 'low': return TaskPriority.low;
-      default: return TaskPriority.medium;
+      case 'high':
+        return TaskPriority.high;
+      case 'low':
+        return TaskPriority.low;
+      default:
+        return TaskPriority.medium;
     }
   }
 }
 
+
+// ── Stat Card ────────────────────────────────────────────────────────────────
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
 
-  const _StatCard({required this.label, required this.value, required this.color});
+  const _StatCard(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +387,8 @@ class _StatCard extends StatelessWidget {
         children: [
           Text(
             value,
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+                fontSize: 28, fontWeight: FontWeight.bold, color: color),
           ),
           const SizedBox(height: 4),
           Text(
@@ -305,6 +402,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
+// ── Task Card ────────────────────────────────────────────────────────────────
 class _TaskCard extends ConsumerWidget {
   final Task task;
   final bool isPersonal;
@@ -323,7 +421,12 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isCompleted = task.status == TaskStatus.completed || task.status == TaskStatus.submitted || task.status == TaskStatus.graded;
+    final isOverdue =
+        task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
+    final isCompleted = task.status == TaskStatus.completed ||
+        task.status == TaskStatus.submitted ||
+        task.status == TaskStatus.graded ||
+        (task.status == TaskStatus.pending && isOverdue);
     final typeColor = _getTypeColor(task.taskType);
 
     return Card(
@@ -334,42 +437,61 @@ class _TaskCard extends ConsumerWidget {
         side: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Transform.scale(
           scale: 1.2,
           child: Checkbox(
             value: isCompleted,
             onChanged: (val) {
-              // Prevent unchecking submitted/completed assignments or exams
-              if (val == false && 
-                  (task.taskType == TaskType.assignment || task.taskType == TaskType.exam) && 
-                  (task.status == TaskStatus.submitted || task.status == TaskStatus.graded || task.status == TaskStatus.completed)) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Marking cannot be removed from submitted tasks.')),
-                 );
-                 return;
+              // Prevent unchecking submitted/graded ASSIGNMENTS only
+              if (val == false &&
+                  task.taskType == TaskType.assignment &&
+                  (task.status == TaskStatus.submitted ||
+                      task.status == TaskStatus.graded ||
+                      task.status == TaskStatus.completed)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text(
+                          'Marking cannot be removed from submitted assignments.')),
+                );
+                return;
               }
 
-              if (val == true && 
-                  task.taskType == TaskType.assignment && 
-                  task.status != TaskStatus.submitted && 
+              // Prevent toggling overdue tasks (they've expired)
+              if (task.status == TaskStatus.pending && isOverdue) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('This task has expired and cannot be changed.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              if (val == true &&
+                  task.taskType == TaskType.assignment &&
+                  task.status != TaskStatus.submitted &&
                   task.status != TaskStatus.completed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Please submit your assignment to mark it as complete.'),
+                    content: Text(
+                        'Please submit your assignment to mark it as complete.'),
                     backgroundColor: Colors.orange,
                   ),
                 );
-                // Navigate to assignment details
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AssignmentDetailScreen(task: task)),
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          AssignmentDetailScreen(task: task)),
                 );
                 return;
               }
               onToggle();
             },
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             activeColor: const Color(0xFF10B981),
           ),
         ),
@@ -377,21 +499,27 @@ class _TaskCard extends ConsumerWidget {
           if (task.taskType == TaskType.assignment) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => AssignmentDetailScreen(task: task)),
-            ).then((_) => ref.read(taskStateProvider.notifier).fetchTasks(force: true));
+              MaterialPageRoute(
+                  builder: (context) => AssignmentDetailScreen(task: task)),
+            ).then((_) =>
+                ref.read(taskStateProvider.notifier).fetchTasks(force: true));
           } else if (task.taskType == TaskType.exam) {
-            if (task.status == TaskStatus.submitted || task.status == TaskStatus.graded || task.status == TaskStatus.completed) {
-               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('You have already submitted this exam.')),
-               );
+            if (task.status == TaskStatus.submitted ||
+                task.status == TaskStatus.graded ||
+                task.status == TaskStatus.completed) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('You have already submitted this exam.')),
+              );
             } else {
-               Navigator.of(context, rootNavigator: true).push(
-                MaterialPageRoute(builder: (context) => ExamRunnerScreen(
-                  taskId: task.id, 
-                  courseId: task.courseId ?? '', 
-                )),
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(
+                    builder: (context) => ExamRunnerScreen(
+                          taskId: task.id,
+                          courseId: task.courseId ?? '',
+                        )),
               ).then((_) {
-                 ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+                ref.read(taskStateProvider.notifier).fetchTasks(force: true);
               });
             }
           } else {
@@ -400,18 +528,43 @@ class _TaskCard extends ConsumerWidget {
             } else {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TaskDetailsPage(task: task)),
-              ).then((_) => ref.read(taskStateProvider.notifier).fetchTasks(force: true));
+                MaterialPageRoute(
+                    builder: (context) => TaskDetailsPage(task: task)),
+              ).then((_) =>
+                  ref.read(taskStateProvider.notifier).fetchTasks(force: true));
             }
           }
         },
-        title: Text(
-          task.title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            decoration: isCompleted ? TextDecoration.lineThrough : null,
-            color: isCompleted ? Colors.grey : const Color(0xFF1F2937),
-          ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                task.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  decoration: isCompleted ? TextDecoration.lineThrough : null,
+                  color: isCompleted ? Colors.grey : const Color(0xFF1F2937),
+                ),
+              ),
+            ),
+            if (task.status == TaskStatus.pending && isOverdue)
+              Container(
+                margin: const EdgeInsets.only(left: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Expired',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade700,
+                  ),
+                ),
+              ),
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,16 +572,19 @@ class _TaskCard extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(
               task.subject,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+              style:
+                  const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
             ),
             if (task.dueDate != null) ...[
               const SizedBox(height: 4),
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(task.priority).withValues(alpha: 0.1),
+                      color: _getPriorityColor(task.priority)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -444,11 +600,12 @@ class _TaskCard extends ConsumerWidget {
                   Icon(
                     Icons.access_time,
                     size: 14,
-                    color: _getDueDateColor(task.dueDate!, task.status),
+                    color:
+                        _getDueDateColor(task.dueDate!, task.status),
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _getDueDateText(task.dueDate!),
+                    _getDueDateText(task.dueDate!, task.status),
                     style: TextStyle(
                       fontSize: 12,
                       color: _getDueDateColor(task.dueDate!, task.status),
@@ -458,10 +615,12 @@ class _TaskCard extends ConsumerWidget {
                 ],
               ),
             ],
-            if (task.status == TaskStatus.graded && task.submission != null)
+            if (task.status == TaskStatus.graded &&
+                task.submission != null)
               Container(
                 margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
@@ -484,7 +643,8 @@ class _TaskCard extends ConsumerWidget {
                   if (onEdit != null)
                     const PopupMenuItem(value: 'edit', child: Text('Edit')),
                   if (onDelete != null)
-                    const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    const PopupMenuItem(
+                        value: 'delete', child: Text('Delete')),
                 ],
                 onSelected: (value) {
                   if (value == 'delete') onDelete?.call();
@@ -493,7 +653,8 @@ class _TaskCard extends ConsumerWidget {
               )
             : !isPersonal
                 ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: typeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -514,39 +675,49 @@ class _TaskCard extends ConsumerWidget {
 
   Color _getTypeColor(TaskType type) {
     switch (type) {
-      case TaskType.exam: return Colors.red;
-      case TaskType.assignment: return Colors.orange;
-      case TaskType.lab: return Colors.blue;
-      default: return const Color(0xFF6B7280);
+      case TaskType.exam:
+        return Colors.red;
+      case TaskType.assignment:
+        return Colors.orange;
+      case TaskType.lab:
+        return Colors.blue;
+      default:
+        return const Color(0xFF6B7280);
     }
   }
 
   Color _getPriorityColor(TaskPriority priority) {
     switch (priority) {
-      case TaskPriority.high: return Colors.red;
-      case TaskPriority.medium: return Colors.orange;
-      case TaskPriority.low: return Colors.green;
+      case TaskPriority.high:
+        return Colors.red;
+      case TaskPriority.medium:
+        return Colors.orange;
+      case TaskPriority.low:
+        return Colors.green;
     }
   }
 
   Color _getDueDateColor(DateTime due, TaskStatus status) {
-    if (status == TaskStatus.completed || status == TaskStatus.submitted) return Colors.grey;
+    if (status == TaskStatus.completed ||
+        status == TaskStatus.submitted) return Colors.grey;
     if (due.isBefore(DateTime.now())) return Colors.red;
-    if (due.isBefore(DateTime.now().add(const Duration(days: 2)))) return Colors.orange[800]!;
+    if (due.isBefore(DateTime.now().add(const Duration(days: 2))))
+      return Colors.orange[800]!;
     return const Color(0xFF6B7280);
   }
 
-  String _getDueDateText(DateTime date) {
+  String _getDueDateText(DateTime date, TaskStatus status) {
     final now = DateTime.now();
-    if (date.isBefore(now)) return 'Overdue';
-    
+    if (date.isBefore(now)) {
+      if (status == TaskStatus.pending) return 'Ended';
+      return 'Overdue';
+    }
+
     final diff = date.difference(now);
     if (diff.inDays == 0) return 'Today';
     if (diff.inDays == 1) return 'Tomorrow';
     if (diff.inDays < 7) return '${diff.inDays} days';
-    
+
     return '${date.month}/${date.day}';
   }
-
-
 }

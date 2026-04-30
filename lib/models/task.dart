@@ -189,7 +189,8 @@ class Task {
     return Task(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
-      subject: json['course']?['name'] ?? json['courseName'] ?? 'General',
+      subject: json['course']?['name'] ?? json['courseName'] ?? 
+               ((json['taskType'] ?? json['type'] ?? '').toString().toUpperCase() == 'PERSONAL' ? 'Personal Note' : 'General'),
       dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString()) : null,
       status: status,
       priority: priority,
