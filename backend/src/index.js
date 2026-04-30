@@ -75,6 +75,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ============ ROUTES ============
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'Ezway API is running', version: '1.0.0' });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
