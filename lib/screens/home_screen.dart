@@ -582,7 +582,12 @@ class _TaskItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
+    // If we're forcing strict filtering on the UI side as well:
+    if (task.dueDate != null && task.dueDate!.isBefore(DateTime.now())) {
+      return const SizedBox.shrink();
+    }
+
+    final isOverdue = false; // It physically can't be overdue here without being hidden
     final type = task.taskType.name;
 
     return GestureDetector(

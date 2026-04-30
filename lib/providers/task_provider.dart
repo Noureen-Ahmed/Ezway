@@ -31,8 +31,19 @@ class TaskState {
     );
   }
 
-  List<Task> get pendingTasks => tasks.where((t) => t.status == TaskStatus.pending).toList();
-  List<Task> get completedTasks => tasks.where((t) => t.status == TaskStatus.completed).toList();
+  List<Task> get pendingTasks => tasks.where((t) {
+    if (t.status != TaskStatus.pending) return false;
+    // Exclude overdue tasks — they are expired and should appear in completed
+    if (t.dueDate != null && t.dueDate!.isBefore(DateTime.now())) return false;
+    return true;
+  }).toList();
+  List<Task> get completedTasks => tasks.where((t) => 
+    t.status == TaskStatus.completed || 
+    t.status == TaskStatus.submitted || 
+    t.status == TaskStatus.graded ||
+    // Expired tasks count as completed
+    (t.status == TaskStatus.pending && t.dueDate != null && t.dueDate!.isBefore(DateTime.now()))
+  ).toList();
   List<Task> get personalTasks => tasks.where((t) => t.taskType == TaskType.personal).toList();
   List<Task> get courseTasks => tasks.where((t) => t.taskType != TaskType.personal).toList();
 }

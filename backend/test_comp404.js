@@ -2,10 +2,11 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function run() {
-  const courses = await prisma.course.findMany({
-    include: { tasks: true }
+  const c = await prisma.course.findUnique({
+    where: { id: 'cmnhel6fz0001114hhqzdn415' },
+    include: { _count: { select: { enrollments: true } } }
   });
-  console.log(JSON.stringify(courses, null, 2));
+  console.log(c);
 }
 
 run().catch(console.error).finally(() => prisma.$disconnect());

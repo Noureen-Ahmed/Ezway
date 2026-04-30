@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3"]
+nixPkgs = ["nodejs_20", "python3", "chromium", "nss", "nspr", "atk", "at-spi2-atk", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "libxkbcommon", "mesa", "expat", "libdrm", "alsa-lib", "pango", "cairo", "cups", "dbus", "glib"]
 
 [phases.install]
 cmds = ["npm ci"]
@@ -10,4 +10,4 @@ cmds = [
 ]
 
 [start]
-cmd = "node src/index.js"
+cmd = "npx prisma db push --accept-data-loss && node src/index.js"

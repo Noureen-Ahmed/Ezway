@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 
 async function run() {
   const courses = await prisma.course.findMany({
+    where: { tasks: { some: {} } },
     include: { tasks: true }
   });
   console.log(JSON.stringify(courses, null, 2));

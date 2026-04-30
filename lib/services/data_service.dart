@@ -202,9 +202,18 @@ class DataService {
     }
   }
   
-  /// Get course by ID
+  /// Get course by ID (or by UMS virtual ID like 'ums-COMP404' - looks up by code)
   static Future<Course?> getCourse(String id) async {
     try {
+      // UMS virtual course: id is 'ums-{CODE}' e.g. 'ums-COMP404'
+      if (id.startsWith('ums-')) {
+        final code = id.substring(4); // Extract code after 'ums-'
+        if (code.isNotEmpty) {
+          return getCourseByCode(code);
+        }
+        return null;
+      }
+
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/courses/$id'),
         headers: ApiConfig.authHeaders,
@@ -217,6 +226,29 @@ class DataService {
       return null;
     } catch (e) {
       print('[DataService] Get course error: $e');
+      return null;
+    }
+  }
+
+  // Cache: ums-{id} -> course code (populated when getUmsCourses is called)
+  static final Map<String, String> _umsCodeCache = {};
+
+  /// Get course by course code (bridges UMS courses to app courses)
+  static Future<Course?> getCourseByCode(String code) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/courses/by-code/${Uri.encodeComponent(code)}'),
+        headers: ApiConfig.authHeaders,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['course'] != null) {
+          return Course.fromJson(data['course']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('[DataService] Get course by code error: $e');
       return null;
     }
   }
@@ -250,7 +282,7 @@ class DataService {
   static Future<List<Course>> getProfessorCourses(String email) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/users/professor/courses?email=${Uri.encodeComponent(email)}'),
+        Uri.parse('${ApiConfig.baseUrl}/courses/professor/${Uri.encodeComponent(email)}'),
         headers: ApiConfig.authHeaders,
       );
       
@@ -259,6 +291,8 @@ class DataService {
         final List courses = data['courses'] ?? [];
         return courses.map((c) => Course.fromJson(c)).toList();
       }
+      print('[DataService] Get professor courses returned status: ${response.statusCode}');
+      print('[DataService] Body: ${response.body}');
       return [];
     } catch (e) {
       print('[DataService] Get professor courses error: $e');
@@ -365,23 +399,26 @@ class DataService {
     String type = 'PERSONAL',
   }) async {
     try {
+      final body = <String, dynamic>{
+        'title': title,
+        'priority': priority,
+        'taskType': type,
+      };
+      if (description != null && description.isNotEmpty) body['description'] = description;
+      if (dueDate != null) body['dueDate'] = dueDate.toIso8601String();
+      if (courseId != null) body['courseId'] = courseId;
+
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}/tasks'),
         headers: ApiConfig.authHeaders,
-        body: jsonEncode({
-          'title': title,
-          'description': description,
-          'priority': priority,
-          'dueDate': dueDate?.toIso8601String(),
-          'courseId': courseId,
-          'taskType': type,
-        }),
+        body: jsonEncode(body),
       );
       
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return _parseTask(data['task']);
       }
+      print('[DataService] Create task failed: ${response.statusCode} ${response.body}');
       return null;
     } catch (e) {
       print('[DataService] Create task error: $e');
@@ -441,6 +478,53 @@ class DataService {
     } catch (e) {
       print('[DataService] Delete task error: $e');
       return false;
+    }
+  }
+
+  /// Get professor's created exams/assignments with enrolled student counts
+  static Future<Map<String, dynamic>> getProfessorExams() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/tasks/professor-exams'),
+        headers: ApiConfig.authHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List rawExams = data['exams'] ?? [];
+        final List rawDaily = data['dailySummary'] ?? [];
+
+        final exams = rawExams.map((e) {
+          return {
+            'id': e['id']?.toString() ?? '',
+            'title': e['title']?.toString() ?? '',
+            'description': e['description']?.toString(),
+            'taskType': e['taskType']?.toString() ?? 'EXAM',
+            'dueDate': e['dueDate']?.toString(),
+            'course': e['course'],
+            'enrolledStudentCount': (e['enrolledStudentCount'] as num?)?.toInt() ?? 0,
+            'submissionCount': (e['submissionCount'] as num?)?.toInt() ?? 0,
+            'maxPoints': (e['maxPoints'] as num?)?.toInt() ?? 100,
+            'status': e['status']?.toString() ?? 'PENDING',
+            'published': e['published'] as bool? ?? false,
+          };
+        }).toList();
+
+        final daily = rawDaily.map((d) {
+          return {
+            'date': d['date']?.toString() ?? '',
+            'totalStudents': (d['totalStudents'] as num?)?.toInt() ?? 0,
+            'exams': List<String>.from((d['exams'] as List?)?.map((x) => x.toString()) ?? []),
+          };
+        }).toList();
+
+        return {'exams': exams, 'dailySummary': daily};
+      }
+      print('[DataService] getProfessorExams failed: ${response.statusCode} ${response.body}');
+      return {'exams': [], 'dailySummary': []};
+    } catch (e) {
+      print('[DataService] getProfessorExams error: $e');
+      return {'exams': [], 'dailySummary': []};
     }
   }
 
@@ -838,8 +922,7 @@ class DataService {
     }
   }
 
-  /// Get exam conflicts for a course (dates with student exams in other courses)
-  static Future<Map<DateTime, int>> getExamConflicts(String courseId) async {
+  static Future<Map<DateTime, Map<String, dynamic>>> getExamConflicts(String courseId) async {
     try {
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/courses/$courseId/exam-conflicts'),
@@ -851,11 +934,20 @@ class DataService {
         final Map<String, dynamic> conflicts = data['conflicts'] ?? {};
         
         // Convert string dates to DateTime keys
-        final Map<DateTime, int> result = {};
+        final Map<DateTime, Map<String, dynamic>> result = {};
         for (final entry in conflicts.entries) {
           final date = DateTime.tryParse(entry.key);
           if (date != null) {
-            result[DateTime(date.year, date.month, date.day)] = entry.value as int;
+            final val = entry.value;
+            if (val is int) {
+              // Legacy format fallback
+              result[DateTime(date.year, date.month, date.day)] = {
+                'count': val,
+                'courses': []
+              };
+            } else if (val is Map) {
+              result[DateTime(date.year, date.month, date.day)] = Map<String, dynamic>.from(val);
+            }
           }
         }
         return result;
@@ -931,21 +1023,27 @@ class DataService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List courses = data['courses'] ?? [];
-        return courses.map((c) => Course(
-          id: 'ums-${c['id']}',
-          code: c['course_code'] ?? c['courseCode'] ?? '',
-          name: c['course_name'] ?? c['courseName'] ?? '',
-          category: CourseCategory.comp,
-          creditHours: c['credit_hours'] ?? c['creditHours'] ?? 3,
-          professors: c['instructor_name'] != null ? [c['instructor_name']] 
-                     : c['instructorName'] != null ? [c['instructorName']] : [],
-          description: 'Synced from UMS Portal',
-          schedule: [],
-          content: [],
-          assignments: [],
-          exams: [],
-          enrollmentStatus: EnrollmentStatus.enrolled,
-        )).toList();
+        return courses.map((c) {
+          final code = (c['course_code'] ?? c['courseCode'] ?? '') as String;
+          // Embed the code directly in the ID: 'ums-COMP404'
+          // This way getCourse('ums-COMP404') works even without a cache
+          final umsId = code.isNotEmpty ? 'ums-$code' : 'ums-${c['id']}';
+          return Course(
+            id: umsId,
+            code: code,
+            name: c['course_name'] ?? c['courseName'] ?? '',
+            category: CourseCategory.comp,
+            creditHours: c['credit_hours'] ?? c['creditHours'] ?? 3,
+            professors: c['instructor_name'] != null ? [c['instructor_name']] 
+                       : c['instructorName'] != null ? [c['instructorName']] : [],
+            description: 'Synced from UMS Portal',
+            schedule: [],
+            content: [],
+            assignments: [],
+            exams: [],
+            enrollmentStatus: EnrollmentStatus.enrolled,
+          );
+        }).toList();
       }
       return [];
     } catch (e) {

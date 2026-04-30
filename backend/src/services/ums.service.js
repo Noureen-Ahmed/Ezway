@@ -9,7 +9,30 @@ const { prisma } = require('../utils/database');
 const logger = require('../utils/logger');
 
 const UMS_BASE = 'https://ums.asu.edu.eg';
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+
+// Detect Chrome/Chromium path based on platform
+function getChromePath() {
+  const { execSync } = require('child_process');
+  if (process.platform === 'win32') {
+    return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  }
+  // Linux: try common paths
+  const linuxPaths = [
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+  ];
+  for (const p of linuxPaths) {
+    try { execSync(`test -f ${p}`); return p; } catch {}
+  }
+  // Nix store (Railway nixpacks)
+  try {
+    const p = execSync('which chromium 2>/dev/null || which chromium-browser 2>/dev/null').toString().trim();
+    if (p) return p;
+  } catch {}
+  throw new Error('Chrome/Chromium not found. Install chromium on this server.');
+}
 
 // ============ BROWSER LOGIN ============
 
@@ -19,10 +42,12 @@ const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 async function loginToUMS(loginName, password) {
   logger.info(`[UMS] Launching headless Chrome for login: ${loginName}`);
 
+  const chromePath = getChromePath();
+  logger.info(`[UMS] Using Chrome at: ${chromePath}`);
   const browser = await puppeteer.launch({
-    executablePath: CHROME_PATH,
+    executablePath: chromePath,
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
   });
 
   try {
