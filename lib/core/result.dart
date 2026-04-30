@@ -1,4 +1,4 @@
-import 'exceptions.dart';
+﻿import 'exceptions.dart';
 
 class Result<T> {
   final T? _data;

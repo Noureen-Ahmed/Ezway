@@ -1,4 +1,4 @@
-enum AnnouncementType { exam, assignment, general, event }
+﻿enum AnnouncementType { exam, assignment, general, event }
 
 class Announcement {
   final String id;

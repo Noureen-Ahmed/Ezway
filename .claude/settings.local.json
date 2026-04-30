@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Process -Id 5908)",
+      "PowerShell(Get-Process -Id 5908 -ErrorAction SilentlyContinue)",
+      "PowerShell(tasklist /fi \"pid eq 5908\")",
+      "PowerShell(Stop-Process -Id 5908 -Force)"
+    ]
+  }
+}

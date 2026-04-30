@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -311,7 +311,7 @@ class NotificationCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           const Text(
-                            '•',
+                            'â€¢',
                             style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
                           ),
                           const SizedBox(width: 4),

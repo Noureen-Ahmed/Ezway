@@ -1,62 +1,62 @@
-final List<Map<String, String>> questions = [
+﻿final List<Map<String, String>> questions = [
   {
-    'question': 'What is a Credit Hour? 🎓',
+    'question': 'What is a Credit Hour? ðŸŽ“',
     'answerAR':
-        'الساعة المعتمدة هي وحدة قياس للمادة.\nكل ساعة = ساعة محاضرة واحدة في الأسبوع.',
+        'Ø§Ù„Ø³Ø§Ø¹Ø© Ø§Ù„Ù…Ø¹ØªÙ…Ø¯Ø© Ù‡ÙŠ ÙˆØ­Ø¯Ø© Ù‚ÙŠØ§Ø³ Ù„Ù„Ù…Ø§Ø¯Ø©.\nÙƒÙ„ Ø³Ø§Ø¹Ø© = Ø³Ø§Ø¹Ø© Ù…Ø­Ø§Ø¶Ø±Ø© ÙˆØ§Ø­Ø¯Ø© ÙÙŠ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹.',
     'answerEN':
         'A credit hour is a unit that measures a course.\nOne credit equals one lecture hour per week.',
   },
   {
-    'question': 'Lecture vs Lab 📚🧪',
+    'question': 'Lecture vs Lab ðŸ“šðŸ§ª',
     'answerAR':
-        '📘 المحاضرة: محاضرة نظرية داخل القاعة.\n\n🧪 العملي: حصة عملية للتطبيق والتجربة.',
+        'ðŸ“˜ Ø§Ù„Ù…Ø­Ø§Ø¶Ø±Ø©: Ù…Ø­Ø§Ø¶Ø±Ø© Ù†Ø¸Ø±ÙŠØ© Ø¯Ø§Ø®Ù„ Ø§Ù„Ù‚Ø§Ø¹Ø©.\n\nðŸ§ª Ø§Ù„Ø¹Ù…Ù„ÙŠ: Ø­ØµØ© Ø¹Ù…Ù„ÙŠØ© Ù„Ù„ØªØ·Ø¨ÙŠÙ‚ ÙˆØ§Ù„ØªØ¬Ø±Ø¨Ø©.',
     'answerEN':
-        '📘 Lecture: A theoretical class.\n\n🧪 Lab: A practical session for hands-on work.',
+        'ðŸ“˜ Lecture: A theoretical class.\n\nðŸ§ª Lab: A practical session for hands-on work.',
   },
   {
-    'question': 'Credit Distribution 📊',
+    'question': 'Credit Distribution ðŸ“Š',
     'answerAR':
-        'بعض المواد تشمل:\nمحاضرة + عملي\nوكل جزء له وزن في الساعات المعتمدة.',
+        'Ø¨Ø¹Ø¶ Ø§Ù„Ù…ÙˆØ§Ø¯ ØªØ´Ù…Ù„:\nÙ…Ø­Ø§Ø¶Ø±Ø© + Ø¹Ù…Ù„ÙŠ\nÙˆÙƒÙ„ Ø¬Ø²Ø¡ Ù„Ù‡ ÙˆØ²Ù† ÙÙŠ Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ù…Ø¹ØªÙ…Ø¯Ø©.',
     'answerEN':
         'Some courses include:\nLecture + Lab\nEach part counts toward total credits.',
   },
   {
-    'question': 'Semester Duration ⏱️',
-    'answerAR': 'الفصل الدراسي مدته غالبًا 16 أسبوعًا من الدراسة والامتحانات.',
+    'question': 'Semester Duration â±ï¸',
+    'answerAR': 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ù…Ø¯ØªÙ‡ ØºØ§Ù„Ø¨Ù‹Ø§ 16 Ø£Ø³Ø¨ÙˆØ¹Ù‹Ø§ Ù…Ù† Ø§Ù„Ø¯Ø±Ø§Ø³Ø© ÙˆØ§Ù„Ø§Ù…ØªØ­Ø§Ù†Ø§Øª.',
     'answerEN': 'A semester usually lasts 16 weeks of instruction plus exams.',
   },
   {
-    'question': 'Why Credit Hours Matter? ⭐',
+    'question': 'Why Credit Hours Matter? â­',
     'answerAR':
-        'الساعات تحدد:\n\n✓ حالتك الأكاديمية\n✓ عبء الدراسة\n✓ متطلبات التخرج',
+        'Ø§Ù„Ø³Ø§Ø¹Ø§Øª ØªØ­Ø¯Ø¯:\n\nâœ“ Ø­Ø§Ù„ØªÙƒ Ø§Ù„Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠØ©\nâœ“ Ø¹Ø¨Ø¡ Ø§Ù„Ø¯Ø±Ø§Ø³Ø©\nâœ“ Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ØªØ®Ø±Ø¬',
     'answerEN':
-        'Credits determine:\n\n✓ Your academic level\n✓ Study load\n✓ Graduation requirements',
+        'Credits determine:\n\nâœ“ Your academic level\nâœ“ Study load\nâœ“ Graduation requirements',
   },
   {
-    'question': 'Allowed Credit Hours⭐',
+    'question': 'Allowed Credit Hoursâ­',
     'answerAR':
-        'لكل فصل دراسي حد أدنى وحد أقصى للساعات.\nالحد الطبيعي غالبًا بين 12 و 19 ساعة.\nيمكن زيادة الساعات بشروط محددة.',
+        'Ù„ÙƒÙ„ ÙØµÙ„ Ø¯Ø±Ø§Ø³ÙŠ Ø­Ø¯ Ø£Ø¯Ù†Ù‰ ÙˆØ­Ø¯ Ø£Ù‚ØµÙ‰ Ù„Ù„Ø³Ø§Ø¹Ø§Øª.\nØ§Ù„Ø­Ø¯ Ø§Ù„Ø·Ø¨ÙŠØ¹ÙŠ ØºØ§Ù„Ø¨Ù‹Ø§ Ø¨ÙŠÙ† 12 Ùˆ 19 Ø³Ø§Ø¹Ø©.\nÙŠÙ…ÙƒÙ† Ø²ÙŠØ§Ø¯Ø© Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø¨Ø´Ø±ÙˆØ· Ù…Ø­Ø¯Ø¯Ø©.',
     'answerEN':
         'Each semester has a minimum and maximum credit hour limit.\nThe normal range is usually between 12 and 19 credits.\nCredits can be increased under specific conditions.',
   },
   {
-    'question': 'Increase & Decrease Conditions ⭐',
+    'question': 'Increase & Decrease Conditions â­',
     'answerAR':
-        'الساعات الإضافية تتطلب معدل تراكمي كبير\n\nقلة الساعات قد تؤخر التخرج',
+        'Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ø¥Ø¶Ø§ÙÙŠØ© ØªØªØ·Ù„Ø¨ Ù…Ø¹Ø¯Ù„ ØªØ±Ø§ÙƒÙ…ÙŠ ÙƒØ¨ÙŠØ±\n\nÙ‚Ù„Ø© Ø§Ù„Ø³Ø§Ø¹Ø§Øª Ù‚Ø¯ ØªØ¤Ø®Ø± Ø§Ù„ØªØ®Ø±Ø¬',
     'answerEN':
         'Extra credits require a good GPA\n\nFewer credits may delay graduation',
   },
   {
-    'question': 'Course Prerequisites ⭐',
+    'question': 'Course Prerequisites â­',
     'answerAR':
-        'بعض المواد لها متطلبات سابقة.\nيجب اجتياز المتطلب السابق قبل تسجيل المادة.\nلا يمكنك تسجيل مادة متقدمة\nقبل اجتياز الأساسية.',
+        'Ø¨Ø¹Ø¶ Ø§Ù„Ù…ÙˆØ§Ø¯ Ù„Ù‡Ø§ Ù…ØªØ·Ù„Ø¨Ø§Øª Ø³Ø§Ø¨Ù‚Ø©.\nÙŠØ¬Ø¨ Ø§Ø¬ØªÙŠØ§Ø² Ø§Ù„Ù…ØªØ·Ù„Ø¨ Ø§Ù„Ø³Ø§Ø¨Ù‚ Ù‚Ø¨Ù„ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…Ø§Ø¯Ø©.\nÙ„Ø§ ÙŠÙ…ÙƒÙ†Ùƒ ØªØ³Ø¬ÙŠÙ„ Ù…Ø§Ø¯Ø© Ù…ØªÙ‚Ø¯Ù…Ø©\nÙ‚Ø¨Ù„ Ø§Ø¬ØªÙŠØ§Ø² Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©.',
     'answerEN':
         'Some courses have prerequisites.\nYou must pass the prerequisite before registering the course.\nYou cannot register an advanced course\nbefore passing the basic one.',
   },
   {
-    'question': 'Academic Warnings ⭐',
+    'question': 'Academic Warnings â­',
     'answerAR':
-        'الإنذار الأكاديمي يُمنح عند انخفاض المعدل التراكمي.\nينبه الطالب لتحسين الأداء الأكاديمي.\nتكرار الإنذارات قد يؤدي إلى إجراءات أكاديمية أكثر جدية.',
+        'Ø§Ù„Ø¥Ù†Ø°Ø§Ø± Ø§Ù„Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠ ÙŠÙÙ…Ù†Ø­ Ø¹Ù†Ø¯ Ø§Ù†Ø®ÙØ§Ø¶ Ø§Ù„Ù…Ø¹Ø¯Ù„ Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ.\nÙŠÙ†Ø¨Ù‡ Ø§Ù„Ø·Ø§Ù„Ø¨ Ù„ØªØ­Ø³ÙŠÙ† Ø§Ù„Ø£Ø¯Ø§Ø¡ Ø§Ù„Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠ.\nØªÙƒØ±Ø§Ø± Ø§Ù„Ø¥Ù†Ø°Ø§Ø±Ø§Øª Ù‚Ø¯ ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø£ÙƒØ§Ø¯ÙŠÙ…ÙŠØ© Ø£ÙƒØ«Ø± Ø¬Ø¯ÙŠØ©.',
     'answerEN':
         'An academic warning is given when GPA is low.\nIt alerts the student to improve academic performance.\nRepeated warnings may lead to more serious academic actions.',
   },

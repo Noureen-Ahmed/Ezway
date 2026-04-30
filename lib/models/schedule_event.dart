@@ -1,4 +1,4 @@
-class ScheduleEvent {
+﻿class ScheduleEvent {
   final String id;
   final String title;
   final DateTime startTime;

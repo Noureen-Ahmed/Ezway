@@ -1,4 +1,4 @@
-/// Unified Data Service
+﻿/// Unified Data Service
 /// Single point of truth for all API interactions
 /// Replaces individual repositories with a clean, consistent interface
 library;

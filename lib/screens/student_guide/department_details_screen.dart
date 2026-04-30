@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'math_courses_screen.dart';
 import 'pure_math_stats_courses_screen.dart';
 import 'pure_math_cs_courses_screen.dart';
@@ -133,7 +133,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                 const Icon(Icons.school, color: Color(0xFF2563eb)),
                 const SizedBox(width: 8),
                 Text(
-                  isArabic ? 'البرامج المتاحة' : 'Available Programs',
+                  isArabic ? 'Ø§Ù„Ø¨Ø±Ø§Ù…Ø¬ Ø§Ù„Ù…ØªØ§Ø­Ø©' : 'Available Programs',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -155,15 +155,15 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                 return ElevatedButton(
                   onPressed: () {
                     final programAR = widget.finalProgramsAR[index];
-                    // فتح شاشة خاصة بكورسات الرياضيات المنفرد
-                    if (programAR == 'رياضيات') {
+                    // ÙØªØ­ Ø´Ø§Ø´Ø© Ø®Ø§ØµØ© Ø¨ÙƒÙˆØ±Ø³Ø§Øª Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ù…Ù†ÙØ±Ø¯
+                    if (programAR == 'Ø±ÙŠØ§Ø¶ÙŠØ§Øª') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const MathCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'بحتة-احصاء') {
+                    } else if (programAR == 'Ø¨Ø­ØªØ©-Ø§Ø­ØµØ§Ø¡') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -171,49 +171,49 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const PureMathStatsCourseScreen(),
                         ),
                       );
-                    } else if (programAR == 'بحتة-حاسب') {
+                    } else if (programAR == 'Ø¨Ø­ØªØ©-Ø­Ø§Ø³Ø¨') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PureMathCSCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'إحصاء رياضي') {
+                    } else if (programAR == 'Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const MathStatsCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'احصاء-حاسب') {
+                    } else if (programAR == 'Ø§Ø­ØµØ§Ø¡-Ø­Ø§Ø³Ø¨') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const StatsCSCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'علوم الحاسب') {
+                    } else if (programAR == 'Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const CSCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'فيزياء منفردة') {
+                    } else if (programAR == 'ÙÙŠØ²ÙŠØ§Ø¡ Ù…Ù†ÙØ±Ø¯Ø©') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PhysicsCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'فيزياء حيوية') {
+                    } else if (programAR == 'ÙÙŠØ²ÙŠØ§Ø¡ Ø­ÙŠÙˆÙŠØ©') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const BiophysicsCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'فيزياء- كيمياء') {
+                    } else if (programAR == 'ÙÙŠØ²ÙŠØ§Ø¡- ÙƒÙŠÙ…ÙŠØ§Ø¡') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -221,21 +221,21 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const PhysicsChemCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'فيزياء- حاسب') {
+                    } else if (programAR == 'ÙÙŠØ²ÙŠØ§Ø¡- Ø­Ø§Ø³Ø¨') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PhysicsCSCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'كيمياء أساسية') {
+                    } else if (programAR == 'ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø£Ø³Ø§Ø³ÙŠØ©') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const ChemistryCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'كيمياء تطبيقية') {
+                    } else if (programAR == 'ÙƒÙŠÙ…ÙŠØ§Ø¡ ØªØ·Ø¨ÙŠÙ‚ÙŠØ©') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -243,28 +243,28 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const AppliedChemistryCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'نبات') {
+                    } else if (programAR == 'Ù†Ø¨Ø§Øª') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const BotanyCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'النبات-كيمياء') {
+                    } else if (programAR == 'Ø§Ù„Ù†Ø¨Ø§Øª-ÙƒÙŠÙ…ÙŠØ§Ø¡') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const BotanyChemCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'علم الحيوان') {
+                    } else if (programAR == 'Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù†') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const ZoologyCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'علم الحيوان-كيمياء') {
+                    } else if (programAR == 'Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù†-ÙƒÙŠÙ…ÙŠØ§Ø¡') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -272,7 +272,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const ZoologyChemCoursesScreen(),
                         ),
                       );
-                    } else if (programAR == 'علم الحشرات') {
+                    } else if (programAR == 'Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -280,7 +280,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const EntomologyCoursesScreen(),
                         ),
                       );
-                    } else if (programAR.trim() == 'علم الحشرات الطبية') {
+                    } else if (programAR.trim() == 'Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª Ø§Ù„Ø·Ø¨ÙŠØ©') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -288,7 +288,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const MedicalEntomologyCoursesScreen(),
                         ),
                       );
-                    } else if (programAR.trim() == 'كيمياء حيوية') {
+                    } else if (programAR.trim() == 'ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø­ÙŠÙˆÙŠØ©') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -296,7 +296,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const BiochemistryCoursesScreen(),
                         ),
                       );
-                    } else if (programAR.trim() == 'الكيمياء الحيوية-الكيمياء') {
+                    } else if (programAR.trim() == 'Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„Ø­ÙŠÙˆÙŠØ©-Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -304,7 +304,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                               const BiochemChemCoursesScreen(),
                         ),
                       );
-                    } else if (programAR.trim() == 'ميكروبيولوجي') {
+                    } else if (programAR.trim() == 'Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -317,7 +317,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                         SnackBar(
                           content: Text(
                             isArabic
-                                ? 'تم اختيار: ${programs[index]}'
+                                ? 'ØªÙ… Ø§Ø®ØªÙŠØ§Ø±: ${programs[index]}'
                                 : 'Selected: ${programs[index]}',
                           ),
                           behavior: SnackBarBehavior.floating,

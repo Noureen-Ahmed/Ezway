@@ -1,4 +1,4 @@
-class AdvisingMessage {
+﻿class AdvisingMessage {
   final int? id;
   final String senderEmail;
   final String? receiverEmail;

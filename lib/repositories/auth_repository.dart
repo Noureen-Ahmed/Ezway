@@ -1,4 +1,4 @@
-import '../core/result.dart';
+﻿import '../core/result.dart';
 import '../models/user.dart';
 
 abstract class AuthRepository {

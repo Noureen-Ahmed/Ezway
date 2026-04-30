@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/task.dart';
 import '../services/data_service.dart';
 import 'app_session_provider.dart';
@@ -33,7 +33,7 @@ class TaskState {
 
   List<Task> get pendingTasks => tasks.where((t) {
     if (t.status != TaskStatus.pending) return false;
-    // Exclude overdue tasks — they are expired and should appear in completed
+    // Exclude overdue tasks â€” they are expired and should appear in completed
     if (t.dueDate != null && t.dueDate!.isBefore(DateTime.now())) return false;
     return true;
   }).toList();

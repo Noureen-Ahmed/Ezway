@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class CustomStatusBar extends StatelessWidget {
   const CustomStatusBar({super.key});
@@ -65,7 +65,7 @@ class CustomStatusBar extends StatelessWidget {
               const SizedBox(width: 8),
               // WiFi symbol
               const Text(
-                '📶',
+                'ðŸ“¶',
                 style: TextStyle(fontSize: 16),
               ),
               const SizedBox(width: 8),

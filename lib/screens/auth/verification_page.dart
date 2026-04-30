@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +25,7 @@ class _VerificationPageState extends State<VerificationPage> {
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   bool _isLoading = false;
 
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'https://ezway-backend.up.railway.app/api';
 
   @override
   void initState() {

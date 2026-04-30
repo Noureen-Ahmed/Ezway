@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 /// Task model for API
@@ -46,7 +46,7 @@ class ApiTask {
 
 /// API Task Database Service - Works on all platforms including Web
 class ApiTaskDatabase {
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'https://ezway-backend.up.railway.app/api';
 
   /// Get all tasks
   static Future<List<ApiTask>> getAllTasks() async {

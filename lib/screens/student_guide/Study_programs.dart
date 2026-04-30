@@ -1,19 +1,19 @@
-
+﻿
 final List<Map<String, dynamic>> Departments = [
     {
       'title': 'Mathematics',
-      'subtitle': 'رياضيات – علوم الحاسب – إحصاء رياضي',
-      'ARinformation':'بعد الفصل الدراسي الاول المستوى الاول يختار الطالب بالتنسيق :\n رياضيات\nعلوم الحاسب\n إحصاء رياضي\n\nبعد الفصل الدراسي الثاني المستوى الاول\nطالب برنامج الرياضيات مستمرون حتى التخرج بهذا البرنامج.\n\n طالب برنامج علوم الحاسب يختار بالتنسيق بين \n برنامج علوم الحاسب   =>  منفرد\nبرنامج بحتة – حاسب  => مزدوج\nويستمر الطالب بالبرنامج حتى تخرجه .\n\n طالب برنامج إحصاء رياضي يختار بالتنسيق بين \n برنامج إحصاء   =>  منفرد\n برنامج بحتة- إحصاء رياضي=> مزدوج\n برنامج إحصاء رياضي- حاسب=> مزدوج\nويستمر الطالب بالبرنامج حتى تخرجه.',
+      'subtitle': 'Ø±ÙŠØ§Ø¶ÙŠØ§Øª â€“ Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ â€“ Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ',
+      'ARinformation':'Ø¨Ø¹Ø¯ Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ø§Ù„Ø§ÙˆÙ„ Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø§ÙˆÙ„ ÙŠØ®ØªØ§Ø± Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„ØªÙ†Ø³ÙŠÙ‚ :\nÂ Ø±ÙŠØ§Ø¶ÙŠØ§Øª\nØ¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨\nÂ Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ\n\nØ¨Ø¹Ø¯ Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ø§Ù„Ø«Ø§Ù†ÙŠ Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø§ÙˆÙ„\nØ·Ø§Ù„Ø¨ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ù…Ø³ØªÙ…Ø±ÙˆÙ† Ø­ØªÙ‰ Ø§Ù„ØªØ®Ø±Ø¬ Ø¨Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬.\n\nÂ Ø·Ø§Ù„Ø¨ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ ÙŠØ®ØªØ§Ø± Ø¨Ø§Ù„ØªÙ†Ø³ÙŠÙ‚ Ø¨ÙŠÙ† \nÂ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨Â  Â =>Â  Ù…Ù†ÙØ±Ø¯\nØ¨Ø±Ù†Ø§Ù…Ø¬ Ø¨Ø­ØªØ© â€“ Ø­Ø§Ø³Ø¨Â  => Ù…Ø²Ø¯ÙˆØ¬\nÙˆÙŠØ³ØªÙ…Ø± Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø­ØªÙ‰ ØªØ®Ø±Ø¬Ù‡ .\n\nÂ Ø·Ø§Ù„Ø¨ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ ÙŠØ®ØªØ§Ø± Ø¨Ø§Ù„ØªÙ†Ø³ÙŠÙ‚ Ø¨ÙŠÙ† \nÂ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¥Ø­ØµØ§Ø¡Â  Â =>Â  Ù…Ù†ÙØ±Ø¯\nÂ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¨Ø­ØªØ©- Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ=> Ù…Ø²Ø¯ÙˆØ¬\nÂ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ- Ø­Ø§Ø³Ø¨=> Ù…Ø²Ø¯ÙˆØ¬\nÙˆÙŠØ³ØªÙ…Ø± Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø­ØªÙ‰ ØªØ®Ø±Ø¬Ù‡.',
       'ENinformation':'After the first semester of the first level, the student chooses in coordination:\n Mathematics\n Computer Science\n Mathematical Statistics\n\nAfter the second semester of the first level\nStudents of the Mathematics program continue until graduation with this program.\n\n Students of the Computer Science program choose in coordination between\n Computer Science Program => Single\n Pure - Computer => Double\nAnd the student continues with the program until his graduation.\n\n Students of the Mathematical Statistics program choose in coordination between\n Statistics Program => Single\n Pure - Mathematical Statistics => Double\n Mathematical Statistics - Computer => Double\nAnd the student continues with the program until his graduation.',
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-        'رياضيات',
-        'احصاء-حاسب',
-        'بحتة-احصاء',
-        'بحتة-حاسب',
-        'علوم الحاسب',
-        'إحصاء رياضي',
+        'Ø±ÙŠØ§Ø¶ÙŠØ§Øª',
+        'Ø§Ø­ØµØ§Ø¡-Ø­Ø§Ø³Ø¨',
+        'Ø¨Ø­ØªØ©-Ø§Ø­ØµØ§Ø¡',
+        'Ø¨Ø­ØªØ©-Ø­Ø§Ø³Ø¨',
+        'Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨',
+        'Ø¥Ø­ØµØ§Ø¡ Ø±ÙŠØ§Ø¶ÙŠ',
       ],
       'finalProgramsEN':[
         'Mathematics',
@@ -26,15 +26,15 @@ final List<Map<String, dynamic>> Departments = [
     },
     {
       'title': 'Physics',
-      'subtitle': 'فيزياء منفردة ومزدوجة',
-      'ARinformation':'بعد الفصل الدراسي الاول المستوى الاول يختار بين :\n فيزياء => منفرد\n فيزياء- حاسب => مزدوج\nفيزياء- كيمياء=> مزدوج\nويستمر الطالب بالبرنامج حتى تخرجه.',
+      'subtitle': 'ÙÙŠØ²ÙŠØ§Ø¡ Ù…Ù†ÙØ±Ø¯Ø© ÙˆÙ…Ø²Ø¯ÙˆØ¬Ø©',
+      'ARinformation':'Ø¨Ø¹Ø¯ Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ø§Ù„Ø§ÙˆÙ„ Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø§ÙˆÙ„ ÙŠØ®ØªØ§Ø± Ø¨ÙŠÙ† :\nÂ ÙÙŠØ²ÙŠØ§Ø¡ => Ù…Ù†ÙØ±Ø¯\nÂ ÙÙŠØ²ÙŠØ§Ø¡- Ø­Ø§Ø³Ø¨ => Ù…Ø²Ø¯ÙˆØ¬\nÙÙŠØ²ÙŠØ§Ø¡- ÙƒÙŠÙ…ÙŠØ§Ø¡=> Ù…Ø²Ø¯ÙˆØ¬\nÙˆÙŠØ³ØªÙ…Ø± Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø­ØªÙ‰ ØªØ®Ø±Ø¬Ù‡.',
       'ENinformation':'After the first semester of the first level, he chooses between:\n Physics => Single\n Physics - Computer => Double\n Physics - Chemistry => Double\nAnd the student continues with the program until his graduation.' ,
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-         'فيزياء منفردة',
-         'فيزياء- حاسب',
-         'فيزياء- كيمياء',
+         'ÙÙŠØ²ÙŠØ§Ø¡ Ù…Ù†ÙØ±Ø¯Ø©',
+         'ÙÙŠØ²ÙŠØ§Ø¡- Ø­Ø§Ø³Ø¨',
+         'ÙÙŠØ²ÙŠØ§Ø¡- ÙƒÙŠÙ…ÙŠØ§Ø¡',
         ],
         'finalProgramsEN':[
         'Single Physics',
@@ -44,13 +44,13 @@ final List<Map<String, dynamic>> Departments = [
     },
     {
       'title': 'Biophysics',
-      'subtitle': 'برنامج الفيزياء الحيوية',
-      'ARinformation':'برنامج وفقا يلتحق الطالب بال للشروط الموجودة بإستمارة رغبات اإللتحاق بالمستو األول ويستمربالدراسة بالبرنامج حتى تخرجه.',
+      'subtitle': 'Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø§Ù„ÙÙŠØ²ÙŠØ§Ø¡ Ø§Ù„Ø­ÙŠÙˆÙŠØ©',
+      'ARinformation':'Ø¨Ø±Ù†Ø§Ù…Ø¬ ÙˆÙÙ‚Ø§ ÙŠÙ„ØªØ­Ù‚ Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„ Ù„Ù„Ø´Ø±ÙˆØ· Ø§Ù„Ù…ÙˆØ¬ÙˆØ¯Ø© Ø¨Ø¥Ø³ØªÙ…Ø§Ø±Ø© Ø±ØºØ¨Ø§Øª Ø§Ø¥Ù„Ù„ØªØ­Ø§Ù‚ Ø¨Ø§Ù„Ù…Ø³ØªÙˆ Ø§Ø£Ù„ÙˆÙ„ ÙˆÙŠØ³ØªÙ…Ø±Ø¨Ø§Ù„Ø¯Ø±Ø§Ø³Ø© Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø­ØªÙ‰ ØªØ®Ø±Ø¬Ù‡.',
       'ENinformation':'According to the conditions in the application form for admission to the first level, the student joins and continues studying in the program until his graduation.',
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-        'فيزياء حيوية',
+        'ÙÙŠØ²ÙŠØ§Ø¡ Ø­ÙŠÙˆÙŠØ©',
       ],
       'finalProgramsEN':[
         'Biophysics',
@@ -58,14 +58,14 @@ final List<Map<String, dynamic>> Departments = [
     },
     {
       'title': 'Chemistry',
-      'subtitle': 'كيمياء أساسية وتطبيقية',
-      'ARinformation': 'بعد نهاية المستوى الثاني يختار بين :\n  يستمر الطالب في برنامج الكيمياء " الاساسي" حتى تخرجه \n يختار برنامج الكيمياء التطبيقية و يستمر به حتى التخرج',
+      'subtitle': 'ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø£Ø³Ø§Ø³ÙŠØ© ÙˆØªØ·Ø¨ÙŠÙ‚ÙŠØ©',
+      'ARinformation': 'Ø¨Ø¹Ø¯ Ù†Ù‡Ø§ÙŠØ© Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù†ÙŠ ÙŠØ®ØªØ§Ø± Ø¨ÙŠÙ† :\nÂ  ÙŠØ³ØªÙ…Ø± Ø§Ù„Ø·Ø§Ù„Ø¨ ÙÙŠ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ " Ø§Ù„Ø§Ø³Ø§Ø³ÙŠ" Ø­ØªÙ‰ ØªØ®Ø±Ø¬Ù‡ \n ÙŠØ®ØªØ§Ø± Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ÙŠØ© Ùˆ ÙŠØ³ØªÙ…Ø± Ø¨Ù‡ Ø­ØªÙ‰ Ø§Ù„ØªØ®Ø±Ø¬',
       'ENinformation':'After the end of the second level, he chooses between:\n The student continues in the Chemistry "Basic" program until his graduation\n He chooses the Applied Chemistry program and continues with it until graduation',   
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-       'كيمياء أساسية',
-        'كيمياء تطبيقية',
+       'ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø£Ø³Ø§Ø³ÙŠØ©',
+        'ÙƒÙŠÙ…ÙŠØ§Ø¡ ØªØ·Ø¨ÙŠÙ‚ÙŠØ©',
         ],
         'finalProgramsEN':[
          'Basic Chemistry',
@@ -74,15 +74,15 @@ final List<Map<String, dynamic>> Departments = [
      },
     {
       'title': 'Geology',
-      'subtitle': 'جيولوجيا وبرامج مزدوجة',
-      'ARinformation':'بعد الفصل الدراسي الاول المستوى الاول يختار بين :\nبرنامج الجيولوجيا => منفرد \nبرنامج جيولوجيا - كيمياء => مزدوج \nبرنامج جيولوجيا - جيوفيزياء => مزدوج \nو يستمر بالبرنامج حتى التخرج',
+      'subtitle': 'Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ ÙˆØ¨Ø±Ø§Ù…Ø¬ Ù…Ø²Ø¯ÙˆØ¬Ø©',
+      'ARinformation':'Ø¨Ø¹Ø¯ Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ø§Ù„Ø§ÙˆÙ„ Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø§ÙˆÙ„ ÙŠØ®ØªØ§Ø± Ø¨ÙŠÙ† :\nØ¨Ø±Ù†Ø§Ù…Ø¬ Ø§Ù„Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ => Ù…Ù†ÙØ±Ø¯ \nØ¨Ø±Ù†Ø§Ù…Ø¬ Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ - ÙƒÙŠÙ…ÙŠØ§Ø¡ => Ù…Ø²Ø¯ÙˆØ¬ \nØ¨Ø±Ù†Ø§Ù…Ø¬ Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ - Ø¬ÙŠÙˆÙÙŠØ²ÙŠØ§Ø¡ => Ù…Ø²Ø¯ÙˆØ¬ \nÙˆ ÙŠØ³ØªÙ…Ø± Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø­ØªÙ‰ Ø§Ù„ØªØ®Ø±Ø¬',
       'ENinformation':'After the first semester of the first level, he chooses between:\n Geology Program => Single\n Geology - Chemistry Program => Double\n Geology - Geophysics Program => Double\nAnd continues with the program until graduation.',
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-       'جيولوجيا منفردة',
-       'جيولوجيا- كيمياء',
-        'جيولوجيا- جيوفيزياء',
+       'Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ Ù…Ù†ÙØ±Ø¯Ø©',
+       'Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§- ÙƒÙŠÙ…ÙŠØ§Ø¡',
+        'Ø¬ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§- Ø¬ÙŠÙˆÙÙŠØ²ÙŠØ§Ø¡',
        
       ],
       'finalProgramsEN':[ 
@@ -93,13 +93,13 @@ final List<Map<String, dynamic>> Departments = [
     },
     {
       'title': 'Geophysics',
-      'subtitle': 'برنامج الجيوفيزياء',
-      'ARinformation':'يلتحق الطالب بالبرنامج عند دخول الكلية بالمستوى الاول و يستمر حتى التخرج ',
+      'subtitle': 'Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø§Ù„Ø¬ÙŠÙˆÙÙŠØ²ÙŠØ§Ø¡',
+      'ARinformation':'ÙŠÙ„ØªØ­Ù‚ Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¹Ù†Ø¯ Ø¯Ø®ÙˆÙ„ Ø§Ù„ÙƒÙ„ÙŠØ© Ø¨Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø§ÙˆÙ„ Ùˆ ÙŠØ³ØªÙ…Ø± Ø­ØªÙ‰ Ø§Ù„ØªØ®Ø±Ø¬Â ',
       'ENinformation':'The student joins the program upon entering the college at the first level and continues until graduation.',
       'isMath':true,
       'isScience':true,
       'finalProgramsAR':[
-       'جيوفيزياء'
+       'Ø¬ÙŠÙˆÙÙŠØ²ÙŠØ§Ø¡'
       ],
       'finalProgramsEN':[
        'Geophysics'
@@ -107,26 +107,26 @@ final List<Map<String, dynamic>> Departments = [
     },
     {
       'title': 'Biology',
-      'subtitle': 'برامج منفردة ومزدوجة',
-      'ARinformation':'بعد الفصل الدراسي الثاني المستوى الاول يختار وفقا للشروط :\n\nبرامج منفردة:\n النبات \n علم الحيوان \n علم الحشرات\n الكيمياء الحيوية \n الميكروبيولوجي\n علم الحشرات الطبية\n\n برامج مزدوجة:\n النبات- الكيمياء \n علم الحيوان- الكيمياء \n علم الحشرات- الكيمياء\n الكيمياء الحيوية- الكيمياء \n الميكروبيولوجي- الكيمياء\n\n يستمر الطالب بالبرنامج حتى تخرجه.',
+      'subtitle': 'Ø¨Ø±Ø§Ù…Ø¬ Ù…Ù†ÙØ±Ø¯Ø© ÙˆÙ…Ø²Ø¯ÙˆØ¬Ø©',
+      'ARinformation':'Ø¨Ø¹Ø¯ Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ø§Ù„Ø«Ø§Ù†ÙŠ Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø§ÙˆÙ„ ÙŠØ®ØªØ§Ø± ÙˆÙÙ‚Ø§ Ù„Ù„Ø´Ø±ÙˆØ· :\n\nØ¨Ø±Ø§Ù…Ø¬ Ù…Ù†ÙØ±Ø¯Ø©:\n Ø§Ù„Ù†Ø¨Ø§Øª \n Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù† \n Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª\n Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„Ø­ÙŠÙˆÙŠØ© \n Ø§Ù„Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ\n Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª Ø§Ù„Ø·Ø¨ÙŠØ©\n\n Ø¨Ø±Ø§Ù…Ø¬ Ù…Ø²Ø¯ÙˆØ¬Ø©:\n Ø§Ù„Ù†Ø¨Ø§Øª- Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ \n Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù†- Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ \n Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª- Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡\n Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„Ø­ÙŠÙˆÙŠØ©- Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ \n Ø§Ù„Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ- Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡\n\n ÙŠØ³ØªÙ…Ø± Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø­ØªÙ‰ ØªØ®Ø±Ø¬Ù‡.',
       'ENinformation':'After the second semester of the first level, he chooses according to the conditions:\n\nSingle Programs:\n Plant\n Zoology\n Entomology\n Biochemistry\n Microbiology\n Medical Entomology\n\n Double Programs:\n Plant-Chemistry\n Zoology-Chemistry\n Entomology-Chemistry\n Biochemistry-Chemistry\n Microbiology-Chemistry\n\n The student continues with the program until his graduation.',
       'isMath':false,
       'isScience':true,
       'finalProgramsAR':[
-       'نبات',
-        'الميكروبيولوجي -الكيمياء',
-         'الكيمياء الحيوية-الكيمياء',
-         'علم الحشرات-كيمياء',
-         'علم الحيوان-كيمياء',
-         'النبات-كيمياء',
-         'علم الحشرات الطبية  ',
-         'علم الحيوان',
-         'علم الحشرات',
-         'كيمياء حيوية',
-         'ميكروبيولوجي', 
-         'علم الحشرات', 
-         'كيمياء حيوية', 
-         'ميكروبيولوجي',
+       'Ù†Ø¨Ø§Øª',
+        'Ø§Ù„Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ -Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡',
+         'Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„Ø­ÙŠÙˆÙŠØ©-Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡',
+         'Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª-ÙƒÙŠÙ…ÙŠØ§Ø¡',
+         'Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù†-ÙƒÙŠÙ…ÙŠØ§Ø¡',
+         'Ø§Ù„Ù†Ø¨Ø§Øª-ÙƒÙŠÙ…ÙŠØ§Ø¡',
+         'Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª Ø§Ù„Ø·Ø¨ÙŠØ©  ',
+         'Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù†',
+         'Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª',
+         'ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø­ÙŠÙˆÙŠØ©',
+         'Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ', 
+         'Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª', 
+         'ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø­ÙŠÙˆÙŠØ©', 
+         'Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ',
         ],
       'finalProgramsEN':[
         'Plant', 

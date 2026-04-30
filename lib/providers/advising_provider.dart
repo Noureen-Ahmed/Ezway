@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../models/advising_message.dart';
@@ -43,7 +43,7 @@ class AdvisingState {
 
 class AdvisingNotifier extends StateNotifier<AdvisingState> {
   final Ref _ref;
-  final String _baseUrl = 'http://localhost:3000/api/advising';
+  final String _baseUrl = 'https://ezway-backend.up.railway.app/api/advising';
 
   AdvisingNotifier(this._ref) : super(AdvisingState());
 

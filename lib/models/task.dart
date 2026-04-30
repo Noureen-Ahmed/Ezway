@@ -1,4 +1,4 @@
-enum TaskPriority { high, medium, low }
+﻿enum TaskPriority { high, medium, low }
 
 enum TaskStatus { pending, completed, submitted, graded }
 

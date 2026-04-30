@@ -1,4 +1,4 @@
-import 'dart:developer' as developer;
+﻿import 'dart:developer' as developer;
 
 class AppLogger {
   static const String _tag = 'StudentDashboard';

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/result.dart';
 import '../../core/exceptions.dart';

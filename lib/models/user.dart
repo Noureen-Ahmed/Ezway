@@ -1,4 +1,4 @@
-/// User model - Non-freezed version for reliability
+﻿/// User model - Non-freezed version for reliability
 /// Supports both students and professors
 library;
 
@@ -61,12 +61,12 @@ class User {
     if (clean.contains('activate to sort column')) {
       clean = clean.replaceAll(RegExp(r'activate to sort column[ a-zA-Z]*"?\s*>?', caseSensitive: false), '');
     }
-    clean = clean.replaceAll(RegExp(r'باللغة العربية ?:?', caseSensitive: false), '');
-    clean = clean.replaceAll(RegExp(r'الاسم باللغة العربية', caseSensitive: false), '');
+    clean = clean.replaceAll(RegExp(r'Ø¨Ø§Ù„Ù„ØºØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© ?:?', caseSensitive: false), '');
+    clean = clean.replaceAll(RegExp(r'Ø§Ù„Ø§Ø³Ù… Ø¨Ø§Ù„Ù„ØºØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©', caseSensitive: false), '');
     return clean.trim().isNotEmpty ? clean.trim() : 'Student';
   }
 
-  /// Clean scraped field values — remove DataTable/Kendo artifacts
+  /// Clean scraped field values â€” remove DataTable/Kendo artifacts
   static String? _cleanScrapedValue(dynamic val) {
     if (val == null) return null;
     String s = val.toString();
@@ -79,7 +79,7 @@ class User {
     s = s.replaceAll(RegExp('^[">]+'), '');
     s = s.trim().replaceAll(RegExp('\\s{2,}'), ' ');
     // If it's just a known label, return null
-    const labels = ['الاسم', 'العنوان', 'الهاتف', 'الموبايل', 'تليفون', 'الكلية', 'البرنامج'];
+    const labels = ['Ø§Ù„Ø§Ø³Ù…', 'Ø§Ù„Ø¹Ù†ÙˆØ§Ù†', 'Ø§Ù„Ù‡Ø§ØªÙ', 'Ø§Ù„Ù…ÙˆØ¨Ø§ÙŠÙ„', 'ØªÙ„ÙŠÙÙˆÙ†', 'Ø§Ù„ÙƒÙ„ÙŠØ©', 'Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬'];
     if (labels.contains(s) || s.isEmpty) return null;
     return s;
   }

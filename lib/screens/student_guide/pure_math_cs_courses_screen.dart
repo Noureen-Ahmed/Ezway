@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 const List<Map<String, String>> _courses = [
-  // ========== المستوى الأول ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø£ÙˆÙ„ ==========
   {
     "level": "1",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "الأمن والسلامة",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø§Ù„Ø£Ù…Ù† ÙˆØ§Ù„Ø³Ù„Ø§Ù…Ø©",
     "course_code": "SAFS 101",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -14,8 +14,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "حقوق الإنسان",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø­Ù‚ÙˆÙ‚ Ø§Ù„Ø¥Ù†Ø³Ø§Ù†",
     "course_code": "HURI 101",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -23,8 +23,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الرياضيات (متطلبات الكلية)",
-    "course_name": "تفاضل وتكامل (1)",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "ØªÙØ§Ø¶Ù„ ÙˆØªÙƒØ§Ù…Ù„ (1)",
     "course_code": "MATH 101",
     "credit_hours": "4",
     "prerequisites": "-",
@@ -32,8 +32,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الفيزياء (متطلبات الكلية)",
-    "course_name": "فيزياء عامة (1)",
+    "department": "Ø§Ù„ÙÙŠØ²ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "ÙÙŠØ²ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (1)",
     "course_code": "PHYS 101",
     "credit_hours": "4",
     "prerequisites": "-",
@@ -41,8 +41,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الكيمياء (متطلبات الكلية)",
-    "course_name": "كيمياء عامة (1)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (1)",
     "course_code": "CHEM 101",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -50,8 +50,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الكيمياء (متطلبات الكلية)",
-    "course_name": "عملي كيمياء عامة (1)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¹Ù…Ù„ÙŠ ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (1)",
     "course_code": "CHEM 103",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -59,8 +59,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الإحصاء (متطلبات الكلية)",
-    "course_name": "مقدمة في الإحصاء",
+    "department": "Ø§Ù„Ø¥Ø­ØµØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ù…Ù‚Ø¯Ù…Ø© ÙÙŠ Ø§Ù„Ø¥Ø­ØµØ§Ø¡",
     "course_code": "STAT 101",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -68,8 +68,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "لغة إنجليزية (1)",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ù„ØºØ© Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ© (1)",
     "course_code": "ENGL 102",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -77,8 +77,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "مدخل في الحاسب الآلي",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ù…Ø¯Ø®Ù„ ÙÙŠ Ø§Ù„Ø­Ø§Ø³Ø¨ Ø§Ù„Ø¢Ù„ÙŠ",
     "course_code": "INCO 102",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -86,8 +86,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الرياضيات (متطلبات الكلية)",
-    "course_name": "تفاضل وتكامل (2)",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "ØªÙØ§Ø¶Ù„ ÙˆØªÙƒØ§Ù…Ù„ (2)",
     "course_code": "MATH 102",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -95,8 +95,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "الرياضيات (متطلبات الكلية)",
-    "course_name": "مفاهيم أساسية في الرياضيات",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ù…ÙØ§Ù‡ÙŠÙ… Ø£Ø³Ø§Ø³ÙŠØ© ÙÙŠ Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª",
     "course_code": "MATH 104",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -104,8 +104,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "علوم الحاسب (متطلبات الكلية)",
-    "course_name": "مقدمة في الحاسب الآلي",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ù…Ù‚Ø¯Ù…Ø© ÙÙŠ Ø§Ù„Ø­Ø§Ø³Ø¨ Ø§Ù„Ø¢Ù„ÙŠ",
     "course_code": "COMP 102",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -113,8 +113,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "علوم الحاسب (متطلبات الكلية)",
-    "course_name": "برمجة حاسب (1)",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¨Ø±Ù…Ø¬Ø© Ø­Ø§Ø³Ø¨ (1)",
     "course_code": "COMP 104",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -122,8 +122,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "علوم الحاسب (متطلبات الكلية)",
-    "course_name": "تصميم منطق",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙƒÙ„ÙŠØ©)",
+    "course_name": "ØªØµÙ…ÙŠÙ… Ù…Ù†Ø·Ù‚",
     "course_code": "COMP 106",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -131,18 +131,18 @@ const List<Map<String, String>> _courses = [
   {
     "level": "1",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "لغة إنجليزية (2)",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ù„ØºØ© Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ© (2)",
     "course_code": "ENGL 201",
     "credit_hours": "2",
     "prerequisites": "ENGL 102",
   },
-  // ========== المستوى الثاني ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù†ÙŠ ==========
   {
     "level": "2",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "التحليل الرياضي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠ",
     "course_code": "MATH 201",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -150,8 +150,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "جبر خطي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø¬Ø¨Ø± Ø®Ø·ÙŠ",
     "course_code": "MATH 203",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -159,8 +159,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "نظرية الأعداد",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ø£Ø¹Ø¯Ø§Ø¯",
     "course_code": "MATH 205",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -168,8 +168,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "تصميم وتحليل الخوارزميات",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ØªØµÙ…ÙŠÙ… ÙˆØªØ­Ù„ÙŠÙ„ Ø§Ù„Ø®ÙˆØ§Ø±Ø²Ù…ÙŠØ§Øª",
     "course_code": "COMP 201",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -177,8 +177,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "نظم قواعد بيانات",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ù†Ø¸Ù… Ù‚ÙˆØ§Ø¹Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª",
     "course_code": "COMP 207",
     "credit_hours": "4",
     "prerequisites": "-",
@@ -186,17 +186,17 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "معادلات تفاضلية عادية",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù…Ø¹Ø§Ø¯Ù„Ø§Øª ØªÙØ§Ø¶Ù„ÙŠØ© Ø¹Ø§Ø¯ÙŠØ©",
     "course_code": "MATH 202",
     "credit_hours": "3",
-    "prerequisites": "MATH 101 أو 102",
+    "prerequisites": "MATH 101 Ø£Ùˆ 102",
   },
   {
     "level": "2",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "تحليل حقيقي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "ØªØ­Ù„ÙŠÙ„ Ø­Ù‚ÙŠÙ‚ÙŠ",
     "course_code": "MATH 204",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -204,8 +204,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "تراكيب البيانات",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ØªØ±Ø§ÙƒÙŠØ¨ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª",
     "course_code": "COMP 202",
     "credit_hours": "3",
     "prerequisites": "COMP 104",
@@ -213,8 +213,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "برمجة حاسب متقدم",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ø¨Ø±Ù…Ø¬Ø© Ø­Ø§Ø³Ø¨ Ù…ØªÙ‚Ø¯Ù…",
     "course_code": "COMP 212",
     "credit_hours": "3",
     "prerequisites": "COMP 104",
@@ -222,8 +222,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "نظرية الألعاب",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ø£Ù„Ø¹Ø§Ø¨",
     "course_code": "MATH 206",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -231,8 +231,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "البرمجة الخطية",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ù„Ø¨Ø±Ù…Ø¬Ø© Ø§Ù„Ø®Ø·ÙŠØ©",
     "course_code": "MATH 208",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -240,8 +240,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "المنطق الرياضي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ù„Ù…Ù†Ø·Ù‚ Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠ",
     "course_code": "MATH 222",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -249,8 +249,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "شبكات الحاسب",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø´Ø¨ÙƒØ§Øª Ø§Ù„Ø­Ø§Ø³Ø¨",
     "course_code": "COMP 204",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -258,8 +258,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "برمجة الويب",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø¨Ø±Ù…Ø¬Ø© Ø§Ù„ÙˆÙŠØ¨",
     "course_code": "COMP 206",
     "credit_hours": "2",
     "prerequisites": "COMP 104",
@@ -267,18 +267,18 @@ const List<Map<String, String>> _courses = [
   {
     "level": "2",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "نظرية الآليات الذاتية",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ø¢Ù„ÙŠØ§Øª Ø§Ù„Ø°Ø§ØªÙŠØ©",
     "course_code": "COMP 208",
     "credit_hours": "3",
     "prerequisites": "-",
   },
-  // ========== المستوى الثالث ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù„Ø« ==========
   {
     "level": "3",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "التفكير العلمي",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø§Ù„ØªÙÙƒÙŠØ± Ø§Ù„Ø¹Ù„Ù…ÙŠ",
     "course_code": "SCTH 301",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -286,8 +286,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "متطلبات جامعة",
-    "course_name": "أخلاقيات البحث العلمي",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø£Ø®Ù„Ø§Ù‚ÙŠØ§Øª Ø§Ù„Ø¨Ø­Ø« Ø§Ù„Ø¹Ù„Ù…ÙŠ",
     "course_code": "ETHR 302",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -295,8 +295,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "الجبر المجرد (1) – نظرية الزمر",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ø¬Ø¨Ø± Ø§Ù„Ù…Ø¬Ø±Ø¯ (1) â€“ Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ø²Ù…Ø±",
     "course_code": "MATH 301",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -304,8 +304,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "التحليل العددي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ø¹Ø¯Ø¯ÙŠ",
     "course_code": "MATH 303",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -313,8 +313,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "التوبولوجي العام",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„ØªÙˆØ¨ÙˆÙ„ÙˆØ¬ÙŠ Ø§Ù„Ø¹Ø§Ù…",
     "course_code": "MATH 302",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -322,8 +322,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "نظرية القياس",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ù‚ÙŠØ§Ø³",
     "course_code": "MATH 304",
     "credit_hours": "3",
     "prerequisites": "MATH 204",
@@ -331,8 +331,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "بحوث العمليات",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø¨Ø­ÙˆØ« Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª",
     "course_code": "MATH 306",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -340,8 +340,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "نظرية التعقد",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„ØªØ¹Ù‚Ø¯",
     "course_code": "COMP 305",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -349,8 +349,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "نظم تشغيل",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ù†Ø¸Ù… ØªØ´ØºÙŠÙ„",
     "course_code": "COMP 307",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -358,8 +358,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "تآلفيات خوارزمية",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ØªØ¢Ù„ÙÙŠØ§Øª Ø®ÙˆØ§Ø±Ø²Ù…ÙŠØ©",
     "course_code": "COMP 302",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -367,8 +367,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "تشفير",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ØªØ´ÙÙŠØ±",
     "course_code": "COMP 308",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -376,8 +376,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "الهندسة التفاضلية",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ù„Ù‡Ù†Ø¯Ø³Ø© Ø§Ù„ØªÙØ§Ø¶Ù„ÙŠØ©",
     "course_code": "MATH 305",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -385,8 +385,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "نظرية الخوارزميات",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ø®ÙˆØ§Ø±Ø²Ù…ÙŠØ§Øª",
     "course_code": "MATH 307",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -394,8 +394,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "مبادئ نمذجة رياضية",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…Ø¨Ø§Ø¯Ø¦ Ù†Ù…Ø°Ø¬Ø© Ø±ÙŠØ§Ø¶ÙŠØ©",
     "course_code": "MATH 319",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -403,8 +403,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "مبادئ حساب التغيرات",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…Ø¨Ø§Ø¯Ø¦ Ø­Ø³Ø§Ø¨ Ø§Ù„ØªØºÙŠØ±Ø§Øª",
     "course_code": "MATH 331",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -412,8 +412,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "قواعد ودلالات لغات البرمجة",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù‚ÙˆØ§Ø¹Ø¯ ÙˆØ¯Ù„Ø§Ù„Ø§Øª Ù„ØºØ§Øª Ø§Ù„Ø¨Ø±Ù…Ø¬Ø©",
     "course_code": "COMP 303",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -421,8 +421,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "نظم الوسائط المتعددة",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù†Ø¸Ù… Ø§Ù„ÙˆØ³Ø§Ø¦Ø· Ø§Ù„Ù…ØªØ¹Ø¯Ø¯Ø©",
     "course_code": "COMP 309",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -430,8 +430,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "اللغات التصريحية",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ù„Ù„ØºØ§Øª Ø§Ù„ØªØµØ±ÙŠØ­ÙŠØ©",
     "course_code": "COMP 311",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -439,8 +439,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "حزم برمجية",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø­Ø²Ù… Ø¨Ø±Ù…Ø¬ÙŠØ©",
     "course_code": "COMP 313",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -448,8 +448,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "تصميم مؤلفات",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "ØªØµÙ…ÙŠÙ… Ù…Ø¤Ù„ÙØ§Øª",
     "course_code": "COMP 304",
     "credit_hours": "3",
     "prerequisites": "COMP 212",
@@ -457,18 +457,18 @@ const List<Map<String, String>> _courses = [
   {
     "level": "3",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "رسومات الحاسب",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø±Ø³ÙˆÙ…Ø§Øª Ø§Ù„Ø­Ø§Ø³Ø¨",
     "course_code": "COMP 306",
     "credit_hours": "3",
     "prerequisites": "COMP 212",
   },
-  // ========== المستوى الرابع ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø±Ø§Ø¨Ø¹ ==========
   {
     "level": "4",
     "type": "elective",
-    "department": "متطلبات جامعة (اختياري)",
-    "course_name": "مهارات العمل",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…Ù‡Ø§Ø±Ø§Øª Ø§Ù„Ø¹Ù…Ù„",
     "course_code": "SKIL 401",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -476,8 +476,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "متطلبات جامعة (اختياري)",
-    "course_name": "ثقافة بيئية",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø«Ù‚Ø§ÙØ© Ø¨ÙŠØ¦ÙŠØ©",
     "course_code": "ENCU 401",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -485,8 +485,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "متطلبات جامعة (اختياري)",
-    "course_name": "نشأة وتاريخ وتطور العلوم",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù†Ø´Ø£Ø© ÙˆØªØ§Ø±ÙŠØ® ÙˆØªØ·ÙˆØ± Ø§Ù„Ø¹Ù„ÙˆÙ…",
     "course_code": "GHDS 401",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -494,8 +494,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "التحليل الدالي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ø¯Ø§Ù„ÙŠ",
     "course_code": "MATH 401",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -503,8 +503,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "التحليل المركب",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ù…Ø±ÙƒØ¨",
     "course_code": "MATH 403",
     "credit_hours": "3",
     "prerequisites": "MATH 204",
@@ -512,8 +512,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "مشروع بحثي رياضيات بحتة",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù…Ø´Ø±ÙˆØ¹ Ø¨Ø­Ø«ÙŠ Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø¨Ø­ØªØ©",
     "course_code": "MATH 423",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -521,8 +521,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "الجبر المجرد (2) – الحلقات والحقول",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ø¬Ø¨Ø± Ø§Ù„Ù…Ø¬Ø±Ø¯ (2) â€“ Ø§Ù„Ø­Ù„Ù‚Ø§Øª ÙˆØ§Ù„Ø­Ù‚ÙˆÙ„",
     "course_code": "MATH 402",
     "credit_hours": "3",
     "prerequisites": "MATH 301",
@@ -530,8 +530,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "الرياضيات البحتة (تخصص أول)",
-    "course_name": "المعادلات التفاضلية الجزئية",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ù…Ø¹Ø§Ø¯Ù„Ø§Øª Ø§Ù„ØªÙØ§Ø¶Ù„ÙŠØ© Ø§Ù„Ø¬Ø²Ø¦ÙŠØ©",
     "course_code": "MATH 404",
     "credit_hours": "3",
     "prerequisites": "MATH 202",
@@ -539,8 +539,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "ذكاء اصطناعي",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ",
     "course_code": "COMP 401",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -548,8 +548,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "المعالجة المتوازية والموزعة",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø© Ø§Ù„Ù…ØªÙˆØ§Ø²ÙŠØ© ÙˆØ§Ù„Ù…ÙˆØ²Ø¹Ø©",
     "course_code": "COMP 403",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -557,8 +557,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "mandatory",
-    "department": "علوم الحاسب (تخصص ثاني)",
-    "course_name": "المعلومات الحيوية",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ø­ÙŠÙˆÙŠØ©",
     "course_code": "COMP 402",
     "credit_hours": "3",
     "prerequisites": "COMP 201",
@@ -566,8 +566,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "الهندسة الجبرية",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ù„Ù‡Ù†Ø¯Ø³Ø© Ø§Ù„Ø¬Ø¨Ø±ÙŠØ©",
     "course_code": "MATH 407",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -575,8 +575,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "نظرية الرسوم",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù†Ø¸Ø±ÙŠØ© Ø§Ù„Ø±Ø³ÙˆÙ…",
     "course_code": "MATH 409",
     "credit_hours": "2",
     "prerequisites": "-",
@@ -584,8 +584,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "جبر خطي عددي",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø¬Ø¨Ø± Ø®Ø·ÙŠ Ø¹Ø¯Ø¯ÙŠ",
     "course_code": "MATH 421",
     "credit_hours": "2",
     "prerequisites": "MATH 203",
@@ -593,8 +593,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "جبر خطي متقدم",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø¬Ø¨Ø± Ø®Ø·ÙŠ Ù…ØªÙ‚Ø¯Ù…",
     "course_code": "MATH 406",
     "credit_hours": "3",
     "prerequisites": "MATH 203",
@@ -602,8 +602,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "الرياضيات البحتة (اختياري)",
-    "course_name": "موضوعات مختارة في الرياضيات البحتة",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…ÙˆØ¶ÙˆØ¹Ø§Øª Ù…Ø®ØªØ§Ø±Ø© ÙÙŠ Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø§Ù„Ø¨Ø­ØªØ©",
     "course_code": "MATH 408",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -611,8 +611,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "معالجة الصور",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…Ø¹Ø§Ù„Ø¬Ø© Ø§Ù„ØµÙˆØ±",
     "course_code": "COMP 407",
     "credit_hours": "3",
     "prerequisites": "COMP 212",
@@ -620,8 +620,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "الهندسة الحسابية",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ù„Ù‡Ù†Ø¯Ø³Ø© Ø§Ù„Ø­Ø³Ø§Ø¨ÙŠØ©",
     "course_code": "COMP 411",
     "credit_hours": "3",
     "prerequisites": "COMP 201, 212",
@@ -629,8 +629,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "موضوعات مختارة في الخوارزميات",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…ÙˆØ¶ÙˆØ¹Ø§Øª Ù…Ø®ØªØ§Ø±Ø© ÙÙŠ Ø§Ù„Ø®ÙˆØ§Ø±Ø²Ù…ÙŠØ§Øª",
     "course_code": "COMP 413",
     "credit_hours": "3",
     "prerequisites": "COMP 201",
@@ -638,8 +638,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "موضوعات مختارة في أمن المعلومات",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…ÙˆØ¶ÙˆØ¹Ø§Øª Ù…Ø®ØªØ§Ø±Ø© ÙÙŠ Ø£Ù…Ù† Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª",
     "course_code": "COMP 412",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -647,8 +647,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "موضوعات مختارة في الحوسبة",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…ÙˆØ¶ÙˆØ¹Ø§Øª Ù…Ø®ØªØ§Ø±Ø© ÙÙŠ Ø§Ù„Ø­ÙˆØ³Ø¨Ø©",
     "course_code": "COMP 414",
     "credit_hours": "3",
     "prerequisites": "COMP 205",
@@ -656,8 +656,8 @@ const List<Map<String, String>> _courses = [
   {
     "level": "4",
     "type": "elective",
-    "department": "علوم الحاسب (اختياري)",
-    "course_name": "استخلاص البيانات والويب",
+    "department": "Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ø§Ø³ØªØ®Ù„Ø§Øµ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª ÙˆØ§Ù„ÙˆÙŠØ¨",
     "course_code": "COMP 416",
     "credit_hours": "3",
     "prerequisites": "COMP 207",
@@ -679,12 +679,12 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
   String _filterSpec = 'all';
 
   static const _levels = ['1', '2', '3', '4'];
-  static const _levelNames = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة'];
+  static const _levelNames = ['Ø§Ù„Ø£ÙˆÙ„Ù‰', 'Ø§Ù„Ø«Ø§Ù†ÙŠØ©', 'Ø§Ù„Ø«Ø§Ù„Ø«Ø©', 'Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©'];
   static const _levelLabels = [
-    'المستوى الأول',
-    'المستوى الثاني',
-    'المستوى الثالث',
-    'المستوى الرابع',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø£ÙˆÙ„',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù†ÙŠ',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù„Ø«',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø±Ø§Ø¨Ø¹',
   ];
 
   @override
@@ -704,12 +704,12 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
       if (c['level'] != level) return false;
       if (_filterType != 'all' && c['type'] != _filterType) return false;
       if (_filterSpec == 'math') {
-        return c['department']!.contains('رياضيات') ||
-            c['department']!.contains('متطلبات');
+        return c['department']!.contains('Ø±ÙŠØ§Ø¶ÙŠØ§Øª') ||
+            c['department']!.contains('Ù…ØªØ·Ù„Ø¨Ø§Øª');
       }
       if (_filterSpec == 'cs') {
-        return c['department']!.contains('حاسب') ||
-            c['department']!.contains('متطلبات');
+        return c['department']!.contains('Ø­Ø§Ø³Ø¨') ||
+            c['department']!.contains('Ù…ØªØ·Ù„Ø¨Ø§Øª');
       }
       return true;
     }).toList();
@@ -724,7 +724,7 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: const Text(
-          'بحتة – علوم الحاسب (مزدوج)',
+          'Ø¨Ø­ØªØ© â€“ Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨ (Ù…Ø²Ø¯ÙˆØ¬)',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
         ),
         centerTitle: true,
@@ -742,7 +742,7 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
           unselectedLabelStyle: const TextStyle(fontSize: 12),
           tabs: List.generate(
             _levels.length,
-            (i) => Tab(text: 'السنة ${_levelNames[i]}'),
+            (i) => Tab(text: 'Ø§Ù„Ø³Ù†Ø© ${_levelNames[i]}'),
           ),
         ),
       ),
@@ -773,19 +773,19 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _Chip(
-                  label: 'الكل',
+                  label: 'Ø§Ù„ÙƒÙ„',
                   selected: _filterType == 'all',
                   color: const Color(0xFF64748B),
                   onTap: () => setState(() => _filterType = 'all')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'إجباري',
+                  label: 'Ø¥Ø¬Ø¨Ø§Ø±ÙŠ',
                   selected: _filterType == 'mandatory',
                   color: const Color(0xFF059669),
                   onTap: () => setState(() => _filterType = 'mandatory')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'اختياري',
+                  label: 'Ø§Ø®ØªÙŠØ§Ø±ÙŠ',
                   selected: _filterType == 'elective',
                   color: const Color(0xFFD97706),
                   onTap: () => setState(() => _filterType = 'elective')),
@@ -796,19 +796,19 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _Chip(
-                  label: 'الكل',
+                  label: 'Ø§Ù„ÙƒÙ„',
                   selected: _filterSpec == 'all',
                   color: const Color(0xFF047857),
                   onTap: () => setState(() => _filterSpec = 'all')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'رياضيات بحتة',
+                  label: 'Ø±ÙŠØ§Ø¶ÙŠØ§Øª Ø¨Ø­ØªØ©',
                   selected: _filterSpec == 'math',
                   color: const Color(0xFF2563EB),
                   onTap: () => setState(() => _filterSpec = 'math')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'علوم الحاسب',
+                  label: 'Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³Ø¨',
                   selected: _filterSpec == 'cs',
                   color: const Color(0xFF7C3AED),
                   onTap: () => setState(() => _filterSpec = 'cs')),
@@ -830,7 +830,7 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
           children: [
             Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            Text('لا توجد مقررات لهذا الفلتر',
+            Text('Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù‚Ø±Ø±Ø§Øª Ù„Ù‡Ø°Ø§ Ø§Ù„ÙÙ„ØªØ±',
                 style: TextStyle(color: Colors.grey[500], fontSize: 16)),
           ],
         ),
@@ -871,7 +871,7 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
                               fontSize: 18,
                               fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
-                      Text('${courses.length} مقرر',
+                      Text('${courses.length} Ù…Ù‚Ø±Ø±',
                           style: const TextStyle(
                               color: Colors.white70, fontSize: 14)),
                     ],
@@ -890,7 +890,7 @@ class _PureMathCSCoursesScreenState extends State<PureMathCSCoursesScreen>
                                 color: Colors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold)),
-                        const Text('ساعة',
+                        const Text('Ø³Ø§Ø¹Ø©',
                             style:
                                 TextStyle(color: Colors.white70, fontSize: 12)),
                       ],
@@ -924,10 +924,10 @@ class _CourseCard extends StatelessWidget {
 
   Color get _specColor {
     final dept = course['department'] ?? '';
-    if (dept.contains('حاسب') || dept.contains('COMP')) {
+    if (dept.contains('Ø­Ø§Ø³Ø¨') || dept.contains('COMP')) {
       return const Color(0xFF7C3AED);
     }
-    if (dept.contains('رياضيات')) return const Color(0xFF2563EB);
+    if (dept.contains('Ø±ÙŠØ§Ø¶ÙŠØ§Øª')) return const Color(0xFF2563EB);
     return const Color(0xFF64748B);
   }
 
@@ -936,7 +936,7 @@ class _CourseCard extends StatelessWidget {
     final isElective = course['type'] == 'elective';
     final typeColor =
         isElective ? const Color(0xFFD97706) : const Color(0xFF059669);
-    final typeLabel = isElective ? 'اختياري' : 'إجباري';
+    final typeLabel = isElective ? 'Ø§Ø®ØªÙŠØ§Ø±ÙŠ' : 'Ø¥Ø¬Ø¨Ø§Ø±ÙŠ';
     final hasPrereq =
         course['prerequisites'] != null && course['prerequisites'] != '-';
 
@@ -1036,7 +1036,7 @@ class _CourseCard extends StatelessWidget {
                       const Icon(Icons.access_time,
                           size: 13, color: Color(0xFF64748B)),
                       const SizedBox(width: 4),
-                      Text('${course['credit_hours']} ساعة',
+                      Text('${course['credit_hours']} Ø³Ø§Ø¹Ø©',
                           style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF374151),

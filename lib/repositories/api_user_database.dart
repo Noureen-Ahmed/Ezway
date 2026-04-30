@@ -1,11 +1,11 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
 
 /// API Service for communicating with the backend server
 /// which handles MySQL database operations
 class ApiUserDatabase {
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'https://ezway-backend.up.railway.app/api';
 
   /// Login user with email and password
   static Future<User?> login(String email, String password) async {

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
@@ -196,7 +196,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '⚠️ $conflictCount student${conflictCount > 1 ? 's' : ''} have exams in other courses on this day.',
+                              'âš ï¸ $conflictCount student${conflictCount > 1 ? 's' : ''} have exams in other courses on this day.',
                               style: const TextStyle(
                                   color: Colors.orange, 
                                   fontWeight: FontWeight.bold,
@@ -474,7 +474,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             const Text('Questions',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text(
-                '${_questions.length} questions • ${_calculateTotalPoints()} pts',
+                '${_questions.length} questions â€¢ ${_calculateTotalPoints()} pts',
                 style: TextStyle(
                     color: Colors.grey[600], fontWeight: FontWeight.w500)),
           ],
@@ -551,7 +551,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('${question['type']} • ${question['points']} pts'),
+        subtitle: Text('${question['type']} â€¢ ${question['points']} pts'),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -1,4 +1,4 @@
-enum CourseCategory { comp, math, chem, phys, hist, eng }
+﻿enum CourseCategory { comp, math, chem, phys, hist, eng }
 
 enum EnrollmentStatus { enrolled, wishlist, available, completed }
 

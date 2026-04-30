@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
 
@@ -12,7 +12,7 @@ abstract class CourseRepository {
 }
 
 class ApiCourseRepository implements CourseRepository {
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'https://ezway-backend.up.railway.app/api';
 
   @override
   Future<List<Course>> getCourses() async {

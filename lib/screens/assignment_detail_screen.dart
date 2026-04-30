@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -189,7 +189,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'No due date';
-    return DateFormat('MMM d, y • h:mm a').format(date);
+    return DateFormat('MMM d, y â€¢ h:mm a').format(date);
   }
 
   Future<void> _launchUrl(String url) async {
@@ -278,7 +278,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text('•', style: TextStyle(color: Colors.grey[400])),
+                  Text('â€¢', style: TextStyle(color: Colors.grey[400])),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(

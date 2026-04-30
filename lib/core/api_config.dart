@@ -1,8 +1,8 @@
-/// API Configuration
+﻿/// API Configuration
 /// Centralized configuration for API endpoints and headers
 class ApiConfig {
   // Base URL - change this for different environments
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'https://ezway-backend.up.railway.app/api';
   
   // For production, use:
   // static const String baseUrl = 'https://api.yourcollegeguide.com/api';

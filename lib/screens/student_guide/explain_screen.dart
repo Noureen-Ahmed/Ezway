@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'question.dart';
 
 class ExplainScreen extends StatefulWidget {
@@ -140,14 +140,14 @@ class _ExplainScreenState extends State<ExplainScreen> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       Text(
-                                        'العربية',
+                                        'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Color(0xFF2563eb),
                                         ),
                                       ),
                                       SizedBox(width: 8),
-                                      Text('🇪🇬'),
+                                      Text('ðŸ‡ªðŸ‡¬'),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
@@ -180,7 +180,7 @@ class _ExplainScreenState extends State<ExplainScreen> {
                                 children: [
                                   const Row(
                                     children: [
-                                      Text('🇬🇧'),
+                                      Text('ðŸ‡¬ðŸ‡§'),
                                       SizedBox(width: 8),
                                       Text(
                                         'English',

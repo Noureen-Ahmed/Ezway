@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'AddTask.dart';
@@ -13,7 +13,7 @@ import '../../services/data_service.dart';
 import 'AddNote.dart';
 import 'package:intl/intl.dart';
 
-// ── Main page ────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class TasksPage extends ConsumerWidget {
   const TasksPage({super.key});
 
@@ -102,7 +102,7 @@ class TasksPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Error Banner ──────────────────────────────────────────────
+              // â”€â”€ Error Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               if (error != null)
                 Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -133,7 +133,7 @@ class TasksPage extends ConsumerWidget {
                   ),
                 ),
 
-              // ── Stats Cards (only for students) ───────────────────────
+              // â”€â”€ Stats Cards (only for students) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               if (!isProfessor) ...[
                 Row(
                   children: [
@@ -160,7 +160,7 @@ class TasksPage extends ConsumerWidget {
                 const SizedBox(height: 24),
               ],
 
-              // ── Add New Task/Note Button ───────────────────────────────
+              // â”€â”€ Add New Task/Note Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -191,7 +191,7 @@ class TasksPage extends ConsumerWidget {
 
               const SizedBox(height: 32),
 
-              // ── Pending Section ────────────────────────────────────────
+              // â”€â”€ Pending Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Text(
                 isProfessor ? 'Pending Notes' : 'Pending Tasks',
                 style: const TextStyle(
@@ -231,7 +231,7 @@ class TasksPage extends ConsumerWidget {
 
               const SizedBox(height: 32),
 
-              // ── Completed Section ──────────────────────────────────────
+              // â”€â”€ Completed Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Text(
                 isProfessor ? 'Completed Notes' : 'Completed Tasks',
                 style: const TextStyle(
@@ -365,7 +365,7 @@ class TasksPage extends ConsumerWidget {
 }
 
 
-// ── Stat Card ────────────────────────────────────────────────────────────────
+// â”€â”€ Stat Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
@@ -402,7 +402,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Task Card ────────────────────────────────────────────────────────────────
+// â”€â”€ Task Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _TaskCard extends ConsumerWidget {
   final Task task;
   final bool isPersonal;

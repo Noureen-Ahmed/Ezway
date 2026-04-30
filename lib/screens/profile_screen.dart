@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_session_provider.dart';
@@ -235,7 +235,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             title: 'Phone Number',
             value: user.phone != null && user.phone!.isNotEmpty
                 ? user.phone!
-                : 'Not available — sync UMS to retrieve',
+                : 'Not available â€” sync UMS to retrieve',
           ),
 
           const SizedBox(height: 100),

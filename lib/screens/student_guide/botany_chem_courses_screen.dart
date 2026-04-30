@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 const List<Map<String, String>> _courses = [
-  // ========== المستوى الأول ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø£ÙˆÙ„ ==========
   {
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "الأمن والسلامة",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø§Ù„Ø£Ù…Ù† ÙˆØ§Ù„Ø³Ù„Ø§Ù…Ø©",
     "course_code": "SAFS 101",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -16,8 +16,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "حقوق الإنسان",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø­Ù‚ÙˆÙ‚ Ø§Ù„Ø¥Ù†Ø³Ø§Ù†",
     "course_code": "HURI 101",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -26,8 +26,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "الرياضيات (متطلبات كلية)",
-    "course_name": "تفاضل وتكامل (1)",
+    "department": "Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "ØªÙØ§Ø¶Ù„ ÙˆØªÙƒØ§Ù…Ù„ (1)",
     "course_code": "MATH 101",
     "credit_hours": "4",
     "prerequisites": "-"
@@ -36,8 +36,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "الفيزياء (متطلبات كلية)",
-    "course_name": "فيزياء عامة (1)",
+    "department": "Ø§Ù„ÙÙŠØ²ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "ÙÙŠØ²ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (1)",
     "course_code": "PHYS 101",
     "credit_hours": "4",
     "prerequisites": "-"
@@ -46,8 +46,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (متطلبات كلية)",
-    "course_name": "كيمياء عامة (1)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (1)",
     "course_code": "CHEM 101",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -56,8 +56,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (متطلبات كلية)",
-    "course_name": "عملي كيمياء عامة (1)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¹Ù…Ù„ÙŠ ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (1)",
     "course_code": "CHEM 103",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -66,8 +66,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (متطلبات كلية)",
-    "course_name": "أساسيات علم النبات (1)",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª Ø¹Ù„Ù… Ø§Ù„Ù†Ø¨Ø§Øª (1)",
     "course_code": "BOTA 101",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -76,8 +76,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "علم الحيوان (متطلبات كلية)",
-    "course_name": "علم الحيوان (1)",
+    "department": "Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù† (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù† (1)",
     "course_code": "ZOOL 101",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -86,8 +86,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "لغة إنجليزية (1)",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ù„ØºØ© Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ© (1)",
     "course_code": "ENGL 102",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -96,8 +96,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "مدخل في الحاسب الآلي",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ù…Ø¯Ø®Ù„ ÙÙŠ Ø§Ù„Ø­Ø§Ø³Ø¨ Ø§Ù„Ø¢Ù„ÙŠ",
     "course_code": "INCO 102",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -106,8 +106,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (متطلبات كلية)",
-    "course_name": "كيمياء (2)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ (2)",
     "course_code": "CHEM 102",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -116,8 +116,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (متطلبات كلية)",
-    "course_name": "عملي كيمياء عامة (2)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¹Ù…Ù„ÙŠ ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø§Ù…Ø© (2)",
     "course_code": "CHEM 104",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -126,8 +126,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (متطلبات كلية)",
-    "course_name": "أساسيات علم النبات (2)",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª Ø¹Ù„Ù… Ø§Ù„Ù†Ø¨Ø§Øª (2)",
     "course_code": "BOTA 102",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -136,8 +136,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "علم الحيوان (متطلبات كلية)",
-    "course_name": "علم الحيوان (2)",
+    "department": "Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù† (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¹Ù„Ù… Ø§Ù„Ø­ÙŠÙˆØ§Ù† (2)",
     "course_code": "ZOOL 102",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -146,8 +146,8 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "الميكروبيولوجي (متطلبات كلية)",
-    "course_name": "ميكروبيولوجي",
+    "department": "Ø§Ù„Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ù…ÙŠÙƒØ±ÙˆØ¨ÙŠÙˆÙ„ÙˆØ¬ÙŠ",
     "course_code": "MICR 102",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -156,19 +156,19 @@ const List<Map<String, String>> _courses = [
     "level": "1",
     "type": "mandatory",
     "spec": "both",
-    "department": "علم الحشرات (متطلبات كلية)",
-    "course_name": "علم الحشرات",
+    "department": "Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª (Ù…ØªØ·Ù„Ø¨Ø§Øª ÙƒÙ„ÙŠØ©)",
+    "course_name": "Ø¹Ù„Ù… Ø§Ù„Ø­Ø´Ø±Ø§Øª",
     "course_code": "ENTM 102",
     "credit_hours": "2",
     "prerequisites": "-"
   },
-  // ========== المستوى الثاني ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù†ÙŠ ==========
   {
     "level": "2",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "لغة إنجليزية (2)",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ù„ØºØ© Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ© (2)",
     "course_code": "ENGL 201",
     "credit_hours": "2",
     "prerequisites": "ENGL 102"
@@ -177,8 +177,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "تشريح نبات",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "ØªØ´Ø±ÙŠØ­ Ù†Ø¨Ø§Øª",
     "course_code": "BOTA 201",
     "credit_hours": "2",
     "prerequisites": "BOTA 101"
@@ -187,8 +187,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "أساسيات علم الطحالب",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª Ø¹Ù„Ù… Ø§Ù„Ø·Ø­Ø§Ù„Ø¨",
     "course_code": "BOTA 213",
     "credit_hours": "2",
     "prerequisites": "BOTA 102"
@@ -197,8 +197,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "أساسيات النظم البيئية",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª Ø§Ù„Ù†Ø¸Ù… Ø§Ù„Ø¨ÙŠØ¦ÙŠØ©",
     "course_code": "BOTA 215",
     "credit_hours": "1",
     "prerequisites": "BOTA 102"
@@ -207,8 +207,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "أساسيات وأدوات تكنولوجيا الدنا – البروتيومات",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª ÙˆØ£Ø¯ÙˆØ§Øª ØªÙƒÙ†ÙˆÙ„ÙˆØ¬ÙŠØ§ Ø§Ù„Ø¯Ù†Ø§ â€“ Ø§Ù„Ø¨Ø±ÙˆØªÙŠÙˆÙ…Ø§Øª",
     "course_code": "BOTA 217",
     "credit_hours": "2",
     "prerequisites": "BOTA 102"
@@ -217,8 +217,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء عضوية أليفاتية أحادية وعديدة المجموعة",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø¶ÙˆÙŠØ© Ø£Ù„ÙŠÙØ§ØªÙŠØ© Ø£Ø­Ø§Ø¯ÙŠØ© ÙˆØ¹Ø¯ÙŠØ¯Ø© Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹Ø©",
     "course_code": "CHEM 261",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -227,8 +227,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء غير عضوية – نظريات وعناصر s,p",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ØºÙŠØ± Ø¹Ø¶ÙˆÙŠØ© â€“ Ù†Ø¸Ø±ÙŠØ§Øª ÙˆØ¹Ù†Ø§ØµØ± s,p",
     "course_code": "CHEM 271",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -237,8 +237,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "أساسيات الكيمياء التحليلية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„ØªØ­Ù„ÙŠÙ„ÙŠØ©",
     "course_code": "CHEM 281",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -247,8 +247,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "الخلية والجينوم النباتي – الاتجاه التطوري",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ø®Ù„ÙŠØ© ÙˆØ§Ù„Ø¬ÙŠÙ†ÙˆÙ… Ø§Ù„Ù†Ø¨Ø§ØªÙŠ â€“ Ø§Ù„Ø§ØªØ¬Ø§Ù‡ Ø§Ù„ØªØ·ÙˆØ±ÙŠ",
     "course_code": "BOTA 220",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -257,8 +257,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء عضوية أروماتية أحادية وعديدة المجموعة",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø¶ÙˆÙŠØ© Ø£Ø±ÙˆÙ…Ø§ØªÙŠØ© Ø£Ø­Ø§Ø¯ÙŠØ© ÙˆØ¹Ø¯ÙŠØ¯Ø© Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹Ø©",
     "course_code": "CHEM 260",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -267,8 +267,8 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء فيزيائية – ديناميكا حرارية وكيمياء كهربية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ÙÙŠØ²ÙŠØ§Ø¦ÙŠØ© â€“ Ø¯ÙŠÙ†Ø§Ù…ÙŠÙƒØ§ Ø­Ø±Ø§Ø±ÙŠØ© ÙˆÙƒÙŠÙ…ÙŠØ§Ø¡ ÙƒÙ‡Ø±Ø¨ÙŠØ©",
     "course_code": "CHEM 290",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -277,19 +277,19 @@ const List<Map<String, String>> _courses = [
     "level": "2",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء فيزيائية – كيمياء حركية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ÙÙŠØ²ÙŠØ§Ø¦ÙŠØ© â€“ ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø­Ø±ÙƒÙŠØ©",
     "course_code": "CHEM 294",
     "credit_hours": "1",
     "prerequisites": "-"
   },
-  // ========== المستوى الثالث ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù„Ø« ==========
   {
     "level": "3",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "التفكير العلمي",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø§Ù„ØªÙÙƒÙŠØ± Ø§Ù„Ø¹Ù„Ù…ÙŠ",
     "course_code": "SCTH 301",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -298,8 +298,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "both",
-    "department": "متطلبات جامعة",
-    "course_name": "أخلاقيات البحث العلمي",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø©",
+    "course_name": "Ø£Ø®Ù„Ø§Ù‚ÙŠØ§Øª Ø§Ù„Ø¨Ø­Ø« Ø§Ù„Ø¹Ù„Ù…ÙŠ",
     "course_code": "ETHR 302",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -308,8 +308,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "فسيولوجيا النمو والهرمونات النباتية – زراعة أنسجة نباتية",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "ÙØ³ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ Ø§Ù„Ù†Ù…Ùˆ ÙˆØ§Ù„Ù‡Ø±Ù…ÙˆÙ†Ø§Øª Ø§Ù„Ù†Ø¨Ø§ØªÙŠØ© â€“ Ø²Ø±Ø§Ø¹Ø© Ø£Ù†Ø³Ø¬Ø© Ù†Ø¨Ø§ØªÙŠØ©",
     "course_code": "BOTA 321",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -318,8 +318,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "الآليات الأساسية للوراثة",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ø¢Ù„ÙŠØ§Øª Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© Ù„Ù„ÙˆØ±Ø§Ø«Ø©",
     "course_code": "BOTA 323",
     "credit_hours": "2",
     "prerequisites": "BOTA 217"
@@ -328,8 +328,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "طحالب البيئات المختلفة في مصر",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø·Ø­Ø§Ù„Ø¨ Ø§Ù„Ø¨ÙŠØ¦Ø§Øª Ø§Ù„Ù…Ø®ØªÙ„ÙØ© ÙÙŠ Ù…ØµØ±",
     "course_code": "BOTA 325",
     "credit_hours": "2",
     "prerequisites": "BOTA 213"
@@ -338,8 +338,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء عضوية – الكيمياء الفراغية والسكريات",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø¶ÙˆÙŠØ© â€“ Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„ÙØ±Ø§ØºÙŠØ© ÙˆØ§Ù„Ø³ÙƒØ±ÙŠØ§Øª",
     "course_code": "CHEM 361",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -348,8 +348,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء غير عضوية – كيمياء تناسقية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ØºÙŠØ± Ø¹Ø¶ÙˆÙŠØ© â€“ ÙƒÙŠÙ…ÙŠØ§Ø¡ ØªÙ†Ø§Ø³Ù‚ÙŠØ©",
     "course_code": "CHEM 371",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -358,8 +358,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء فيزيائية – كيمياء السطوح والحفز والبلمرات",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ÙÙŠØ²ÙŠØ§Ø¦ÙŠØ© â€“ ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„Ø³Ø·ÙˆØ­ ÙˆØ§Ù„Ø­ÙØ² ÙˆØ§Ù„Ø¨Ù„Ù…Ø±Ø§Øª",
     "course_code": "CHEM 391",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -368,8 +368,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "أساسيات علم الأرشيجونيات",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø£Ø³Ø§Ø³ÙŠØ§Øª Ø¹Ù„Ù… Ø§Ù„Ø£Ø±Ø´ÙŠØ¬ÙˆÙ†ÙŠØ§Øª",
     "course_code": "BOTA 322",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -378,8 +378,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "من تميز البروتينات إلى هندسة البروتينات",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù…Ù† ØªÙ…ÙŠØ² Ø§Ù„Ø¨Ø±ÙˆØªÙŠÙ†Ø§Øª Ø¥Ù„Ù‰ Ù‡Ù†Ø¯Ø³Ø© Ø§Ù„Ø¨Ø±ÙˆØªÙŠÙ†Ø§Øª",
     "course_code": "BOTA 324",
     "credit_hours": "1",
     "prerequisites": "BOTA 217"
@@ -388,8 +388,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "الحياة البرية والموارد البيئية الطبيعية",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ø­ÙŠØ§Ø© Ø§Ù„Ø¨Ø±ÙŠØ© ÙˆØ§Ù„Ù…ÙˆØ§Ø±Ø¯ Ø§Ù„Ø¨ÙŠØ¦ÙŠØ© Ø§Ù„Ø·Ø¨ÙŠØ¹ÙŠØ©",
     "course_code": "BOTA 326",
     "credit_hours": "1",
     "prerequisites": "BOTA 215"
@@ -398,8 +398,8 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء عضوية – الأصباغ والأطياف العضوية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø¶ÙˆÙŠØ© â€“ Ø§Ù„Ø£ØµØ¨Ø§Øº ÙˆØ§Ù„Ø£Ø·ÙŠØ§Ù Ø§Ù„Ø¹Ø¶ÙˆÙŠØ©",
     "course_code": "CHEM 360",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -408,19 +408,19 @@ const List<Map<String, String>> _courses = [
     "level": "3",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء تحليلية – التحليل بالأجهزة",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ØªØ­Ù„ÙŠÙ„ÙŠØ© â€“ Ø§Ù„ØªØ­Ù„ÙŠÙ„ Ø¨Ø§Ù„Ø£Ø¬Ù‡Ø²Ø©",
     "course_code": "CHEM 380",
     "credit_hours": "3",
     "prerequisites": "-"
   },
-  // ========== المستوى الرابع ==========
+  // ========== Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø±Ø§Ø¨Ø¹ ==========
   {
     "level": "4",
     "type": "elective",
     "spec": "both",
-    "department": "متطلبات جامعة (اختياري)",
-    "course_name": "مهارات العمل",
+    "department": "Ù…ØªØ·Ù„Ø¨Ø§Øª Ø¬Ø§Ù…Ø¹Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
+    "course_name": "Ù…Ù‡Ø§Ø±Ø§Øª Ø§Ù„Ø¹Ù…Ù„",
     "course_code": "SKIL 401",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -429,8 +429,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "فسيولوجيا الإنبات والإكثار",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "ÙØ³ÙŠÙˆÙ„ÙˆØ¬ÙŠØ§ Ø§Ù„Ø¥Ù†Ø¨Ø§Øª ÙˆØ§Ù„Ø¥ÙƒØ«Ø§Ø±",
     "course_code": "BOTA 427",
     "credit_hours": "2",
     "prerequisites": "BOTA 321"
@@ -439,8 +439,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "النواحي التطبيقية للأرشيجونيات والحفريات",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø§Ù„Ù†ÙˆØ§Ø­ÙŠ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ÙŠØ© Ù„Ù„Ø£Ø±Ø´ÙŠØ¬ÙˆÙ†ÙŠØ§Øª ÙˆØ§Ù„Ø­ÙØ±ÙŠØ§Øª",
     "course_code": "BOTA 429",
     "credit_hours": "2",
     "prerequisites": "BOTA 322"
@@ -449,8 +449,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "مقدمة في علم الأجنة",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù…Ù‚Ø¯Ù…Ø© ÙÙŠ Ø¹Ù„Ù… Ø§Ù„Ø£Ø¬Ù†Ø©",
     "course_code": "BOTA 431",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -459,8 +459,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء عضوية – ميكانيكية تفاعلات وتربينات",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø¶ÙˆÙŠØ© â€“ Ù…ÙŠÙƒØ§Ù†ÙŠÙƒÙŠØ© ØªÙØ§Ø¹Ù„Ø§Øª ÙˆØªØ±Ø¨ÙŠÙ†Ø§Øª",
     "course_code": "CHEM 461",
     "credit_hours": "4",
     "prerequisites": "-"
@@ -469,8 +469,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "الكيمياء الحيوية غير عضوية والطيفية الكيميائية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø§Ù„Ø­ÙŠÙˆÙŠØ© ØºÙŠØ± Ø¹Ø¶ÙˆÙŠØ© ÙˆØ§Ù„Ø·ÙŠÙÙŠØ© Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¦ÙŠØ©",
     "course_code": "CHEM 471",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -479,9 +479,9 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
     "course_name":
-        "كيمياء فيزيائية – الديناميكا الحرارية للمحاليل الإلكتروليتية",
+        "ÙƒÙŠÙ…ÙŠØ§Ø¡ ÙÙŠØ²ÙŠØ§Ø¦ÙŠØ© â€“ Ø§Ù„Ø¯ÙŠÙ†Ø§Ù…ÙŠÙƒØ§ Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ© Ù„Ù„Ù…Ø­Ø§Ù„ÙŠÙ„ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ„ÙŠØªÙŠØ©",
     "course_code": "CHEM 491",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -490,8 +490,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "أيض النبات",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ø£ÙŠØ¶ Ø§Ù„Ù†Ø¨Ø§Øª",
     "course_code": "BOTA 422",
     "credit_hours": "3",
     "prerequisites": "-"
@@ -500,8 +500,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
-    "course_name": "نباتات عقاقير طبية – تصنيف وفلورا كيميائي",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
+    "course_name": "Ù†Ø¨Ø§ØªØ§Øª Ø¹Ù‚Ø§Ù‚ÙŠØ± Ø·Ø¨ÙŠØ© â€“ ØªØµÙ†ÙŠÙ ÙˆÙÙ„ÙˆØ±Ø§ ÙƒÙŠÙ…ÙŠØ§Ø¦ÙŠ",
     "course_code": "BOTA 424",
     "credit_hours": "3",
     "prerequisites": "BOTA 216"
@@ -510,9 +510,9 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "bota",
-    "department": "النبات (تخصص أول)",
+    "department": "Ø§Ù„Ù†Ø¨Ø§Øª (ØªØ®ØµØµ Ø£ÙˆÙ„)",
     "course_name":
-        "تقنيات تضاعف الحمض النووي DNA بإستخدام تفاعل البلمرة المتسلسل",
+        "ØªÙ‚Ù†ÙŠØ§Øª ØªØ¶Ø§Ø¹Ù Ø§Ù„Ø­Ù…Ø¶ Ø§Ù„Ù†ÙˆÙˆÙŠ DNA Ø¨Ø¥Ø³ØªØ®Ø¯Ø§Ù… ØªÙØ§Ø¹Ù„ Ø§Ù„Ø¨Ù„Ù…Ø±Ø© Ø§Ù„Ù…ØªØ³Ù„Ø³Ù„",
     "course_code": "BOTA 426",
     "credit_hours": "2",
     "prerequisites": "BOTA 323"
@@ -521,8 +521,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء عضوية – غير متجانسة وقلويدات",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¹Ø¶ÙˆÙŠØ© â€“ ØºÙŠØ± Ù…ØªØ¬Ø§Ù†Ø³Ø© ÙˆÙ‚Ù„ÙˆÙŠØ¯Ø§Øª",
     "course_code": "CHEM 460",
     "credit_hours": "4",
     "prerequisites": "-"
@@ -531,8 +531,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء فيزيائية – كيمياء ضوئية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ÙÙŠØ²ÙŠØ§Ø¦ÙŠØ© â€“ ÙƒÙŠÙ…ÙŠØ§Ø¡ Ø¶ÙˆØ¦ÙŠØ©",
     "course_code": "CHEM 490",
     "credit_hours": "2",
     "prerequisites": "-"
@@ -541,8 +541,8 @@ const List<Map<String, String>> _courses = [
     "level": "4",
     "type": "mandatory",
     "spec": "chem",
-    "department": "الكيمياء (تخصص ثاني)",
-    "course_name": "كيمياء غير عضوية – سلاسل والمتراكبات العنقودية",
+    "department": "Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡ (ØªØ®ØµØµ Ø«Ø§Ù†ÙŠ)",
+    "course_name": "ÙƒÙŠÙ…ÙŠØ§Ø¡ ØºÙŠØ± Ø¹Ø¶ÙˆÙŠØ© â€“ Ø³Ù„Ø§Ø³Ù„ ÙˆØ§Ù„Ù…ØªØ±Ø§ÙƒØ¨Ø§Øª Ø§Ù„Ø¹Ù†Ù‚ÙˆØ¯ÙŠØ©",
     "course_code": "CHEM 470",
     "credit_hours": "1",
     "prerequisites": "-"
@@ -563,12 +563,12 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
   String _filterSpec = 'all';
 
   static const _levels = ['1', '2', '3', '4'];
-  static const _levelNames = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة'];
+  static const _levelNames = ['Ø§Ù„Ø£ÙˆÙ„Ù‰', 'Ø§Ù„Ø«Ø§Ù†ÙŠØ©', 'Ø§Ù„Ø«Ø§Ù„Ø«Ø©', 'Ø§Ù„Ø±Ø§Ø¨Ø¹Ø©'];
   static const _levelLabels = [
-    'المستوى الأول',
-    'المستوى الثاني',
-    'المستوى الثالث',
-    'المستوى الرابع',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø£ÙˆÙ„',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù†ÙŠ',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø«Ø§Ù„Ø«',
+    'Ø§Ù„Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø±Ø§Ø¨Ø¹',
   ];
 
   @override
@@ -605,7 +605,7 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text('النبات – كيمياء (مزدوج)',
+        title: const Text('Ø§Ù„Ù†Ø¨Ø§Øª â€“ ÙƒÙŠÙ…ÙŠØ§Ø¡ (Ù…Ø²Ø¯ÙˆØ¬)',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
         centerTitle: true,
         backgroundColor: const Color(0xFF14532D),
@@ -621,7 +621,7 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
               const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontSize: 12),
           tabs: List.generate(
-              _levels.length, (i) => Tab(text: 'السنة ${_levelNames[i]}')),
+              _levels.length, (i) => Tab(text: 'Ø§Ù„Ø³Ù†Ø© ${_levelNames[i]}')),
         ),
       ),
       body: Column(
@@ -649,19 +649,19 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _Chip(
-                  label: 'الكل',
+                  label: 'Ø§Ù„ÙƒÙ„',
                   selected: _filterType == 'all',
                   color: const Color(0xFF64748B),
                   onTap: () => setState(() => _filterType = 'all')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'إجباري',
+                  label: 'Ø¥Ø¬Ø¨Ø§Ø±ÙŠ',
                   selected: _filterType == 'mandatory',
                   color: const Color(0xFF059669),
                   onTap: () => setState(() => _filterType = 'mandatory')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'اختياري',
+                  label: 'Ø§Ø®ØªÙŠØ§Ø±ÙŠ',
                   selected: _filterType == 'elective',
                   color: const Color(0xFFD97706),
                   onTap: () => setState(() => _filterType = 'elective')),
@@ -672,19 +672,19 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _Chip(
-                  label: 'الكل',
+                  label: 'Ø§Ù„ÙƒÙ„',
                   selected: _filterSpec == 'all',
                   color: const Color(0xFF14532D),
                   onTap: () => setState(() => _filterSpec = 'all')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'النبات',
+                  label: 'Ø§Ù„Ù†Ø¨Ø§Øª',
                   selected: _filterSpec == 'bota',
                   color: const Color(0xFF16A34A),
                   onTap: () => setState(() => _filterSpec = 'bota')),
               const SizedBox(width: 8),
               _Chip(
-                  label: 'الكيمياء',
+                  label: 'Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡',
                   selected: _filterSpec == 'chem',
                   color: const Color(0xFF7C3AED),
                   onTap: () => setState(() => _filterSpec = 'chem')),
@@ -704,7 +704,7 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text('لا توجد مقررات لهذا الفلتر',
+          Text('Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù‚Ø±Ø±Ø§Øª Ù„Ù‡Ø°Ø§ Ø§Ù„ÙÙ„ØªØ±',
               style: TextStyle(color: Colors.grey[500], fontSize: 16)),
         ]),
       );
@@ -743,7 +743,7 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
-                        Text('${courses.length} مقرر',
+                        Text('${courses.length} Ù…Ù‚Ø±Ø±',
                             style: const TextStyle(
                                 color: Colors.white70, fontSize: 14)),
                       ]),
@@ -760,7 +760,7 @@ class _BotanyChemCoursesScreenState extends State<BotanyChemCoursesScreen>
                               color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.bold)),
-                      const Text('ساعة',
+                      const Text('Ø³Ø§Ø¹Ø©',
                           style:
                               TextStyle(color: Colors.white70, fontSize: 12)),
                     ]),
@@ -793,16 +793,16 @@ class _CourseCard extends StatelessWidget {
   Color get _accentColor {
     final spec = course['spec'] ?? '';
     final dept = course['department'] ?? '';
-    if (spec == 'bota' || dept.contains('النبات') || dept.contains('BOTA')) {
+    if (spec == 'bota' || dept.contains('Ø§Ù„Ù†Ø¨Ø§Øª') || dept.contains('BOTA')) {
       return const Color(0xFF16A34A);
     }
-    if (spec == 'chem' || dept.contains('الكيمياء') || dept.contains('CHEM')) {
+    if (spec == 'chem' || dept.contains('Ø§Ù„ÙƒÙŠÙ…ÙŠØ§Ø¡') || dept.contains('CHEM')) {
       return const Color(0xFF7C3AED);
     }
-    if (dept.contains('فيزياء') || dept.contains('PHYS')) {
+    if (dept.contains('ÙÙŠØ²ÙŠØ§Ø¡') || dept.contains('PHYS')) {
       return const Color(0xFFDC2626);
     }
-    if (dept.contains('رياضيات')) return const Color(0xFF2563EB);
+    if (dept.contains('Ø±ÙŠØ§Ø¶ÙŠØ§Øª')) return const Color(0xFF2563EB);
     return const Color(0xFF64748B);
   }
 
@@ -811,7 +811,7 @@ class _CourseCard extends StatelessWidget {
     final isElective = course['type'] == 'elective';
     final typeColor =
         isElective ? const Color(0xFFD97706) : const Color(0xFF059669);
-    final typeLabel = isElective ? 'اختياري' : 'إجباري';
+    final typeLabel = isElective ? 'Ø§Ø®ØªÙŠØ§Ø±ÙŠ' : 'Ø¥Ø¬Ø¨Ø§Ø±ÙŠ';
     final hasPrereq =
         course['prerequisites'] != null && course['prerequisites'] != '-';
 
@@ -888,7 +888,7 @@ class _CourseCard extends StatelessWidget {
                 const Icon(Icons.access_time,
                     size: 13, color: Color(0xFF64748B)),
                 const SizedBox(width: 4),
-                Text('${course['credit_hours']} ساعة',
+                Text('${course['credit_hours']} Ø³Ø§Ø¹Ø©',
                     style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF374151),

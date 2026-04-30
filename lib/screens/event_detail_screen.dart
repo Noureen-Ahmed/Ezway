@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class EventDetailScreen extends StatelessWidget {
   final String eventId;

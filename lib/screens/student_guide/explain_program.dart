@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'Study_programs.dart';
 import 'departmentcard.dart';
 import 'department_details_screen.dart';
@@ -101,7 +101,7 @@ class _ExplainProgramState extends State<ExplainProgram> {
                               Icon(Icons.calculate,
                                   color: Color(0xFF2563eb), size: 20),
                               SizedBox(width: 12),
-                              Text('Scientific Math (علمي رياضة)'),
+                              Text('Scientific Math (Ø¹Ù„Ù…ÙŠ Ø±ÙŠØ§Ø¶Ø©)'),
                             ],
                           ),
                         ),
@@ -112,7 +112,7 @@ class _ExplainProgramState extends State<ExplainProgram> {
                               Icon(Icons.science,
                                   color: Color(0xFF7c3aed), size: 20),
                               SizedBox(width: 12),
-                              Text('Scientific Science (علمي علوم)'),
+                              Text('Scientific Science (Ø¹Ù„Ù…ÙŠ Ø¹Ù„ÙˆÙ…)'),
                             ],
                           ),
                         ),

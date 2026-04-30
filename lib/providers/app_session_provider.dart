@@ -1,4 +1,4 @@
-/// App Session Provider - Clean state management without freezed
+﻿/// App Session Provider - Clean state management without freezed
 /// Handles authentication state for both students and professors
 library;
 
