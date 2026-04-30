@@ -19,6 +19,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool obscurePassword = true;
   String? errorMessage;
   bool isLoading = false;
+  String _loadingMessage = 'Logging in...';
 
   @override
   void initState() {
@@ -56,9 +57,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> login() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final input = emailController.text.trim().toLowerCase();
+    final isDoctor = input.contains('doctor') || input.contains('professor') || input.contains('dr.');
     setState(() {
       isLoading = true;
       errorMessage = null;
+      _loadingMessage = isDoctor
+          ? 'Logging in...'
+          : 'Connecting to university portal… this may take up to a minute';
     });
 
     final result = await ref.read(appSessionControllerProvider.notifier).login(
@@ -251,6 +257,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ),
                             ),
                           ),
+                          if (isLoading) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              _loadingMessage,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF6b7280),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 16),
                           GestureDetector(
                             onTap: () => context.go('/register'),

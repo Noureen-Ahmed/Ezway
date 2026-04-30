@@ -91,8 +91,7 @@ router.post('/login', async (req, res, next) => {
       }
     });
 
-    // Temporarily disabled bypass to force re-scrape
-    if (false && localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0) {
+    if (localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0) {
       // Local auth successful and user has data, bypass Puppeteer scrape
       if (localUser.enrollments.length === 0 && localUser._count.umsCourses > 0) {
         logger.info(`[UMS] User has ${localUser._count.umsCourses} UMS courses but 0 enrollments — re-syncing...`);

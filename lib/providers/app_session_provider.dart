@@ -147,7 +147,9 @@ class AppSessionController extends StateNotifier<AppSessionState> {
       }
     } catch (e) {
       print('[AppSession] Login error: $e');
-      state = AppSessionError(e.toString());
+      // Strip the "Exception: " prefix Flutter adds to exception messages
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      state = AppSessionError(msg);
       return false;
     }
   }
