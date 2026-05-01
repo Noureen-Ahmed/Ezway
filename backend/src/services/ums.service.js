@@ -5,10 +5,10 @@
 const puppeteer = require('puppeteer-core');
 const cheerio = require('cheerio');
 const axios = require('axios');
-const { wrapper } = require('axios-cookiejar-support');
-const { CookieJar } = require('tough-cookie');
 const { prisma } = require('../utils/database');
 const logger = require('../utils/logger');
+// axios-cookiejar-support and tough-cookie are ESM-only (v5+/v6+),
+// so they must be loaded with dynamic import() inside async functions.
 
 const UMS_BASE = 'https://ums.asu.edu.eg';
 
@@ -71,6 +71,9 @@ function getChromePath() {
 // ============ HTTP LOGIN (fast path — no browser needed) ============
 
 async function loginToUMSHttp(loginId, domain, password) {
+  const { wrapper } = await import('axios-cookiejar-support');
+  const { CookieJar } = await import('tough-cookie');
+
   const jar = new CookieJar();
   const client = wrapper(axios.create({ jar, withCredentials: true, maxRedirects: 10 }));
 
