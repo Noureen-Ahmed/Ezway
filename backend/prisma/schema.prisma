@@ -136,6 +136,7 @@ model User {
   
   // Scraped UMS Data
   faculty               String?
+  departmentName        String?  @map("department_name")
   major                 String?
   semester              String?
   academicYear          String?  @map("academic_year")

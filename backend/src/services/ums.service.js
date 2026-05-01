@@ -238,6 +238,7 @@ function labelToKey(label) {
   if (/البرنامج|Program/i.test(label))                             return 'program';
   if (/العنوان|address/i.test(label))                              return 'address';
   if (/المستوى|Level/i.test(label))                                return 'level';
+  if (/المعدل|GPA|معدل/i.test(label))                             return 'gpa';
   if (/الفصل|semester/i.test(label))                               return 'semester';
   if (/الأكاديمية|السنة|academicYear/i.test(label))                return 'academicYear';
   return null;

@@ -42,14 +42,14 @@ const formatUserResponse = (user, umsProfile = {}) => ({
   studentId: user.studentId,
   phone: user.phone || umsProfile.phone || null,
   address: user.address || umsProfile.address || null,
-  gpa: user.gpa,
-  level: user.level,
-  department: user.department?.name || umsProfile.department || null,
+  gpa: user.gpa || (umsProfile.gpa ? parseFloat(umsProfile.gpa) : null),
+  level: user.level || umsProfile.levelNum || null,
+  department: user.department?.name || user.departmentName || umsProfile.department || null,
   departmentId: user.departmentId,
-  program: user.program?.name || umsProfile.program || user.major || user.program || null,
+  program: user.program?.name || umsProfile.program || user.major || null,
   programId: user.programId,
   faculty: user.faculty || umsProfile.faculty || null,
-  major: user.major || umsProfile.major || null,
+  major: user.major || umsProfile.major || umsProfile.program || null,
   semester: user.semester || umsProfile.semester || null,
   academicYear: user.academicYear || umsProfile.academicYear || null,
   advisorName: umsProfile.advisorName || user.advisorName || null,
@@ -153,10 +153,22 @@ router.post('/login', async (req, res, next) => {
       const lastSyncAt = session ? session.lastSyncAt : null;
       
       logger.info(`✅ Local login bypass successful: ${loginEmail}`);
+      const storedProfile = {
+        faculty: updatedUser.faculty,
+        department: updatedUser.departmentName,
+        program: updatedUser.major,
+        major: updatedUser.major,
+        levelNum: updatedUser.level,
+        gpa: updatedUser.gpa,
+        semester: updatedUser.semester,
+        academicYear: updatedUser.academicYear,
+        advisorName: updatedUser.advisorName,
+        advisorEmail: updatedUser.advisorEmail,
+      };
       return res.json({
         success: true,
         message: 'Local login successful (UMS bypassed)',
-        user: formatUserResponse(updatedUser),
+        user: formatUserResponse(updatedUser, storedProfile),
         token: generateToken(updatedUser.id),
         sync: { courses: localUser._count.umsCourses, grades: localUser._count.umsGrades || 0, bypassed: true }
       });
@@ -233,7 +245,9 @@ router.post('/login', async (req, res, next) => {
           studentId: studentId,
           password: hashedPassword,
           level: umsProfile.levelNum || user.level,
+          gpa: umsProfile.gpa ? parseFloat(umsProfile.gpa) : user.gpa,
           faculty: umsProfile.faculty || user.faculty,
+          departmentName: umsProfile.department || user.departmentName,
           major: umsProfile.program || umsProfile.major || user.major,
           semester: umsProfile.semester || user.semester,
           academicYear: umsProfile.academicYear || user.academicYear,
@@ -265,7 +279,9 @@ router.post('/login', async (req, res, next) => {
           role: 'STUDENT',
           studentId: studentId,
           level: umsProfile.levelNum || null,
+          gpa: umsProfile.gpa ? parseFloat(umsProfile.gpa) : null,
           faculty: umsProfile.faculty || null,
+          departmentName: umsProfile.department || null,
           major: umsProfile.program || umsProfile.major || null,
           semester: umsProfile.semester || null,
           academicYear: umsProfile.academicYear || null,
