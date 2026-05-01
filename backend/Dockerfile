@@ -9,6 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 RUN npm ci
+RUN mkdir -p /app/logs
 
 COPY src ./src/
 
