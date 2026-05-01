@@ -38,8 +38,21 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',');
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || true,
+  origin: (origin, callback) => {
+    // No origin = same-origin or native app (always allow)
+    if (!origin) return callback(null, true);
+    // Always allow localhost (dev / Flutter web on emulator)
+    if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    // If no allowlist configured, allow everything
+    if (!allowedOrigins || allowedOrigins.length === 0) return callback(null, true);
+    // Otherwise check the allowlist
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
