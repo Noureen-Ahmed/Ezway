@@ -1,14 +1,22 @@
 /**
  * UMS (University Management System) Integration Service
- * Uses Puppeteer (headless Chrome) for login since UMS requires JavaScript.
- * After login, uses the browser context to fetch profile/courses/grades.
+ * Login strategy: HTTP POST first (fast, ~2–5s), falls back to Puppeteer if blocked.
  */
 const puppeteer = require('puppeteer-core');
 const cheerio = require('cheerio');
+const axios = require('axios');
+const { wrapper } = require('axios-cookiejar-support');
+const { CookieJar } = require('tough-cookie');
 const { prisma } = require('../utils/database');
 const logger = require('../utils/logger');
 
 const UMS_BASE = 'https://ums.asu.edu.eg';
+
+const BASE_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8',
+};
 
 // Detect Chrome/Chromium path based on platform
 function getChromePath() {
@@ -60,219 +68,275 @@ function getChromePath() {
   );
 }
 
-// ============ BROWSER LOGIN ============
+// ============ HTTP LOGIN (fast path — no browser needed) ============
 
-/**
- * Login to UMS using headless Chrome and return session cookies
- */
-async function loginToUMS(loginName, password) {
-  logger.info(`[UMS] Launching headless Chrome for login: ${loginName}`);
+async function loginToUMSHttp(loginId, domain, password) {
+  const jar = new CookieJar();
+  const client = wrapper(axios.create({ jar, withCredentials: true, maxRedirects: 10 }));
 
+  // Step 1: GET login page → pick up session cookie + any CSRF token
+  const loginPageRes = await client.get(`${UMS_BASE}/App/Login_Form`, {
+    headers: BASE_HEADERS,
+    timeout: 15000,
+  });
+
+  const $ = cheerio.load(loginPageRes.data);
+  const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+
+  // Step 2: POST credentials as a standard form submission
+  const body = new URLSearchParams();
+  body.append('LoginName', loginId);
+  body.append('password', password);
+  body.append('DomainName', domain);
+  if (csrfToken) body.append('__RequestVerificationToken', csrfToken);
+
+  const postRes = await client.post(`${UMS_BASE}/App/Login_Form`, body.toString(), {
+    headers: {
+      ...BASE_HEADERS,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Referer': `${UMS_BASE}/App/Login_Form`,
+    },
+    timeout: 15000,
+    validateStatus: () => true,
+  });
+
+  // If still on the login page, credentials are wrong
+  const finalUrl = postRes.request?.res?.responseUrl || postRes.config?.url || '';
+  if (finalUrl.includes('Login_Form') || postRes.status === 401) {
+    const $r = cheerio.load(postRes.data);
+    const errText = $r('.validation-summary-errors, .text-danger, .alert-danger').first().text().trim();
+    throw new Error(errText || 'invalid credentials');
+  }
+
+  const cookies = await jar.getCookies(UMS_BASE);
+  if (!cookies.length) throw new Error('HTTP login returned no cookies');
+
+  return cookies.map(c => `${c.key}=${c.value}`);
+}
+
+// ============ BROWSER LOGIN (slow fallback) ============
+
+async function loginToUMSBrowser(loginId, domain, password) {
   const chromePath = getChromePath();
-  logger.info(`[UMS] Using Chrome at: ${chromePath}`);
+  logger.info(`[UMS] Fallback: launching headless Chrome at: ${chromePath}`);
+
   const browser = await puppeteer.launch({
     executablePath: chromePath,
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
   });
 
   try {
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(BASE_HEADERS['User-Agent']);
+    await page.goto(`${UMS_BASE}/App/Login_Form`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForSelector('input[name="DomainName"], [data-role="dropdownlist"]', { timeout: 15000 });
 
-    // Navigate to login page
-    await page.goto(`${UMS_BASE}/App/Login_Form`, { waitUntil: 'networkidle2', timeout: 30000 });
-    logger.info('[UMS] Login page loaded');
-
-    // Wait for Kendo dropdown to initialize
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Extract just the student number (remove @domain if present)
-    const loginId = loginName.includes('@') ? loginName.split('@')[0] : loginName;
-    
-    // Determine the domain — extract from email or default to sci.asu.edu.eg
-    let domain = '@sci.asu.edu.eg'; // default
-    if (loginName.includes('@')) {
-      domain = '@' + loginName.split('@')[1]; // e.g., "@sci.asu.edu.eg"
-    }
-
-    // Set the Kendo DomainName dropdown via JavaScript
-    await page.evaluate((domainValue) => {
-      // Method 1: Kendo API
-      const ddl = $('#DomainName').data('kendoDropDownList');
-      if (ddl) {
-        ddl.value(domainValue);
-        ddl.trigger('change');
-      }
-      // Method 2: Set both input fields directly
-      document.querySelectorAll('input[name="DomainName"]').forEach(el => {
-        el.value = domainValue;
-      });
+    await page.evaluate((d) => {
+      const ddl = window.jQuery && window.jQuery('#DomainName').data('kendoDropDownList');
+      if (ddl) { ddl.value(d); ddl.trigger('change'); }
+      document.querySelectorAll('input[name="DomainName"]').forEach(el => { el.value = d; });
     }, domain);
-    
-    logger.info(`[UMS] Set DomainName to: ${domain}`);
 
-    // Fill LoginName (id="user-name")
     const loginField = await page.$('#user-name') || await page.$('input[name="LoginName"]');
-    if (loginField) {
-      await loginField.click({ clickCount: 3 });
-      await loginField.type(loginId, { delay: 30 });
-    }
-    logger.info(`[UMS] Set LoginName to: ${loginId}`);
+    if (loginField) { await loginField.click({ clickCount: 3 }); await loginField.type(loginId); }
+    const passField = await page.$('#pass') || await page.$('input[name="password"]');
+    if (passField) await passField.type(password);
 
-    // Fill password (id="pass")
-    const passwordField = await page.$('#pass') || await page.$('input[name="password"]');
-    if (passwordField) {
-      await passwordField.type(password, { delay: 30 });
-    }
-
-    // Submit form
     await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
+      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {}),
       page.click('button[type="submit"], input[type="submit"], .btn-primary, #btnLogin').catch(async () => {
         await page.keyboard.press('Enter');
-      })
+      }),
     ]);
 
-    // Check if login succeeded — look for login form still present
-    const currentUrl = page.url();
-    const isLoginPage = currentUrl.includes('Login_Form');
-    
-    if (isLoginPage) {
-      const errorText = await page.evaluate(() => {
+    if (page.url().includes('Login_Form')) {
+      const errText = await page.evaluate(() => {
         const el = document.querySelector('.validation-summary-errors, .text-danger, .alert-danger, .error');
         return el ? el.textContent.trim() : null;
       });
-      throw new Error(errorText || 'UMS login failed — invalid credentials');
+      throw new Error(errText || 'UMS login failed — invalid credentials');
     }
 
-    logger.info(`[UMS] ✅ Login successful! Current URL: ${currentUrl}`);
-
-    // Extract all cookies from the browser
     const cookies = await page.cookies();
-    const cookieStrings = cookies.map(c => `${c.name}=${c.value}`);
-    logger.info(`[UMS] Got ${cookies.length} cookies: ${cookies.map(c => c.name).join(', ')}`);
-
-    // Now fetch profile and courses while the browser session is active
-    const result = {
-      cookies: cookieStrings,
-      profile: {},
-      courses: [],
-      grades: []
-    };
-
-    // ── Extract profile from /UserInformation using page.evaluate() ──
-    try {
-      await page.goto(`${UMS_BASE}/UserInformation`, { waitUntil: 'networkidle2', timeout: 30000 });
-      // Wait for content to render
-      await new Promise(r => setTimeout(r, 3000));
-
-      // Save debug HTML for inspection
-      const fs = require('fs');
-      const debugHtml = await page.content();
-      fs.writeFileSync('ums_profile_debug.html', debugHtml, 'utf-8');
-      logger.info(`[UMS] Saved profile page HTML to ums_profile_debug.html (${debugHtml.length} chars)`);
-
-      // Extract profile data straight from the rendered DataTable row or labels
-      const profileData = await page.evaluate(() => {
-        const profile = {};
-        const clean = (s) => s ? s.replace(/<[^>]*>/g, '').trim().replace(/\s{2,}/g, ' ') : null;
-
-        // STRATEGY 1: Extract from the DataTable row if it exists (very reliable)
-        // The data row looks like: <td>Status</td><td></td><td>NameAr</td><td>NameEn</td><td>Email</td><td>AltEmail</td><td>DOB</td><td>City</td><td>Address</td><td>Phone</td>
-        const tableRows = document.querySelectorAll('table tbody tr');
-        for (const row of tableRows) {
-          const cells = row.querySelectorAll('td');
-          // Check if this row looks like the main student profile row (has > 10 columns and contains an email)
-          if (cells.length >= 12 && Array.from(cells).some(c => c.textContent.includes('@'))) {
-            profile.nameAr = clean(cells[2]?.textContent);
-            profile.nameEn = clean(cells[3]?.textContent);
-            profile.email = clean(cells[4]?.textContent);
-            profile.address = clean(cells[8]?.textContent);
-            profile.phone = clean(cells[9]?.textContent);
-            break;
-          }
-        }
-
-        // STRATEGY 2: Fallback to the top nav link / welcome message for the name
-        if (!profile.nameAr || profile.nameAr.length < 3) {
-          const navLinks = document.querySelectorAll('a');
-          for (const a of navLinks) {
-            const text = a.textContent.trim();
-            if (a.querySelector('.fa-user') && text !== 'الصفحة الشخصية') {
-              profile.nameAr = text;
-              break;
-            }
-          }
-        }
-
-        return profile;
-      });
-
-      // Merge the extracted data into result.profile
-      Object.assign(result.profile, profileData);
-
-      // Parse level number
-      if (result.profile.level) {
-        const m = result.profile.level.match(/(\d+)/);
-        if (m) result.profile.levelNum = parseInt(m[1]);
-      }
-
-      logger.info(`[UMS] ✅ Profile extracted: nameAr=${result.profile.nameAr}, nameEn=${result.profile.nameEn}, phone=${result.profile.phone}, address=${result.profile.address}, ssn=${result.profile.ssn}`);
-    } catch (err) {
-      logger.error(`[UMS] HTML profile error: ${err.message}`);
-    }
-
-    // Fetch courses
-    try {
-      await page.goto(`${UMS_BASE}/UserInformation/CurrentCourse`, { waitUntil: 'networkidle2', timeout: 20000 });
-      const coursesHtml = await page.content();
-      result.courses = parseCoursesHtml(coursesHtml);
-      logger.info(`[UMS] ✅ Found ${result.courses.length} courses`);
-    } catch (err) {
-      logger.error(`[UMS] Courses fetch error: ${err.message}`);
-    }
-
-    // Fetch grades
-    try {
-      await page.goto(`${UMS_BASE}/StudentGrades`, { waitUntil: 'networkidle2', timeout: 20000 });
-      const gradesHtml = await page.content();
-      result.grades = parseGradesHtml(gradesHtml);
-      logger.info(`[UMS] ✅ Found ${result.grades.length} grades`);
-    } catch (err) {
-      logger.error(`[UMS] Grades fetch error: ${err.message}`);
-    }
-
-    // Fetch advisor page for structural analysis and data extraction
-    try {
-      await page.goto(`${UMS_BASE}/RegisterElectiveCourse/Registration`, { waitUntil: 'networkidle2', timeout: 20000 });
-      const advisorHtml = await page.content();
-      
-      // Extract advisor name and email using Regex based on the HTML structure
-      const advisorNameMatch = advisorHtml.match(/للمرشد الأكاديمى\s*:?\s*([^<]+)|المرشد\s*:?\s*([^<]+)|Advisor\s*:?\s*([^<]+)/i);
-      const advisorEmailMatch = advisorHtml.match(/mailto:([^"]+)/i);
-      
-      if (advisorNameMatch) {
-        result.profile.advisorName = (advisorNameMatch[1] || advisorNameMatch[2] || advisorNameMatch[3]).trim();
-      }
-      
-      if (advisorEmailMatch && advisorEmailMatch[1]) {
-        result.profile.advisorEmail = advisorEmailMatch[1].trim();
-      }
-
-      logger.info(`[UMS] ✅ Extracted advisor: ${result.profile.advisorName || 'Not found'} (${result.profile.advisorEmail || 'Not found'})`);
-    } catch (err) {
-      logger.error(`[UMS] Advisor form fetch error: ${err.message}`);
-    }
-
-    return result;
+    return cookies.map(c => `${c.name}=${c.value}`);
   } finally {
     await browser.close();
-    logger.info('[UMS] Browser closed');
   }
 }
 
+// ============ MAIN LOGIN ENTRY POINT ============
+
+async function loginToUMS(loginName, password) {
+  const loginId = loginName.includes('@') ? loginName.split('@')[0] : loginName;
+  const domain  = loginName.includes('@') ? '@' + loginName.split('@')[1] : '@sci.asu.edu.eg';
+
+  let cookieStrings;
+
+  // Try fast HTTP path first
+  try {
+    logger.info(`[UMS] Attempting HTTP login for: ${loginId}${domain}`);
+    cookieStrings = await loginToUMSHttp(loginId, domain, password);
+    logger.info(`[UMS] ✅ HTTP login succeeded (${cookieStrings.length} cookies)`);
+  } catch (httpErr) {
+    if (httpErr.message.includes('invalid credentials') || httpErr.message.includes('Login failed')) {
+      throw new Error('UMS login failed — invalid credentials');
+    }
+    // Network/parse error — fall back to Puppeteer
+    logger.warn(`[UMS] HTTP login failed (${httpErr.message}), falling back to browser...`);
+    try {
+      cookieStrings = await loginToUMSBrowser(loginId, domain, password);
+      logger.info(`[UMS] ✅ Browser login succeeded (${cookieStrings.length} cookies)`);
+    } catch (browserErr) {
+      if (browserErr.message.includes('invalid credentials') || browserErr.message.includes('Login failed')) {
+        throw new Error('UMS login failed — invalid credentials');
+      }
+      throw browserErr;
+    }
+  }
+
+  // Fetch all pages in parallel with the session cookies
+  const cookieHeader = cookieStrings.join('; ');
+  const headers = { ...BASE_HEADERS, Cookie: cookieHeader, Referer: UMS_BASE };
+
+  logger.info('[UMS] Fetching profile, courses, grades, advisor in parallel...');
+  const [profileRes, coursesRes, gradesRes, advisorRes] = await Promise.all([
+    axios.get(`${UMS_BASE}/UserInformation`,                     { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+    axios.get(`${UMS_BASE}/UserInformation/CurrentCourse`,       { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+    axios.get(`${UMS_BASE}/StudentGrades`,                       { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+    axios.get(`${UMS_BASE}/RegisterElectiveCourse/Registration`, { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+  ]);
+
+  const profile = parseProfileHtml(profileRes.data);
+  const courses = parseCoursesHtml(coursesRes.data);
+  const grades  = parseGradesHtml(gradesRes.data);
+  Object.assign(profile, parseAdvisorHtml(advisorRes.data));
+
+  logger.info(`[UMS] ✅ Courses: ${courses.length}, Grades: ${grades.length}`);
+  logger.info(`[UMS] ✅ phone=${profile.phone}, faculty=${profile.faculty}, program=${profile.program}`);
+
+  return { cookies: cookieStrings, profile, courses, grades };
+}
+
 // ============ HTML PARSERS ============
+
+/**
+ * Map an Arabic/English label string to a profile field key.
+ */
+function labelToKey(label) {
+  if (/القومي|رقم قومي|SSN/i.test(label))                          return 'studentId';
+  if (/جواز|Passport/i.test(label))                                return 'passportNumber';
+  if (/بالعربية|Arabic/i.test(label))                              return 'nameAr';
+  if (/بالإنجليزية|English/i.test(label))                          return 'nameEn';
+  if (/الإلكتروني|email/i.test(label))                             return 'email';
+  if (/الهاتف|تليفون|موبايل|Mobile|phone/i.test(label))           return 'phone';
+  if (/الكلية|Faculty|كلية/i.test(label))                          return 'faculty';
+  if (/القسم|Department|قسم/i.test(label))                         return 'department';
+  if (/البرنامج|Program/i.test(label))                             return 'program';
+  if (/العنوان|address/i.test(label))                              return 'address';
+  if (/المستوى|Level/i.test(label))                                return 'level';
+  if (/الفصل|semester/i.test(label))                               return 'semester';
+  if (/الأكاديمية|السنة|academicYear/i.test(label))                return 'academicYear';
+  return null;
+}
+
+/**
+ * Parse /UserInformation HTML and extract full profile.
+ * Tries multiple layout strategies used by UMS:
+ *   1. div.row > h5 (label) + p/span (value)  — server-rendered card layout
+ *   2. dl > dt (label) + dd (value)
+ *   3. 2-column table rows
+ *   4. 12-column DataTable row with email     — Kendo DataTable (if JS-rendered)
+ */
+function parseProfileHtml(html) {
+  if (!html) return {};
+  const $ = cheerio.load(html);
+  const profile = {};
+
+  const clean = (s) => s
+    ? s.replace(/<[^>]*>/g, '').trim().replace(/\s{2,}/g, ' ')
+    : null;
+
+  const set = (key, val) => {
+    if (!key || !val || profile[key]) return;
+    const v = clean(val);
+    if (v && v.length > 0) profile[key] = v;
+  };
+
+  // Strategy 1: div.row > h5 (label) + p or span (value)
+  $('div.row').each((_, row) => {
+    const label = clean($(row).find('h5').first().text());
+    const value = clean($(row).find('p, span').not('h5').first().text());
+    if (label && value) set(labelToKey(label), value);
+  });
+
+  // Strategy 2: dl > dt + dd
+  $('dl').each((_, dl) => {
+    $(dl).find('dt').each((_, dt) => {
+      const label = clean($(dt).text());
+      const value = clean($(dt).next('dd').text());
+      if (label && value) set(labelToKey(label), value);
+    });
+  });
+
+  // Strategy 3: 2-column table rows (label | value)
+  $('table').each((_, table) => {
+    $(table).find('tr').each((_, row) => {
+      const cells = $(row).find('td');
+      if (cells.length === 2) {
+        const label = clean($(cells[0]).text());
+        const value = clean($(cells[1]).text());
+        if (label && value) set(labelToKey(label), value);
+      }
+    });
+  });
+
+  // Strategy 4: 12-column Kendo DataTable row containing an email address
+  if (!profile.nameAr) {
+    $('table tbody tr').each((_, row) => {
+      const cells = $(row).find('td');
+      if (cells.length >= 12 && cells.toArray().some(c => $(c).text().includes('@'))) {
+        set('nameAr',   $(cells[2]).text());
+        set('nameEn',   $(cells[3]).text());
+        set('email',    $(cells[4]).text());
+        set('address',  $(cells[8]).text());
+        set('phone',    $(cells[9]).text());
+        return false; // break
+      }
+    });
+  }
+
+  // Strategy 5: nav bar user link as last-resort name fallback
+  if (!profile.nameAr) {
+    $('a').each((_, a) => {
+      if ($(a).find('.fa-user').length) {
+        const text = $(a).text().trim();
+        if (text && text !== 'الصفحة الشخصية') { profile.nameAr = text; return false; }
+      }
+    });
+  }
+
+  // Convert level text to number
+  if (profile.level) {
+    const m = profile.level.match(/(\d+)/);
+    if (m) profile.levelNum = parseInt(m[1], 10);
+  }
+
+  return profile;
+}
+
+/**
+ * Parse /RegisterElectiveCourse/Registration HTML for advisor info.
+ */
+function parseAdvisorHtml(html) {
+  if (!html) return {};
+  const info = {};
+  const nameMatch  = html.match(/للمرشد الأكاديم[يى]\s*:?\s*([^<\r\n]{2,80})|المرشد\s*:?\s*([^<\r\n]{2,80})/i);
+  const emailMatch = html.match(/mailto:([^"'\s>]+)/i);
+  if (nameMatch)  info.advisorName  = (nameMatch[1] || nameMatch[2]).trim();
+  if (emailMatch) info.advisorEmail = emailMatch[1].trim();
+  return info;
+}
 
 function parseCoursesHtml(html) {
   const $ = cheerio.load(html);
@@ -490,13 +554,44 @@ async function syncStudentData(userId, umsResult) {
   return results;
 }
 
-// Kept for backward compatibility — not used with Puppeteer approach
+async function resyncWithStoredSession(userId) {
+  const session = await prisma.umsSession.findUnique({ where: { userId } });
+  if (!session || !session.isActive || !session.cookies?.length) {
+    throw new Error('No active UMS session — please login again');
+  }
+
+  const cookieHeader = session.cookies.join('; ');
+  const headers = { ...BASE_HEADERS, Cookie: cookieHeader, Referer: UMS_BASE };
+
+  const [profileRes, coursesRes, gradesRes, advisorRes] = await Promise.all([
+    axios.get(`${UMS_BASE}/UserInformation`,                     { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+    axios.get(`${UMS_BASE}/UserInformation/CurrentCourse`,       { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+    axios.get(`${UMS_BASE}/StudentGrades`,                       { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+    axios.get(`${UMS_BASE}/RegisterElectiveCourse/Registration`, { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+  ]);
+
+  // Detect expired session: profile page redirects back to login
+  if (profileRes.data && profileRes.data.includes('Login_Form')) {
+    await prisma.umsSession.update({ where: { userId }, data: { isActive: false } });
+    throw new Error('UMS session expired — please login again');
+  }
+
+  const courses = parseCoursesHtml(coursesRes.data);
+  const grades  = parseGradesHtml(gradesRes.data);
+  const result  = await syncStudentData(userId, { courses, grades });
+
+  await prisma.umsSession.update({ where: { userId }, data: { lastSyncAt: new Date() } });
+  return result;
+}
+
+// Kept for backward compatibility
 async function fetchUserInfo(cookies) { return {}; }
 async function fetchCurrentCourses(cookies) { return []; }
 async function fetchStudentGrades(cookies) { return []; }
 
 module.exports = {
   loginToUMS,
+  resyncWithStoredSession,
   fetchUserInfo,
   fetchCurrentCourses,
   fetchStudentGrades,
