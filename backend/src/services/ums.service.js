@@ -114,7 +114,7 @@ async function loginToUMSHttp(loginId, domain, password) {
   const cookies = await jar.getCookies(UMS_BASE);
   if (!cookies.length) throw new Error('HTTP login returned no cookies');
 
-  return cookies.map(c => `${c.key}=${c.value}`);
+  return { cookieStrings: cookies.map(c => `${c.key}=${c.value}`), landingHtml: postRes.data, client };
 }
 
 // ============ BROWSER LOGIN (slow fallback) ============
@@ -168,6 +168,32 @@ async function loginToUMSBrowser(loginId, domain, password) {
   }
 }
 
+// ============ PROFILE SCRAPER (Puppeteer — gets JS-rendered data) ============
+
+async function scrapeProfileWithBrowser(cookieStrings) {
+  const chromePath = getChromePath();
+  const browser = await puppeteer.launch({
+    executablePath: chromePath,
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setUserAgent(BASE_HEADERS['User-Agent']);
+    // Inject session cookies
+    for (const c of cookieStrings) {
+      const eq = c.indexOf('=');
+      await page.setCookie({ name: c.slice(0, eq), value: c.slice(eq + 1), domain: 'ums.asu.edu.eg', path: '/' });
+    }
+    await page.goto(`${UMS_BASE}/UserInformation`, { waitUntil: 'networkidle0', timeout: 30000 });
+    const html = await page.content();
+    logger.info(`[UMS] Puppeteer profile HTML length: ${html.length}`);
+    return html;
+  } finally {
+    await browser.close();
+  }
+}
+
 // ============ MAIN LOGIN ENTRY POINT ============
 
 async function loginToUMS(loginName, password) {
@@ -175,17 +201,21 @@ async function loginToUMS(loginName, password) {
   const domain  = loginName.includes('@') ? '@' + loginName.split('@')[1] : '@sci.asu.edu.eg';
 
   let cookieStrings;
+  let landingHtml = '';
+  let httpClient = null;
 
   // Try fast HTTP path first
   try {
     logger.info(`[UMS] Attempting HTTP login for: ${loginId}${domain}`);
-    cookieStrings = await loginToUMSHttp(loginId, domain, password);
+    const result = await loginToUMSHttp(loginId, domain, password);
+    cookieStrings = result.cookieStrings;
+    landingHtml   = result.landingHtml || '';
+    httpClient    = result.client;
     logger.info(`[UMS] ✅ HTTP login succeeded (${cookieStrings.length} cookies)`);
   } catch (httpErr) {
     if (httpErr.message.includes('invalid credentials') || httpErr.message.includes('Login failed')) {
       throw new Error('UMS login failed — invalid credentials');
     }
-    // Network/parse error — fall back to Puppeteer
     logger.warn(`[UMS] HTTP login failed (${httpErr.message}), falling back to browser...`);
     try {
       cookieStrings = await loginToUMSBrowser(loginId, domain, password);
@@ -198,25 +228,79 @@ async function loginToUMS(loginName, password) {
     }
   }
 
-  // Fetch all pages in parallel with the session cookies
   const cookieHeader = cookieStrings.join('; ');
   const headers = { ...BASE_HEADERS, Cookie: cookieHeader, Referer: UMS_BASE };
 
-  logger.info('[UMS] Fetching profile, courses, grades, advisor in parallel...');
-  const [profileRes, coursesRes, gradesRes, advisorRes] = await Promise.all([
-    axios.get(`${UMS_BASE}/UserInformation`,                     { headers, timeout: 20000 }).catch(() => ({ data: '' })),
+  // Fetch courses, grades, advisor via HTTP (these are server-rendered)
+  logger.info('[UMS] Fetching courses, grades, advisor...');
+  const [coursesRes, gradesRes, advisorRes] = await Promise.all([
     axios.get(`${UMS_BASE}/UserInformation/CurrentCourse`,       { headers, timeout: 20000 }).catch(() => ({ data: '' })),
     axios.get(`${UMS_BASE}/StudentGrades`,                       { headers, timeout: 20000 }).catch(() => ({ data: '' })),
     axios.get(`${UMS_BASE}/RegisterElectiveCourse/Registration`, { headers, timeout: 20000 }).catch(() => ({ data: '' })),
   ]);
 
-  const profile = parseProfileHtml(profileRes.data);
   const courses = parseCoursesHtml(coursesRes.data);
   const grades  = parseGradesHtml(gradesRes.data);
+
+  // ── Profile: try three sources in order ──────────────────────────────────
+
+  // Source 1: Kendo Grid JSON endpoint (fastest if available)
+  let profile = {};
+  try {
+    const jsonRes = await axios.post(`${UMS_BASE}/UserInformation/Read`, 'sort=&page=1&pageSize=10&group=&filter=', {
+      headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+      timeout: 10000,
+    });
+    if (jsonRes.data && typeof jsonRes.data === 'object') {
+      const row = (jsonRes.data.Data || jsonRes.data.data || [])[0] || jsonRes.data;
+      if (row && (row.Faculty || row.faculty || row.FacultyName)) {
+        profile.faculty    = row.Faculty || row.FacultyName || row.faculty;
+        profile.department = row.Department || row.DepartmentName || row.department;
+        profile.program    = row.Program || row.ProgramName || row.program || row.Major;
+        profile.nameAr     = row.StudentNameAr || row.NameAr || row.nameAr;
+        profile.nameEn     = row.StudentNameEn || row.NameEn || row.nameEn;
+        profile.level      = row.Level || row.level;
+        profile.gpa        = row.GPA || row.Gpa || row.gpa;
+        profile.semester   = row.Semester || row.semester;
+        profile.email      = row.Email || row.email;
+        profile.phone      = row.Phone || row.phone || row.Mobile;
+        profile.studentId  = row.SSN || row.Ssn || row.StudentId || row.studentId;
+        if (profile.level) { const m = String(profile.level).match(/(\d+)/); if (m) profile.levelNum = parseInt(m[1]); }
+        logger.info(`[UMS] ✅ Profile from Kendo JSON: faculty=${profile.faculty}, dept=${profile.department}`);
+      }
+    }
+  } catch (e) {
+    logger.info(`[UMS] Kendo JSON endpoint not available: ${e.message}`);
+  }
+
+  // Source 2: Parse landing page HTML (navbar/header after login often has name + faculty)
+  if (!profile.faculty && landingHtml) {
+    const landingProfile = parseProfileHtml(landingHtml);
+    Object.assign(profile, Object.fromEntries(Object.entries(landingProfile).filter(([, v]) => v)));
+    logger.info(`[UMS] Landing page profile keys: ${Object.keys(landingProfile).join(', ')}`);
+  }
+
+  // Source 3: Puppeteer renders /UserInformation with full JS execution
+  if (!profile.faculty && !profile.department) {
+    logger.info('[UMS] Falling back to Puppeteer for JS-rendered profile...');
+    try {
+      const renderedHtml = await scrapeProfileWithBrowser(cookieStrings);
+      const browserProfile = parseProfileHtml(renderedHtml);
+      Object.assign(profile, Object.fromEntries(Object.entries(browserProfile).filter(([, v]) => v)));
+      logger.info(`[UMS] Puppeteer profile keys: ${Object.keys(browserProfile).join(', ')}`);
+    } catch (e) {
+      logger.warn(`[UMS] Puppeteer profile scrape failed: ${e.message}`);
+    }
+  }
+
   Object.assign(profile, parseAdvisorHtml(advisorRes.data));
+  if (profile.level && !profile.levelNum) {
+    const m = String(profile.level).match(/(\d+)/);
+    if (m) profile.levelNum = parseInt(m[1]);
+  }
 
   logger.info(`[UMS] ✅ Courses: ${courses.length}, Grades: ${grades.length}`);
-  logger.info(`[UMS] ✅ phone=${profile.phone}, faculty=${profile.faculty}, program=${profile.program}`);
+  logger.info(`[UMS] ✅ faculty=${profile.faculty}, dept=${profile.department}, program=${profile.program}, level=${profile.levelNum}`);
 
   return { cookies: cookieStrings, profile, courses, grades };
 }
