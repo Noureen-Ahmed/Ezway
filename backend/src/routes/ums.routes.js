@@ -91,8 +91,9 @@ router.post('/login', async (req, res, next) => {
       }
     });
 
-    if (localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0) {
-      // Local auth successful and user has data, bypass Puppeteer scrape
+    const hasProfileData = localUser && localUser.faculty && localUser.level;
+    if (localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0 && hasProfileData) {
+      // Local auth successful and user has COMPLETE data, bypass UMS scrape
       if (localUser.enrollments.length === 0 && localUser._count.umsCourses > 0) {
         logger.info(`[UMS] User has ${localUser._count.umsCourses} UMS courses but 0 enrollments — re-syncing...`);
         const umsCourses = await prisma.umsCourse.findMany({
@@ -247,7 +248,6 @@ router.post('/login', async (req, res, next) => {
           level: umsProfile.levelNum || user.level,
           gpa: umsProfile.gpa ? parseFloat(umsProfile.gpa) : user.gpa,
           faculty: umsProfile.faculty || user.faculty,
-          departmentName: umsProfile.department || user.departmentName,
           major: umsProfile.program || umsProfile.major || user.major,
           semester: umsProfile.semester || user.semester,
           academicYear: umsProfile.academicYear || user.academicYear,
@@ -281,7 +281,6 @@ router.post('/login', async (req, res, next) => {
           level: umsProfile.levelNum || null,
           gpa: umsProfile.gpa ? parseFloat(umsProfile.gpa) : null,
           faculty: umsProfile.faculty || null,
-          departmentName: umsProfile.department || null,
           major: umsProfile.program || umsProfile.major || null,
           semester: umsProfile.semester || null,
           academicYear: umsProfile.academicYear || null,

@@ -1,11 +1,7 @@
 /// API Configuration
 /// Centralized configuration for API endpoints and headers
 class ApiConfig {
-  // Base URL - change this for different environments
   static const String baseUrl = 'https://ezway-production.up.railway.app/api';
-  
-  // For production, use:
-  // static const String baseUrl = 'https://api.yourcollegeguide.com/api';
   
   // Auth token (set after login)
   static String? _authToken;

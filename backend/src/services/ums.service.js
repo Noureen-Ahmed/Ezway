@@ -273,14 +273,33 @@ async function loginToUMS(loginName, password) {
     logger.info(`[UMS] Kendo JSON endpoint not available: ${e.message}`);
   }
 
-  // Source 2: Parse landing page HTML (navbar/header after login often has name + faculty)
+  // Source 2: Fetch /UserInformation page via HTTP and parse it (fast, reliable)
+  if (!profile.faculty || !profile.program || !profile.level) {
+    logger.info('[UMS] Fetching /UserInformation via HTTP for full profile...');
+    try {
+      const profileRes = await axios.get(`${UMS_BASE}/UserInformation`, { headers, timeout: 20000 });
+      if (profileRes.data && !profileRes.data.includes('Login_Form')) {
+        const httpProfile = parseProfileHtml(profileRes.data);
+        // Merge only missing fields
+        for (const [k, v] of Object.entries(httpProfile)) {
+          if (v && !profile[k]) profile[k] = v;
+        }
+        logger.info(`[UMS] HTTP profile keys: ${Object.keys(httpProfile).join(', ')}`);
+        logger.info(`[UMS] HTTP profile values: faculty=${httpProfile.faculty}, program=${httpProfile.program}, level=${httpProfile.level}, department=${httpProfile.department}`);
+      }
+    } catch (e) {
+      logger.warn(`[UMS] HTTP profile fetch failed: ${e.message}`);
+    }
+  }
+
+  // Source 3: Parse landing page HTML (navbar/header after login often has name + faculty)
   if (!profile.faculty && landingHtml) {
     const landingProfile = parseProfileHtml(landingHtml);
     Object.assign(profile, Object.fromEntries(Object.entries(landingProfile).filter(([, v]) => v)));
     logger.info(`[UMS] Landing page profile keys: ${Object.keys(landingProfile).join(', ')}`);
   }
 
-  // Source 3: Puppeteer renders /UserInformation with full JS execution
+  // Source 4: Puppeteer renders /UserInformation with full JS execution
   if (!profile.faculty && !profile.department) {
     logger.info('[UMS] Falling back to Puppeteer for JS-rendered profile...');
     try {
@@ -315,16 +334,20 @@ function labelToKey(label) {
   if (/جواز|Passport/i.test(label))                                return 'passportNumber';
   if (/بالعربية|Arabic/i.test(label))                              return 'nameAr';
   if (/بالإنجليزية|English/i.test(label))                          return 'nameEn';
+  if (/المستخدم|username/i.test(label))                            return 'nameAr';
   if (/الإلكتروني|email/i.test(label))                             return 'email';
   if (/الهاتف|تليفون|موبايل|Mobile|phone/i.test(label))           return 'phone';
   if (/الكلية|Faculty|كلية/i.test(label))                          return 'faculty';
   if (/القسم|Department|قسم/i.test(label))                         return 'department';
   if (/البرنامج|Program/i.test(label))                             return 'program';
+  if (/اللائحة.*نوع|نوع.*اللائحة/i.test(label))                   return 'regulationType';
+  if (/اللائحة/i.test(label))                                      return 'regulation';
   if (/العنوان|address/i.test(label))                              return 'address';
   if (/المستوى|Level/i.test(label))                                return 'level';
   if (/المعدل|GPA|معدل/i.test(label))                             return 'gpa';
   if (/الفصل|semester/i.test(label))                               return 'semester';
   if (/الأكاديمية|السنة|academicYear/i.test(label))                return 'academicYear';
+  if (/الجنس|Gender/i.test(label))                                 return 'gender';
   return null;
 }
 
@@ -351,10 +374,12 @@ function parseProfileHtml(html) {
     if (v && v.length > 0) profile[key] = v;
   };
 
-  // Strategy 1: div.row > h5 (label) + p or span (value)
+  // Strategy 1: div.row > div > h5 (label) + div > p (value) — direct children only
   $('div.row').each((_, row) => {
-    const label = clean($(row).find('h5').first().text());
-    const value = clean($(row).find('p, span').not('h5').first().text());
+    const h5 = $(row).find('> div > h5, > div > div > h5').first();
+    const p  = $(row).find('> div > p, > div > div > p').first();
+    const label = clean(h5.text());
+    const value = clean(p.text());
     if (label && value) set(labelToKey(label), value);
   });
 
