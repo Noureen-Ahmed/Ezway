@@ -12,7 +12,7 @@ abstract class CourseRepository {
 }
 
 class ApiCourseRepository implements CourseRepository {
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'https://ezway-production.up.railway.app/api';
 
   @override
   Future<List<Course>> getCourses() async {

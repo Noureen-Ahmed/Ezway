@@ -1,322 +1,128 @@
-from flask import Flask, request, jsonify
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
-from bs4 import BeautifulSoup
-import re
+"""
+UMS Scraper Service v4 — Flask API.
+
+No Playwright. No Chromium. No browser.
+
+Login:   requests.Session  (HTTP POST + CSRF token, same approach already
+         proven in ums.service.js)
+Scrape:  BeautifulSoup + lxml  (4 pages in parallel via ThreadPoolExecutor)
+
+Endpoints:
+  GET  /health     — liveness probe
+  POST /scrape/all — authenticate + return full UMS data
+"""
+
+import concurrent.futures
 import logging
-import traceback
+import os
+import sys
+
+from flask import Flask, jsonify, request
+
+from scraper.config import URLS
+from scraper.parsers import parse_advisor, parse_courses, parse_grades, parse_profile
+from scraper.session import fetch_page, login
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+    stream=sys.stdout,
+)
+logger = logging.getLogger(__name__)
+
+# ── Flask ─────────────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+app.json.ensure_ascii = False  # Preserve Arabic characters in JSON responses
 
-UMS_BASE = 'https://ums.asu.edu.eg'
-LOGIN_URL = f'{UMS_BASE}/App/Login_Form'
-ACCOUNT_URL = f"{UMS_BASE}/UserInformation"
-COURSES_URL = f'{UMS_BASE}/UserInformation/CurrentCourse'
-REGISTRATION_URL = f'{UMS_BASE}/RegisterElectiveCourse/Registration'
+# ── Core scrape logic ─────────────────────────────────────────────────────────
 
-
-def perform_scrape(username, password):
-    """Launch headless Chromium, log in to UMS, and scrape all 3 target pages."""
-    login_id = username.split('@')[0] if '@' in username else username
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-
-        # ── Step 1: Navigate to login page ──
-        logging.info(f"Opening login page for {login_id}...")
-        page.goto(LOGIN_URL, timeout=30000)
-        page.wait_for_load_state('networkidle', timeout=20000)
-
-        # ── Step 2: Set DomainName to @sci.asu.edu.eg via JS (bypasses Kendo UI) ──
-        # The Kendo dropdown populates a hidden input. We set it directly.
-        domain = '@' + username.split('@')[1] if '@' in username else '@sci.asu.edu.eg'
-        page.evaluate(f"""
-            // Set hidden DomainName input
-            var inputs = document.querySelectorAll('input[name="DomainName"]');
-            inputs.forEach(function(el) {{ el.value = '{domain}'; }});
-            // Also update Kendo widget text if present
-            var kdrop = document.querySelector('[data-role="dropdownlist"]');
-            if (kdrop) {{
-                var kendoWidget = window.jQuery && window.jQuery(kdrop).data('kendoDropDownList');
-                if (kendoWidget) {{
-                    var items = kendoWidget.dataSource.data();
-                    for (var i=0; i<items.length; i++) {{
-                        if (items[i].Value === '{domain}') {{
-                            kendoWidget.value(items[i].Value);
-                            kendoWidget.trigger('change');
-                            break;
-                        }}
-                    }}
-                }}
-            }}
-        """)
-        logging.info(f"Set DomainName to {domain} via JS injection")
-
-        # ── Step 3: Fill login name and password ──
-        page.fill('input[name="LoginName"]', login_id)
-        page.fill('input[name="password"]', password)
-
-        # ── Step 4: Submit ──
-        page.click('button[type="submit"]')
-        logging.info("Submitted login form. Waiting for navigation...")
-
-        try:
-            page.wait_for_url(lambda url: '/App/Login_Form' not in url, timeout=20000)
-        except PlaywrightTimeout:
-            # Check if there's an error message on the page
-            err_el = page.query_selector('.text-danger, .validation-summary-errors, .alert-danger')
-            err_msg = err_el.inner_text() if err_el else "Login timed out"
-            logging.error(f"Login failed: {err_msg}")
-            browser.close()
-            return None, err_msg
-
-        logging.info(f"Login succeeded! Now at: {page.url}")
-
-        dashboard_html = page.content()
-        with open("dashboard_debug.html", "w", encoding="utf-8") as f:
-            f.write(dashboard_html)
-            
-        result = {"profile": {}, "courses": [], "grades": []}
-
-        # ── Step 5: Scrape /UserInformation ──
-        logging.info(f"Scraping {ACCOUNT_URL}...")
-        page.goto(ACCOUNT_URL, timeout=20000)
-        try:
-            page.wait_for_load_state('networkidle', timeout=10000)
-        except PlaywrightTimeout:
-            pass
-        result['profile'] = parse_account_page(page.content())
-
-        # ── Step 6: Scrape /UserInformation/CurrentCourse ──
-        logging.info(f"Scraping {COURSES_URL}...")
-        page.goto(COURSES_URL, timeout=20000)
-        try:
-            page.wait_for_load_state('networkidle', timeout=10000)
-        except PlaywrightTimeout:
-            pass
-        result['courses'] = parse_courses_page(page.content())
-
-        # ── Step 7: Scrape /RegisterElectiveCourse/Registration ──
-        logging.info(f"Scraping {REGISTRATION_URL}...")
-        page.goto(REGISTRATION_URL, timeout=20000)
-        try:
-            page.wait_for_load_state('networkidle', timeout=10000)
-        except PlaywrightTimeout:
-            pass
-        reg_info = parse_registration_page(page.content())
-        result['profile'].update(reg_info)
-
-        browser.close()
-        logging.info(f"✅ Scrape complete: {len(result['courses'])} courses, profile keys: {list(result['profile'].keys())}")
-        return result, None
+_PAGES = {
+    "profile": URLS["profile"],
+    "courses": URLS["courses"],
+    "advisor": URLS["advisor"],
+    "grades":  URLS["grades"],
+}
 
 
-def sanitize_scraped_value(val):
-    """Remove DataTable/Kendo UI artifacts that leak into scraped text."""
-    if not val or not isinstance(val, str):
-        return val
-    # Remove 'activate to sort column ascending/descending' and surrounding junk
-    cleaned = re.sub(r'activate to sort column (ascending|descending)', '', val, flags=re.IGNORECASE)
-    # Target exact artifacts like found in the screenshot
-    cleaned = re.sub(r'activate\s+to\s+sort\s+column\s+(ascending|descending)[^>]*>', '', cleaned, flags=re.IGNORECASE)
-    # Remove HTML tags
-    cleaned = re.sub(r'<[^>]*>', '', cleaned)
-    # Remove leading/trailing quotes, >, colons and whitespace
-    cleaned = cleaned.strip(' \t\n\r">\':')
-    # Collapse multiple spaces
-    cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip()
-    
-    # If the value is literally "الاسم", "العنوان", "الهاتف" - it captured the header instead of the value
-    headers = ['الاسم', 'العنوان', 'الهاتف', 'الموبايل', 'تليفون', 'الكلية', 'البرنامج', 'القومي']
-    if cleaned in headers:
-        return None
-        
-    # If empty or just punctuation, return None
-    if not cleaned or re.match(r'^[:\-,>"\s]+$', cleaned):
-        return None
-    return cleaned
+def _scrape(username: str, password: str) -> dict:
+    """
+    1. Authenticate (HTTP, no browser).
+    2. Fetch 4 UMS pages in parallel.
+    3. Parse and return structured data.
+    """
+    cookie_header = login(username, password)
+
+    html: dict[str, str] = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        future_to_name = {
+            pool.submit(fetch_page, cookie_header, url): name
+            for name, url in _PAGES.items()
+        }
+        for future in concurrent.futures.as_completed(future_to_name):
+            name = future_to_name[future]
+            try:
+                html[name] = future.result()
+            except Exception as exc:
+                logger.warning("Page '%s' fetch error: %s", name, exc)
+                html[name] = ""
+
+    profile = parse_profile(html.get("profile", ""))
+    profile.update(parse_advisor(html.get("advisor", "")))
+
+    return {
+        "profile": profile,
+        "courses": parse_courses(html.get("courses", "")),
+        "grades":  parse_grades(html.get("grades", "")),
+    }
 
 
-def parse_account_page(html):
-    """Parse /UserInformation — extract full profile fields."""
-    profile = {}
-    soup = BeautifulSoup(html, 'html.parser')
+# ── Routes ────────────────────────────────────────────────────────────────────
 
-    # Look for grid rows mapping h5 (label) to p or span (value)
-    for row in soup.find_all('div', class_='row'):
-        h5 = row.find('h5')
-        val_el = row.find('p') or row.find('span')
-        if h5 and val_el:
-            k = h5.get_text(strip=True)
-            raw_v = val_el.get_text(strip=True)
-            
-            # Sanitize the value — strips DataTable column header artifacts
-            v = sanitize_scraped_value(raw_v)
-            if not v:
-                continue
-                
-            if any(x in k for x in ['القومي', 'SSN', 'الرقم القومي', 'رقم قومي']):
-                profile['studentId'] = v
-            elif any(x in k for x in ['جواز', 'Passport', 'passport']):
-                # Passport number — only set studentId if SSN wasn't found
-                if 'studentId' not in profile:
-                    profile['studentId'] = v
-                profile['passportNumber'] = v
-            elif any(x in k for x in ['بالعربية', 'الاسم بالعربية', 'Arabic']):
-                profile['nameAr'] = v
-            elif any(x in k for x in ['بالإنجليزية', 'English', 'الاسم بالإنجليزية']):
-                profile['nameEn'] = v
-            elif any(x in k for x in ['اسم المستخدم', 'الطالب', 'Name']):
-                # Generic name field — store as nameAr if no specific Arabic name yet
-                if 'nameAr' not in profile:
-                    profile['nameAr'] = v
-            elif any(x in k for x in ['الإلكتروني', 'email', 'Email']):
-                if 'email' not in profile:
-                    profile['email'] = v
-            elif any(x in k for x in ['الهاتف', 'phone', 'Phone', 'تليفون', 'موبايل', 'Mobile', 'الموبايل']):
-                profile['phone'] = v
-            elif any(x in k for x in ['الكلية', 'Faculty', 'كلية']):
-                profile['faculty'] = v
-            elif any(x in k for x in ['البرنامج', 'Program']):
-                profile['program'] = v
-            elif any(x in k for x in ['العنوان', 'address', 'Address', 'محل']):
-                profile['address'] = v
-            elif any(x in k for x in ['الأكاديمية', 'academicYear', 'السنة']):
-                profile['academicYear'] = v
-            elif any(x in k for x in ['المستوى', 'Level']):
-                profile['level'] = v
-            elif any(x in k for x in ['الفصل الدراسي', 'semester']):
-                profile['semester'] = v
-
-    # Fallback to extract Department from unstructured list items
-    if 'department' not in profile:
-        for li in soup.find_all('li'):
-            text = li.get_text(strip=True)
-            if 'قسم' in text and len(text) < 50:
-                profile['department'] = sanitize_scraped_value(text)
-                break
-
-    # Final sanitize pass on all profile values
-    for key in list(profile.keys()):
-        profile[key] = sanitize_scraped_value(profile[key])
-        if profile[key] is None:
-            del profile[key]
-
-    logging.info(f"Profile parsed: {profile}")
-    return profile
-
-
-def parse_courses_page(html):
-    """Parse /UserInformation/CurrentCourse — extract enrolled courses from card divs."""
-    courses = []
-    soup = BeautifulSoup(html, 'html.parser')
-
-    # The page uses div.price-table-box2 cards for each course
-    cards = soup.find_all('div', class_='price-table-box2')
-    logging.info(f"Courses page: {len(cards)} course cards found")
-
-    for card in cards:
-        course = {}
-
-        # Course name and code come from h5 element
-        # e.g. "هندسه البرمجيات [COMP 404]"
-        title_el = card.find('h5')
-        if title_el:
-            full_title = title_el.get_text(strip=True)
-            # Extract code from brackets
-            code_match = re.search(r'\[([^\]]+)\]', full_title)
-            if code_match:
-                course['courseCode'] = code_match.group(1).strip()
-                course['courseName'] = full_title[:full_title.rfind('[')].strip()
-            else:
-                course['courseName'] = full_title
-                course['courseCode'] = ''
-
-        # Grade fields are in row divs with span elements
-        grades = {}
-        for row in card.find_all('div', class_='row'):
-            text = row.get_text(separator='|', strip=True)
-            parts = text.split('|')
-            for i in range(len(parts) - 1):
-                label = parts[i].strip()
-                val_str = parts[i + 1].strip()
-                try:
-                    val = float(val_str)
-                    if 'تحريري' in label:
-                        grades['written'] = val
-                    elif 'عملي' in label:
-                        grades['practical'] = val
-                    elif 'شفوي' in label:
-                        grades['oral'] = val
-                    elif 'أعمال' in label or 'اعمال' in label:
-                        grades['semesterWork'] = val
-                except ValueError:
-                    pass
-
-        course['grades'] = grades
-        course['creditHours'] = None
-        course['section'] = None
-        course['instructorName'] = None
-
-        if course.get('courseCode') or course.get('courseName'):
-            logging.info(f"  Course: {course['courseCode']} - {course.get('courseName', '')}, grades: {grades}")
-            courses.append(course)
-
-    logging.info(f"Total courses: {len(courses)}")
-    return courses
-
-
-def parse_registration_page(html):
-    """Parse /RegisterElectiveCourse/Registration — extract advisor info."""
-    info = {}
-    soup = BeautifulSoup(html, 'html.parser')
-    text = soup.get_text()
-
-    adv_name = re.search(r'للمرشد الأكاديم[يى]\s*[:\-]*\s*([^\n\r<]{2,80})', text)
-    if adv_name:
-        info['advisorName'] = adv_name.group(1).strip()
-
-    adv_email = re.search(r'mailto:([^"\'>\s]+)', html)
-    if adv_email:
-        info['advisorEmail'] = adv_email.group(1).strip()
-
-    logging.info(f"Registration info: {info}")
-    return info
-
-
-# ============ API ENDPOINTS ============
-
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "message": "Python Playwright scraper v3 running!"})
+    return jsonify({"status": "ok", "service": "ums-scraper", "version": "4.0.0"})
 
 
-@app.route('/scrape/all', methods=['POST'])
+@app.route("/scrape/all", methods=["POST"])
 def scrape_all():
-    data = request.json or {}
-    username = data.get('username')
-    password = data.get('password')
+    body     = request.get_json(silent=True) or {}
+    username = (body.get("username") or "").strip()
+    password = (body.get("password") or "").strip()
 
     if not username or not password:
-        return jsonify({"success": False, "error": "Username and password required"}), 400
+        return jsonify({"success": False, "error": "username and password are required"}), 400
 
-    logging.info(f"🔄 Starting full scrape for {username}")
+    safe_user = username.split("@")[0] + "***"
+    logger.info("Scrape request: %s", safe_user)
 
     try:
-        result, error = perform_scrape(username, password)
+        data = _scrape(username, password)
+        logger.info(
+            "Scrape success for %s — %d courses, %d grades",
+            safe_user, len(data["courses"]), len(data["grades"]),
+        )
+        return jsonify({"success": True, "data": data})
 
-        if error:
-            logging.error(f"❌ Scrape failed for {username}: {error}")
-            return jsonify({"success": False, "error": error}), 401
+    except ValueError as exc:
+        # Wrong credentials — do not log password
+        logger.warning("Auth failure for %s: %s", safe_user, exc)
+        return jsonify({"success": False, "error": str(exc)}), 401
 
-        return jsonify({"success": True, "data": result})
+    except RuntimeError as exc:
+        logger.error("Scrape runtime error for %s: %s", safe_user, exc)
+        return jsonify({"success": False, "error": str(exc)}), 502
 
-    except Exception as e:
-        logging.error(f"❌ Unexpected error for {username}: {traceback.format_exc()}")
-        return jsonify({"success": False, "error": str(e)}), 500
+    except Exception:
+        logger.exception("Unexpected error for %s", safe_user)
+        return jsonify({"success": False, "error": "Internal scraper error"}), 500
 
 
-if __name__ == '__main__':
-    logging.info("🚀 Starting UMS Playwright Scraper Service v3 on port 5000")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "5000"))
+    logger.info("Starting UMS Scraper v4.0 on port %d", port)
+    app.run(host="0.0.0.0", port=port, debug=False)

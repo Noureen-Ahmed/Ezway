@@ -1,0 +1,23 @@
+# Per-Dockerfile ignore for the Python scraper image.
+# Docker 23+ checks for Dockerfile.scraper.dockerignore before .dockerignore.
+
+node_modules
+prisma
+src
+server.js
+Dockerfile
+Dockerfile.scraper
+*.toml
+*.md
+*.log
+*.html
+*.json
+!requirements.txt
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.env
+.env.*
+__pycache__
+*.pyc

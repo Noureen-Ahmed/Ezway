@@ -44,7 +44,7 @@ const formatUserResponse = (user, umsProfile = {}) => ({
   address: user.address || umsProfile.address || null,
   gpa: user.gpa,
   level: user.level,
-  department: user.department?.name || null,
+  department: user.department?.name || umsProfile.department || null,
   departmentId: user.departmentId,
   program: user.program?.name || umsProfile.program || user.major || user.program || null,
   programId: user.programId,

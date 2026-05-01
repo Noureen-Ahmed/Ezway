@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# UMS Scraper Service — Python 3.11 slim
+#
+# No Chromium. No Playwright. Final image ≈ 140-160 MB.
+#
+# Railway deployment:
+#   1. Create a new Railway service in the same project.
+#   2. Set "Dockerfile Path" to "backend/Dockerfile.scraper".
+#   3. Set "Root Directory" to "backend" (or adjust COPY paths).
+#   4. Add env vars: PORT (Railway sets this automatically), LOG_LEVEL.
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM python:3.11-slim
+
+# Prevents .pyc files and enables stdout log flushing
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=5000
+
+WORKDIR /app
+
+# Install Python deps first (cached layer — only rebuilds when requirements change)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# App source
+COPY scraper_service.py .
+COPY scraper/ ./scraper/
+COPY gunicorn.conf.py .
+
+# Non-root user — Railway security best practice
+RUN useradd -m -u 1001 appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 5000
+
+# Liveness probe: Railway can poll /health
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/health')" || exit 1
+
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "scraper_service:app"]

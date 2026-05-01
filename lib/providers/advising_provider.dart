@@ -43,7 +43,7 @@ class AdvisingState {
 
 class AdvisingNotifier extends StateNotifier<AdvisingState> {
   final Ref _ref;
-  final String _baseUrl = 'http://localhost:3000/api/advising';
+  final String _baseUrl = 'https://ezway-production.up.railway.app/api/advising';
 
   AdvisingNotifier(this._ref) : super(AdvisingState());
 

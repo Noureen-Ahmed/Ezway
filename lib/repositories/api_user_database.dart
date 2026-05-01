@@ -5,7 +5,7 @@ import '../models/user.dart';
 /// API Service for communicating with the backend server
 /// which handles MySQL database operations
 class ApiUserDatabase {
-  static const String _baseUrl = 'http://localhost:3000/api';
+  static const String _baseUrl = 'https://ezway-production.up.railway.app/api';
 
   /// Login user with email and password
   static Future<User?> login(String email, String password) async {
