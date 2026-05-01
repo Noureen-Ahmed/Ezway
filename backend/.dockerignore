@@ -46,6 +46,8 @@ server.js
 
 # Data / output files
 *.json
+!package.json
+!package-lock.json
 students.json
 db_courses.json
 profs.txt
