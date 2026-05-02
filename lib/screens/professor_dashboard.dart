@@ -181,47 +181,51 @@ class ProfessorDashboard extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome back,',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                name,
-                style: const TextStyle(
-                  color: Color(0xFFFDC800),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome back,',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDC800).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 4),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFFFDC800),
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.school, size: 14, color: Color(0xFFFDC800)),
-                    SizedBox(width: 4),
-                    Text(
-                      'Professor',
-                      style: TextStyle(
-                          color: Color(0xFFFDC800),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDC800).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.school, size: 14, color: Color(0xFFFDC800)),
+                      SizedBox(width: 4),
+                      Text(
+                        'Professor',
+                        style: TextStyle(
+                            color: Color(0xFFFDC800),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           _HeaderButton(
             icon: Icons.person_outline,
