@@ -150,6 +150,67 @@ router.get('/upcoming',
 );
 
 
+// ============ GET MY WEEKLY SCHEDULE ============
+// Returns enrolled courses' schedule slots grouped by day of week.
+// No date expansion — pure timetable view for students.
+
+router.get('/my-schedule',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { userId: req.user.id, status: 'ENROLLED' },
+        include: {
+          course: {
+            select: {
+              id:   true,
+              code: true,
+              name: true,
+              scheduleSlots: {
+                select: {
+                  id:        true,
+                  dayOfWeek: true,
+                  startTime: true,
+                  endTime:   true,
+                  location:  true,
+                  room:      true,
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Group schedule slots by day
+      const grouped = {};
+      for (const enrollment of enrollments) {
+        const course = enrollment.course;
+        for (const slot of course.scheduleSlots) {
+          if (!grouped[slot.dayOfWeek]) grouped[slot.dayOfWeek] = [];
+          grouped[slot.dayOfWeek].push({
+            courseCode: course.code,
+            courseName: course.name,
+            dayOfWeek:  slot.dayOfWeek,
+            startTime:  slot.startTime,
+            endTime:    slot.endTime,
+            location:   slot.location || slot.room || null,
+            lessonType: 'LECTURE',
+          });
+        }
+      }
+
+      // Sort each day by startTime
+      for (const day of Object.keys(grouped)) {
+        grouped[day].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      }
+
+      res.json({ success: true, schedule: grouped });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ GET SCHEDULE EVENTS ============
 
 router.get('/',

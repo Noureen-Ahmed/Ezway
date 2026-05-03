@@ -91,6 +91,27 @@ router.post('/login', async (req, res, next) => {
       }
     });
 
+    // Admin accounts never go through UMS — just verify password and return JWT
+    if (localUser && localUser.role === 'ADMIN' && localUser.password && await bcrypt.compare(password, localUser.password)) {
+      const updatedUser = await prisma.user.update({
+        where: { id: localUser.id },
+        data: { lastLoginAt: new Date() },
+        include: {
+          department: { select: { id: true, name: true, code: true } },
+          program: { select: { id: true, name: true, code: true } },
+          enrollments: { select: { courseId: true } }
+        }
+      });
+      logger.info(`✅ Admin local login: ${loginEmail}`);
+      return res.json({
+        success: true,
+        message: 'Admin login successful',
+        user: formatUserResponse(updatedUser, {}),
+        token: generateToken(updatedUser.id),
+        sync: { courses: 0, grades: 0, bypassed: true }
+      });
+    }
+
     const hasProfileData = localUser && localUser.faculty && localUser.level;
     if (localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0 && hasProfileData) {
       // Local auth successful and user has COMPLETE data, bypass UMS scrape

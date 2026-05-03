@@ -17,19 +17,19 @@ class DataService {
     final input = email.trim();
     final inputLower = input.toLowerCase();
 
-    // Determine if this is a professor login:
-    // Only explicit professor email patterns go to /auth/login
-    // Everything else (SSN, passport IDs, student emails) goes to /ums/login
-    final isDoctor = inputLower.contains('doctor') ||
+    // Admin and professor accounts use /auth/login (email + password, no UMS scrape).
+    // Everything else (SSN, passport IDs, student @asu emails) goes to /ums/login.
+    final isDirectAuth = inputLower.contains('doctor') ||
         inputLower.contains('professor') ||
-        inputLower.contains('dr.');
-    final isStudent = !isDoctor;
+        inputLower.contains('dr.') ||
+        inputLower.contains('admin');
+    final isStudent = !isDirectAuth;
     final endpoint = isStudent ? '/ums/login' : '/auth/login';
     final body = isStudent
         ? {'loginName': input, 'password': password}
         : {'email': input, 'password': password};
 
-    print('[DataService] Routing login to $endpoint for input: $input (isStudent: $isStudent)');
+    print('[DataService] Routing login to $endpoint for input: $input (isStudent: $isStudent, isDirectAuth: $isDirectAuth)');
 
     // UMS login launches headless Chrome on the server — allow up to 2 minutes
     final timeout = isStudent ? const Duration(seconds: 120) : const Duration(seconds: 30);
@@ -723,6 +723,29 @@ class DataService {
     }
   }
   
+  /// Get current student's weekly timetable grouped by day.
+  /// Returns { 'SATURDAY': [...], 'SUNDAY': [...], ... }
+  static Future<Map<String, List<Map<String, dynamic>>>> getMySchedule() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/schedule/my-schedule'),
+        headers: ApiConfig.authHeaders,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final raw = data['schedule'] as Map<String, dynamic>? ?? {};
+        return raw.map((day, entries) => MapEntry(
+          day,
+          List<Map<String, dynamic>>.from(entries as List),
+        ));
+      }
+      return {};
+    } catch (e) {
+      print('[DataService] Get my schedule error: $e');
+      return {};
+    }
+  }
+
   /// Create personal schedule event
   static Future<bool> createScheduleEvent({
     required String title,
