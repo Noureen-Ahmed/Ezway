@@ -163,17 +163,21 @@ router.post('/',
         }
       });
 
-      // Notify students if course-specific
+      // Notify students if course-specific (non-fatal)
       if (courseId) {
-        await notifyCourseStudents({
-          courseId,
-          title: `📢 ${title}`,
-          message: message.substring(0, 200),
-          type: 'ANNOUNCEMENT',
-          referenceType: 'ANNOUNCEMENT',
-          referenceId: announcement.id,
-          excludeUserId: req.user.id
-        });
+        try {
+          await notifyCourseStudents({
+            courseId,
+            title: `📢 ${title}`,
+            message: message.substring(0, 200),
+            type: 'ANNOUNCEMENT',
+            referenceType: 'ANNOUNCEMENT',
+            referenceId: announcement.id,
+            excludeUserId: req.user.id
+          });
+        } catch (notifError) {
+          logger.error(`Notification failed for announcement "${title}" (non-fatal):`, notifError.message);
+        }
       }
 
       logger.info(`✅ Announcement created: ${title}`);

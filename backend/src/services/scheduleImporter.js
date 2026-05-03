@@ -16,8 +16,24 @@ const path       = require('path');
 // Path to the Python scraper script, relative to this file (src/services → backend/python)
 const SCRAPER_PATH = path.join(__dirname, '../../python/scrape_schedule.py');
 
-// On Windows use 'python'; override via env var for Linux/Mac deployments
-// We read PYTHON_BIN dynamically at runtime inside runScraper
+// ─── Auto-detect Python binary ───────────────────────────────────────────────
+const { execSync } = require('child_process');
+
+function detectPythonBin() {
+  if (process.env.PYTHON_BIN) return process.env.PYTHON_BIN;
+  const candidates = process.platform === 'win32'
+    ? ['py', 'python', 'python3']
+    : ['python3', 'python'];
+  for (const bin of candidates) {
+    try {
+      execSync(`${bin} --version`, { stdio: 'ignore' });
+      return bin;
+    } catch (_) {}
+  }
+  return 'python';
+}
+
+const PYTHON_BIN = detectPythonBin();
 
 // ─── DayOfWeek enum values (must match Prisma schema) ────────────────────────
 const VALID_DAYS = new Set([
@@ -35,8 +51,7 @@ function runScraper(pdfPath, semester, academicYear) {
       '--academic-year', academicYear,
     ];
 
-    const pythonBin = process.env.PYTHON_BIN || 'python';
-    const proc = spawn(pythonBin, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const proc = spawn(PYTHON_BIN, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
     let stdout = '';
     let stderr = '';
@@ -62,7 +77,7 @@ function runScraper(pdfPath, semester, academicYear) {
     proc.on('error', (err) => {
       reject(new Error(
         `Failed to start Python scraper: ${err.message}\n` +
-        `Make sure Python is installed and accessible as '${process.env.PYTHON_BIN || 'python'}'`
+        `Make sure Python is installed and accessible as '${PYTHON_BIN}'`
       ));
     });
   });
@@ -264,4 +279,4 @@ async function importScheduleFromPdf({ pdfPath, semester, academicYear, dryRun =
   return report;
 }
 
-module.exports = { importScheduleFromPdf, runScraper, relinkEnrollments };
+module.exports = { importScheduleFromPdf, runScraper, relinkEnrollments, PYTHON_BIN };

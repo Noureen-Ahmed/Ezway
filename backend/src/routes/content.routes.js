@@ -72,27 +72,30 @@ router.post('/',
         select: { name: true, code: true }
       });
 
-      // Notify students
-      await notifyCourseStudents({
-        courseId,
-        title: `New ${contentType.toLowerCase()}: ${title}`,
-        message: `${course.code}: ${description || title}`,
-        type: 'ANNOUNCEMENT',
-        referenceType: 'CONTENT',
-        referenceId: content.id,
-        excludeUserId: req.user.id
-      });
-
-      // Also create an announcement
-      await prisma.announcement.create({
-        data: {
+      // Notify students (non-fatal — never crash content creation)
+      try {
+        await notifyCourseStudents({
           courseId,
           title: `New ${contentType.toLowerCase()}: ${title}`,
-          message: description || `New content available for ${course.name}`,
-          type: 'LECTURE',
-          createdById: req.user.id
-        }
-      });
+          message: `${course.code}: ${description || title}`,
+          type: 'ANNOUNCEMENT',
+          referenceType: 'CONTENT',
+          referenceId: content.id,
+          excludeUserId: req.user.id
+        });
+
+        await prisma.announcement.create({
+          data: {
+            courseId,
+            title: `New ${contentType.toLowerCase()}: ${title}`,
+            message: description || `New content available for ${course.name}`,
+            type: 'LECTURE',
+            createdById: req.user.id
+          }
+        });
+      } catch (notifError) {
+        logger.error(`Notification/announcement failed for content "${title}" (non-fatal):`, notifError.message);
+      }
 
       logger.info(`✅ Content created: ${title} for ${course.code}`);
 
@@ -163,28 +166,31 @@ router.post('/assignment',
         }
       });
 
-      // Notify students
-      const formattedDate = new Date(dueDate).toLocaleDateString();
-      await notifyCourseStudents({
-        courseId,
-        title: `New Assignment: ${title}`,
-        message: `${course.code} - Due: ${formattedDate}`,
-        type: 'ASSIGNMENT',
-        referenceType: 'TASK',
-        referenceId: task.id,
-        excludeUserId: req.user.id
-      });
-
-      // Create announcement
-      await prisma.announcement.create({
-        data: {
+      // Notify students (non-fatal)
+      try {
+        const formattedDate = new Date(dueDate).toLocaleDateString();
+        await notifyCourseStudents({
           courseId,
           title: `New Assignment: ${title}`,
-          message: `Due: ${formattedDate}. ${description || ''}`,
+          message: `${course.code} - Due: ${formattedDate}`,
           type: 'ASSIGNMENT',
-          createdById: req.user.id
-        }
-      });
+          referenceType: 'TASK',
+          referenceId: task.id,
+          excludeUserId: req.user.id
+        });
+
+        await prisma.announcement.create({
+          data: {
+            courseId,
+            title: `New Assignment: ${title}`,
+            message: `Due: ${formattedDate}. ${description || ''}`,
+            type: 'ASSIGNMENT',
+            createdById: req.user.id
+          }
+        });
+      } catch (notifError) {
+        logger.error(`Notification/announcement failed for assignment "${title}" (non-fatal):`, notifError.message);
+      }
 
       logger.info(`✅ Assignment created: ${title} for ${course.code}`);
 
@@ -258,28 +264,31 @@ router.post('/exam',
         }
       });
 
-      // Notify students
-      const formattedDate = new Date(examDate).toLocaleDateString();
-      await notifyCourseStudents({
-        courseId,
-        title: `Exam Scheduled: ${title}`,
-        message: `${course.code} - Date: ${formattedDate}`,
-        type: 'EXAM',
-        referenceType: 'TASK',
-        referenceId: task.id,
-        excludeUserId: req.user.id
-      });
-
-      // Create announcement
-      await prisma.announcement.create({
-        data: {
+      // Notify students (non-fatal)
+      try {
+        const formattedDate = new Date(examDate).toLocaleDateString();
+        await notifyCourseStudents({
           courseId,
           title: `Exam Scheduled: ${title}`,
-          message: `Date: ${formattedDate}. ${description || ''}`,
+          message: `${course.code} - Date: ${formattedDate}`,
           type: 'EXAM',
-          createdById: req.user.id
-        }
-      });
+          referenceType: 'TASK',
+          referenceId: task.id,
+          excludeUserId: req.user.id
+        });
+
+        await prisma.announcement.create({
+          data: {
+            courseId,
+            title: `Exam Scheduled: ${title}`,
+            message: `Date: ${formattedDate}. ${description || ''}`,
+            type: 'EXAM',
+            createdById: req.user.id
+          }
+        });
+      } catch (notifError) {
+        logger.error(`Notification/announcement failed for exam "${title}" (non-fatal):`, notifError.message);
+      }
 
       logger.info(`✅ Exam created: ${title} for ${course.code}`);
 

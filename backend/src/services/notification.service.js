@@ -80,11 +80,10 @@ const sendToToken = async (token, notification) => {
     return { success: true, messageId: response };
   } catch (error) {
     logger.error('FCM send error:', error);
-    
+
     // Handle invalid token
     if (error.code === 'messaging/invalid-registration-token' ||
         error.code === 'messaging/registration-token-not-registered') {
-      // Remove invalid token from database
       await prisma.user.updateMany({
         where: { fcmToken: token },
         data: { fcmToken: null }
@@ -99,82 +98,91 @@ const sendToToken = async (token, notification) => {
  * Send push notification to multiple users
  */
 const sendToUsers = async (userIds, notification) => {
-  const users = await prisma.user.findMany({
-    where: { 
-      id: { in: userIds },
-      fcmToken: { not: null }
-    },
-    select: { id: true, fcmToken: true }
-  });
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+        fcmToken: { not: null }
+      },
+      select: { id: true, fcmToken: true }
+    });
 
-  const results = await Promise.all(
-    users.map(user => sendToToken(user.fcmToken, notification))
-  );
+    const results = await Promise.all(
+      users.map(user => sendToToken(user.fcmToken, notification))
+    );
 
-  return {
-    total: userIds.length,
-    sent: results.filter(r => r.success).length,
-    failed: results.filter(r => !r.success).length
-  };
+    return {
+      total: userIds.length,
+      sent: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length
+    };
+  } catch (error) {
+    logger.error('sendToUsers error:', error);
+    return { total: userIds.length, sent: 0, failed: userIds.length };
+  }
 };
 
 /**
  * Send push notification to all students enrolled in a course
  */
 const sendToCourseEnrollees = async (courseId, notification, excludeUserId = null) => {
-  const enrollments = await prisma.enrollment.findMany({
-    where: {
-      courseId,
-      status: 'ENROLLED',
-      ...(excludeUserId && { userId: { not: excludeUserId } })
-    },
-    include: {
-      user: {
-        select: { id: true, fcmToken: true }
+  try {
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        courseId,
+        status: 'ENROLLED',
+        ...(excludeUserId && { userId: { not: excludeUserId } })
+      },
+      include: {
+        user: {
+          select: { id: true, fcmToken: true }
+        }
       }
+    });
+
+    const tokens = enrollments
+      .filter(e => e.user.fcmToken)
+      .map(e => e.user.fcmToken);
+
+    if (tokens.length === 0) {
+      return { total: enrollments.length, sent: 0, failed: 0, reason: 'no_tokens' };
     }
-  });
 
-  const tokens = enrollments
-    .filter(e => e.user.fcmToken)
-    .map(e => e.user.fcmToken);
+    const batchSize = 500;
+    let sent = 0;
+    let failed = 0;
 
-  if (tokens.length === 0) {
-    return { total: enrollments.length, sent: 0, failed: 0, reason: 'no_tokens' };
-  }
+    for (let i = 0; i < tokens.length; i += batchSize) {
+      const batch = tokens.slice(i, i + batchSize);
 
-  // Send notifications in batches of 500 (FCM limit)
-  const batchSize = 500;
-  let sent = 0;
-  let failed = 0;
+      if (firebaseApp) {
+        try {
+          const message = {
+            notification: {
+              title: notification.title,
+              body: notification.body
+            },
+            data: notification.data || {},
+            tokens: batch
+          };
 
-  for (let i = 0; i < tokens.length; i += batchSize) {
-    const batch = tokens.slice(i, i + batchSize);
-    
-    if (firebaseApp) {
-      try {
-        const message = {
-          notification: {
-            title: notification.title,
-            body: notification.body
-          },
-          data: notification.data || {},
-          tokens: batch
-        };
-
-        const response = await admin.messaging().sendEachForMulticast(message);
-        sent += response.successCount;
-        failed += response.failureCount;
-      } catch (error) {
-        logger.error('Batch send error:', error);
+          const response = await admin.messaging().sendEachForMulticast(message);
+          sent += response.successCount;
+          failed += response.failureCount;
+        } catch (error) {
+          logger.error('Batch send error:', error);
+          failed += batch.length;
+        }
+      } else {
         failed += batch.length;
       }
-    } else {
-      failed += batch.length;
     }
-  }
 
-  return { total: enrollments.length, sent, failed };
+    return { total: enrollments.length, sent, failed };
+  } catch (error) {
+    logger.error('sendToCourseEnrollees error:', error);
+    return { total: 0, sent: 0, failed: 0 };
+  }
 };
 
 /**
@@ -206,7 +214,6 @@ const createNotification = async ({
   sendPush = true
 }) => {
   try {
-    // Create notification record
     const notification = await prisma.notification.create({
       data: {
         userId,
@@ -218,7 +225,6 @@ const createNotification = async ({
       }
     });
 
-    // Send push notification if enabled
     if (sendPush) {
       const pushResult = await sendToUser(userId, { title, body: message });
       if (pushResult.success) {
@@ -237,7 +243,8 @@ const createNotification = async ({
 };
 
 /**
- * Create notifications for all students in a course
+ * Create notifications for all students in a course.
+ * NEVER throws — failures are logged and returned as metadata.
  */
 const notifyCourseStudents = async ({
   courseId,
@@ -249,7 +256,6 @@ const notifyCourseStudents = async ({
   excludeUserId = null
 }) => {
   try {
-    // Get all enrolled students
     const enrollments = await prisma.enrollment.findMany({
       where: {
         courseId,
@@ -265,7 +271,7 @@ const notifyCourseStudents = async ({
       return { notified: 0 };
     }
 
-    // Create notifications in bulk
+    // Create in-app notifications in bulk
     await prisma.notification.createMany({
       data: userIds.map(userId => ({
         userId,
@@ -277,15 +283,20 @@ const notifyCourseStudents = async ({
       }))
     });
 
-    // Send push notifications
-    const pushResult = await sendToCourseEnrollees(courseId, { title, body: message }, excludeUserId);
+    // Send push notifications (best-effort)
+    let pushResult = { sent: 0, failed: 0 };
+    try {
+      pushResult = await sendToCourseEnrollees(courseId, { title, body: message }, excludeUserId);
+    } catch (pushError) {
+      logger.error('Push notification failed (non-fatal):', pushError.message);
+    }
 
     logger.info(`📢 Notified ${userIds.length} students about: ${title}`);
-
     return { notified: userIds.length, pushResult };
   } catch (error) {
-    logger.error('Error notifying course students:', error);
-    throw error;
+    // Log but NEVER re-throw — notification failure must not crash the calling route
+    logger.error('notifyCourseStudents failed (non-fatal):', error.message);
+    return { notified: 0, error: error.message };
   }
 };
 

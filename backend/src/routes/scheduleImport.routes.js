@@ -2,11 +2,13 @@
  * scheduleImport.routes.js
  *
  * Admin-only routes for importing course schedules from a PDF.
- * Mount in index.js: app.use('/api/admin/schedule-import', scheduleImportRoutes)
+ * Mounted in index.js at: /api/admin/schedule
  *
  * Endpoints:
- *   POST /upload   — Upload PDF and import schedules into the DB
- *   POST /preview  — Scrape PDF and return data without writing to DB
+ *   POST /upload   — Upload PDF and import schedules into DB (original)
+ *   POST /import   — Alias for /upload (used by Flutter UI)
+ *   POST /preview  — Scrape PDF and return slots without writing to DB
+ *   POST /relink   — Re-link UMS enrollments after an import
  *   GET  /status   — DB health check (schedule slot + course counts)
  */
 
@@ -19,7 +21,7 @@ const os       = require('os');
 const router   = express.Router();
 const { prisma }       = require('../utils/database');
 const { authenticate, requireAdmin } = require('../middleware/auth');
-const { importScheduleFromPdf, runScraper, relinkEnrollments } = require('../services/scheduleImporter');
+const { importScheduleFromPdf, runScraper, relinkEnrollments, PYTHON_BIN } = require('../services/scheduleImporter');
 
 // All endpoints require a valid JWT + ADMIN role
 router.use(authenticate);
@@ -41,7 +43,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
       return cb(null, true);
@@ -50,16 +52,23 @@ const upload = multer({
   },
 });
 
-// ─── POST /upload ─────────────────────────────────────────────────────────────
-router.post('/upload', upload.single('file'), async (req, res, next) => {
+// ─── Parse common body params (Flutter sends `year`, direct callers send `academicYear`) ──
+function parseParams(body) {
+  return {
+    semester:     (body.semester     || 'Spring').trim(),
+    academicYear: (body.academicYear || body.year || '2025/2026').trim(),
+    dryRun:       body.dryRun === 'true',
+  };
+}
+
+// ─── Shared import handler used by both /upload and /import ──────────────────
+async function handleImport(req, res, next) {
   if (!req.file) {
     return res.status(400).json({ success: false, error: 'No PDF file uploaded' });
   }
 
-  const pdfPath     = req.file.path;
-  const semester    = (req.body.semester     || 'Spring').trim();
-  const academicYear= (req.body.academicYear || '2025/2026').trim();
-  const dryRun      = req.body.dryRun === 'true';
+  const pdfPath = req.file.path;
+  const { semester, academicYear, dryRun } = parseParams(req.body);
 
   try {
     const report = await importScheduleFromPdf({ pdfPath, semester, academicYear, dryRun });
@@ -69,7 +78,13 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
   } finally {
     fs.unlink(pdfPath, () => {});
   }
-});
+}
+
+// ─── POST /upload ─────────────────────────────────────────────────────────────
+router.post('/upload', upload.single('file'), handleImport);
+
+// ─── POST /import  (Flutter UI uses this path) ───────────────────────────────
+router.post('/import', upload.single('file'), handleImport);
 
 // ─── POST /preview ────────────────────────────────────────────────────────────
 router.post('/preview', upload.single('file'), async (req, res, next) => {
@@ -77,13 +92,29 @@ router.post('/preview', upload.single('file'), async (req, res, next) => {
     return res.status(400).json({ success: false, error: 'No PDF file uploaded' });
   }
 
-  const pdfPath     = req.file.path;
-  const semester    = (req.body.semester     || 'Spring').trim();
-  const academicYear= (req.body.academicYear || '2025/2026').trim();
+  const pdfPath = req.file.path;
+  const { semester, academicYear } = parseParams(req.body);
 
   try {
     const scraped = await runScraper(pdfPath, semester, academicYear);
-    res.json({ success: true, ...scraped });
+
+    // Map to the shape Flutter's ScheduleSlot.fromJson expects,
+    // filtering out any entries the scraper couldn't fully parse.
+    const slots = scraped.schedules
+      .filter(e => e.courseCode && e.startTime && e.endTime && e.dayOfWeek)
+      .map(e => ({
+        courseCode:    e.courseCode,
+        courseNameAr:  e.courseName  || null,
+        programNameAr: e.program     || null,
+        dayOfWeek:     e.dayOfWeek,
+        startTime:     e.startTime,
+        endTime:       e.endTime,
+        location:      e.location    || null,
+        lessonType:    e.lessonType  || 'LECTURE',
+        group:         null,
+      }));
+
+    res.json({ success: true, slots, total: slots.length, programs: scraped.programs });
   } catch (err) {
     next(err);
   } finally {
@@ -92,8 +123,6 @@ router.post('/preview', upload.single('file'), async (req, res, next) => {
 });
 
 // ─── POST /relink ─────────────────────────────────────────────────────────────
-// Re-run enrollment linking for ALL courses that have schedule slots.
-// Call this any time after a PDF import to catch students who logged in earlier.
 router.post('/relink', async (req, res, next) => {
   try {
     const codes = await prisma.course.findMany({
@@ -119,7 +148,7 @@ router.get('/status', async (req, res, next) => {
       success:       true,
       scheduleSlots: scheduleCount,
       courses:       courseCount,
-      pythonBin:     process.env.PYTHON_BIN || 'python',
+      pythonBin:     PYTHON_BIN,
     });
   } catch (err) {
     next(err);

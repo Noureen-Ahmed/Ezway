@@ -3,9 +3,12 @@ FROM node:20-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     python3 \
+    python3-pip \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir --break-system-packages pdfplumber==0.11.4
 
 WORKDIR /app
 
@@ -15,6 +18,7 @@ RUN npm install --ignore-scripts
 RUN npx prisma generate
 
 COPY src ./src/
+COPY python ./python/
 
 ENV CHROMIUM_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
