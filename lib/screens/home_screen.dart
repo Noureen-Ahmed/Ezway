@@ -27,8 +27,9 @@ class HomeScreen extends ConsumerWidget {
     final scheduleAsync = ref.watch(scheduleEventsProvider);
     final announcementsAsync = ref.watch(announcementsProvider);
     final unreadCount = announcementsAsync.whenOrNull(
-      data: (list) => list.where((a) => !a.isRead).length,
-    ) ?? 0;
+          data: (list) => list.where((a) => !a.isRead).length,
+        ) ??
+        0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -86,10 +87,12 @@ class HomeScreen extends ConsumerWidget {
                         value: scheduleAsync.when(
                           data: (e) {
                             final today = DateTime.now();
-                            return e.where((ev) => 
-                              ev.startTime.day == today.day &&
-                              ev.startTime.month == today.month
-                            ).length.toString();
+                            return e
+                                .where((ev) =>
+                                    ev.startTime.day == today.day &&
+                                    ev.startTime.month == today.month)
+                                .length
+                                .toString();
                           },
                           loading: () => '-',
                           error: (_, __) => '!',
@@ -123,12 +126,13 @@ class HomeScreen extends ConsumerWidget {
                       data: (events) {
                         final now = DateTime.now();
                         // Only show actual course lectures (not exams, not tasks)
-                        final upcoming = events.where((e) =>
-                          e.startTime.isAfter(now) &&
-                          e.type == 'lecture' &&
-                          e.courseId != null &&
-                          e.courseId!.isNotEmpty
-                        ).toList()
+                        final upcoming = events
+                            .where((e) =>
+                                e.startTime.isAfter(now) &&
+                                e.type == 'lecture' &&
+                                e.courseId != null &&
+                                e.courseId!.isNotEmpty)
+                            .toList()
                           ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
                         if (upcoming.isEmpty) {
@@ -144,7 +148,8 @@ class HomeScreen extends ConsumerWidget {
                         );
                       },
                       loading: () => const LoadingShimmer(height: 80),
-                      error: (_, __) => _buildEmptyCard('Failed to load schedule'),
+                      error: (_, __) =>
+                          _buildEmptyCard('Failed to load schedule'),
                     ),
                   ],
                 ),
@@ -249,9 +254,12 @@ class HomeScreen extends ConsumerWidget {
                         }
 
                         return Column(
-                          children: tasks.take(3).map((task) => _TaskItem(
-                            task: task,
-                          )).toList(),
+                          children: tasks
+                              .take(3)
+                              .map((task) => _TaskItem(
+                                    task: task,
+                                  ))
+                              .toList(),
                         );
                       },
                     ),
@@ -348,7 +356,8 @@ class _HeaderButton extends StatelessWidget {
   final VoidCallback onTap;
   final int badge;
 
-  const _HeaderButton({required this.icon, required this.onTap, this.badge = 0});
+  const _HeaderButton(
+      {required this.icon, required this.onTap, this.badge = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -468,7 +477,8 @@ class _NextClassCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF10B981).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+          border:
+              Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -587,7 +597,8 @@ class _TaskItem extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final isOverdue = false; // It physically can't be overdue here without being hidden
+    const isOverdue =
+        false; // It physically can't be overdue here without being hidden
     final type = task.taskType.name;
 
     return GestureDetector(
@@ -599,7 +610,8 @@ class _TaskItem extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isOverdue ? const Color(0xFFFECACA) : const Color(0xFFE5E7EB),
+            color:
+                isOverdue ? const Color(0xFFFECACA) : const Color(0xFFE5E7EB),
           ),
         ),
         child: Row(
@@ -629,7 +641,9 @@ class _TaskItem extends StatelessWidget {
                       'Due: ${DateFormat('MMM d').format(task.dueDate!)}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isOverdue ? const Color(0xFFEF4444) : const Color(0xFF6B7280),
+                        color: isOverdue
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF6B7280),
                       ),
                     ),
                 ],
@@ -668,20 +682,22 @@ class _TaskItem extends StatelessWidget {
       );
     } else if (task.taskType == TaskType.exam) {
       // Check if already submitted
-      if (task.status == TaskStatus.completed || task.status == TaskStatus.graded) {
-         String submittedMessage = 'You have already submitted this exam.';
-         if (task.grade != null && task.grade != 'graded') {
-           submittedMessage += ' Grade: ${task.grade}';
-         }
-         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(submittedMessage)),
-         );
-         return;
+      if (task.status == TaskStatus.completed ||
+          task.status == TaskStatus.graded) {
+        String submittedMessage = 'You have already submitted this exam.';
+        if (task.grade != null && task.grade != 'graded') {
+          submittedMessage += ' Grade: ${task.grade}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(submittedMessage)),
+        );
+        return;
       }
-      
+
       Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute(
-          builder: (context) => ExamRunnerScreen(taskId: task.id, courseId: task.courseId ?? ''),
+          builder: (context) =>
+              ExamRunnerScreen(taskId: task.id, courseId: task.courseId ?? ''),
         ),
       );
     } else {
@@ -695,7 +711,8 @@ class _TaskItem extends StatelessWidget {
   }
 
   Color _getStatusColor() {
-    final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
+    final isOverdue =
+        task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
     if (isOverdue) return const Color(0xFFEF4444);
     if (task.status == TaskStatus.submitted) return const Color(0xFF10B981);
     return const Color(0xFFFBBF24);

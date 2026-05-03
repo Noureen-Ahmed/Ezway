@@ -1,37 +1,21 @@
-const http = require('http');
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
 
-// Get the first argument as email or use a default
-const email = process.argv[2] || 'test@test.com';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const token = jwt.sign({ id: 'cmn7hsijq000x69k2vrhzc1v9', email: 'doctor@college.edu', role: 'professor' }, JWT_SECRET);
 
-const options = {
-    hostname: 'localhost',
-    port: 3000,
-    path: `/api/users/${encodeURIComponent(email)}`,
-    method: 'GET'
-};
-
-const req = http.request(options, (res) => {
-    let data = '';
-    res.on('data', chunk => data += chunk);
-    res.on('end', () => {
-        try {
-            const parsed = JSON.parse(data);
-            console.log('API Response:');
-            console.log(JSON.stringify(parsed, null, 2));
-
-            if (parsed.user) {
-                console.log('\n=== KEY FIELDS ===');
-                console.log('isOnboardingComplete:', parsed.user.isOnboardingComplete, '(type:', typeof parsed.user.isOnboardingComplete + ')');
-                console.log('enrolledCourses:', parsed.user.enrolledCourses);
-            }
-        } catch (e) {
-            console.log('Raw response:', data);
-        }
+async function test() {
+  try {
+    console.log('Sending request to http://localhost:3000/api/notes');
+    const res = await axios.post('http://localhost:3000/api/notes', {
+      title: 'Test Note',
+      content: 'Hello World'
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
     });
-});
-
-req.on('error', (e) => {
-    console.error('Error:', e.message);
-});
-
-req.end();
+    console.log('Success:', res.data);
+  } catch (err) {
+    console.error('Error:', err.response ? err.response.data : err.message);
+  }
+}
+test();

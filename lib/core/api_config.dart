@@ -1,7 +1,12 @@
 /// API Configuration
 /// Centralized configuration for API endpoints and headers
 class ApiConfig {
-  static const String baseUrl = 'https://ezway-production.up.railway.app/api';
+  // Set via --dart-define=API_BASE_URL=https://your-app.railway.app/api at build time.
+  // Falls back to localhost for emulator dev (10.0.2.2 = host machine from Android emulator).
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:3000/api',
+  );
   
   // Auth token (set after login)
   static String? _authToken;

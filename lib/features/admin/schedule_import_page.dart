@@ -17,7 +17,7 @@ class ScheduleImportPage extends ConsumerStatefulWidget {
 class _ScheduleImportPageState extends ConsumerState<ScheduleImportPage> {
   PlatformFile? _selectedFile;
   String _semester     = 'Spring';
-  String _academicYear = '2025/2026';
+  final String _academicYear = '2025/2026';
   bool   _isDryRun     = false;
 
   _ImportStatus _status = _ImportStatus.idle;
@@ -224,7 +224,7 @@ class _ScheduleImportPageState extends ConsumerState<ScheduleImportPage> {
           Row(children: [
             Expanded(
               child: DropdownButtonFormField<String>(
-                value: _semester,
+                initialValue: _semester,
                 decoration: const InputDecoration(labelText: 'Semester', border: OutlineInputBorder()),
                 items: ['Spring', 'Fall', 'Summer']
                     .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -251,7 +251,7 @@ class _ScheduleImportPageState extends ConsumerState<ScheduleImportPage> {
             value: _isDryRun,
             onChanged: (v) => setState(() => _isDryRun = v),
             contentPadding: EdgeInsets.zero,
-            activeColor: const Color(0xFF002147),
+            activeThumbColor: const Color(0xFF002147),
           ),
         ],
       ),

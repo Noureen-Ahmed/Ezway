@@ -152,7 +152,7 @@ router.get('/',
           },
           submissions: {
             where: { studentId: req.user.id },
-            select: { status: true, fileUrl: true, submittedAt: true }
+            select: { status: true, fileUrl: true, submittedAt: true, grade: true, points: true, feedback: true }
           }
         },
         orderBy: [
@@ -167,24 +167,32 @@ router.get('/',
           id: t.id,
           title: t.title,
           description: t.description,
+          taskType: t.taskType,
           type: t.taskType,
           priority: t.priority,
-          // If user has a submission, use that status. Otherwise use task status (or PENDING if null)
           status: t.submissions?.[0]?.status || t.status || 'PENDING',
           dueDate: t.dueDate,
           maxPoints: t.maxPoints,
+          questions: t.questions,
+          settings: t.settings,
+          published: t.published,
           attachments: t.attachments,
           course: t.course ? {
             id: t.course.id,
             code: t.course.code,
             name: t.course.name
           } : null,
-          createdBy: t.createdBy.name,
+          courseId: t.courseId,
+          createdBy: t.createdBy?.name,
           createdAt: t.createdAt,
           completedAt: t.completedAt,
           submission: t.submissions && t.submissions.length > 0 ? {
-            ...t.submissions[0],
-            grade: t.submissions[0].grade || t.submissions[0].points
+            status: t.submissions[0].status,
+            fileUrl: t.submissions[0].fileUrl,
+            submittedAt: t.submissions[0].submittedAt,
+            grade: t.submissions[0].grade ?? t.submissions[0].points ?? null,
+            points: t.submissions[0].points ?? null,
+            feedback: t.submissions[0].feedback ?? null
           } : null
         }))
       });

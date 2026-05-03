@@ -115,23 +115,21 @@ router.post('/login', async (req, res, next) => {
     const hasProfileData = localUser && localUser.faculty && localUser.level;
     if (localUser && localUser.password && await bcrypt.compare(password, localUser.password) && localUser._count.umsCourses > 0 && hasProfileData) {
       // Local auth successful and user has COMPLETE data, bypass UMS scrape
-      if (localUser.enrollments.length === 0 && localUser._count.umsCourses > 0) {
-        logger.info(`[UMS] User has ${localUser._count.umsCourses} UMS courses but 0 enrollments — re-syncing...`);
+      // Always sync UMS courses → DB enrollments so students see tasks/notifications
+      if (localUser._count.umsCourses > 0) {
         const umsCourses = await prisma.umsCourse.findMany({
           where: { userId: localUser.id }
         });
-        
+
         let enrolledCount = 0;
         for (const umsCourse of umsCourses) {
           const normalizedCode = (umsCourse.courseCode || '').replace(/\s+/g, '').toUpperCase();
           const rawName = umsCourse.courseName || '';
-          
-          // Try to find matching course in DB
+
           let appCourse = await prisma.course.findFirst({
             where: { code: normalizedCode }
           });
-          
-          // Fallback: match by name
+
           if (!appCourse && rawName) {
             appCourse = await prisma.course.findFirst({
               where: {
@@ -144,21 +142,19 @@ router.post('/login', async (req, res, next) => {
               }
             });
           }
-          
+
           if (appCourse) {
-            try {
-              await prisma.enrollment.upsert({
-                where: { userId_courseId: { userId: localUser.id, courseId: appCourse.id } },
-                update: { status: 'ENROLLED' },
-                create: { userId: localUser.id, courseId: appCourse.id, status: 'ENROLLED' }
-              });
-              enrolledCount++;
-            } catch (e) {
-              // skip duplicates
-            }
+            await prisma.enrollment.upsert({
+              where: { userId_courseId: { userId: localUser.id, courseId: appCourse.id } },
+              update: { status: 'ENROLLED' },
+              create: { userId: localUser.id, courseId: appCourse.id, status: 'ENROLLED' }
+            }).catch(() => {});
+            enrolledCount++;
           }
         }
-        logger.info(`[UMS] Re-synced ${enrolledCount} enrollments from UMS courses`);
+        if (enrolledCount > 0) {
+          logger.info(`[UMS] Synced ${enrolledCount} DB enrollments from UMS courses for ${loginEmail}`);
+        }
       }
       
       const updatedUser = await prisma.user.update({
@@ -341,6 +337,42 @@ router.post('/login', async (req, res, next) => {
 
     // Step 5: Sync courses & grades from the Puppeteer scrape result
     const syncResults = await syncStudentData(user.id, umsResult);
+
+    // Step 5b: Match freshly-synced UMS courses to DB courses and create enrollments
+    try {
+      const umsCourses = await prisma.umsCourse.findMany({ where: { userId: user.id } });
+      let enrolledCount = 0;
+      for (const uc of umsCourses) {
+        const normalizedCode = (uc.courseCode || '').replace(/\s+/g, '').toUpperCase();
+        const rawName = uc.courseName || '';
+        let appCourse = await prisma.course.findFirst({ where: { code: normalizedCode } });
+        if (!appCourse && rawName) {
+          appCourse = await prisma.course.findFirst({
+            where: {
+              OR: [
+                { name: { equals: rawName } },
+                { nameAr: { equals: rawName } },
+                { name: { contains: rawName } }
+              ]
+            }
+          });
+        }
+        if (appCourse) {
+          await prisma.enrollment.upsert({
+            where: { userId_courseId: { userId: user.id, courseId: appCourse.id } },
+            update: { status: 'ENROLLED' },
+            create: { userId: user.id, courseId: appCourse.id, status: 'ENROLLED' }
+          }).catch(() => {});
+          enrolledCount++;
+        }
+      }
+      if (enrolledCount > 0) {
+        logger.info(`[UMS] Auto-enrolled ${enrolledCount} DB courses for ${email}`);
+        syncResults.dbEnrollments = enrolledCount;
+      }
+    } catch (enrollErr) {
+      logger.error('[UMS] Enrollment sync failed (non-fatal):', enrollErr.message);
+    }
 
     // Step 6: Generate JWT token
     const token = generateToken(user.id);

@@ -12,6 +12,8 @@ import '../../models/user.dart';
 import '../../services/data_service.dart';
 import 'AddNote.dart';
 import 'package:intl/intl.dart';
+import '../../providers/note_provider.dart';
+import '../../models/note.dart';
 
 // ── Main page ────────────────────────────────────────────────────────────────
 class TasksPage extends ConsumerWidget {
@@ -68,6 +70,11 @@ class TasksPage extends ConsumerWidget {
             (t.status == TaskStatus.pending && isOverdue(t)))
         .toList();
 
+    // Notes provider (for Doctors)
+    final noteState = ref.watch(noteStateProvider);
+    final notes = noteState.notes;
+    final isNotesLoading = noteState.isLoading;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -80,7 +87,7 @@ class TasksPage extends ConsumerWidget {
               context.canPop() ? context.pop() : context.go('/home'),
         ),
         actions: [
-          if (isLoading)
+          if (isLoading || isNotesLoading)
             const Padding(
               padding: EdgeInsets.all(12),
               child: SizedBox(
@@ -94,6 +101,9 @@ class TasksPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
+          if (isProfessor) {
+             await ref.read(noteStateProvider.notifier).fetchNotes(force: true);
+          }
           await ref.read(taskStateProvider.notifier).fetchTasks(force: true);
         },
         child: SingleChildScrollView(
@@ -193,7 +203,7 @@ class TasksPage extends ConsumerWidget {
 
               // ── Pending Section ────────────────────────────────────────
               Text(
-                isProfessor ? 'Pending Notes' : 'Pending Tasks',
+                isProfessor ? 'Notes' : 'Pending Tasks',
                 style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -201,72 +211,85 @@ class TasksPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              if (pendingPersonal.isEmpty && pendingCourse.isEmpty)
-                _buildEmptyState(
-                    isProfessor ? 'No pending notes' : 'No pending tasks')
-              else ...[
-                ...pendingCourse.map((task) => _TaskCard(
-                      key: ValueKey(task.id),
-                      task: task,
-                      isPersonal: false,
-                      onToggle: () => ref
-                          .read(taskStateProvider.notifier)
-                          .toggleTaskStatus(task.id),
-                      onDelete: null,
-                      onEdit: null,
-                    )),
-                ...pendingPersonal.map((task) => _TaskCard(
-                      key: ValueKey(task.id),
-                      task: task,
-                      isPersonal: true,
-                      onToggle: () => ref
-                          .read(taskStateProvider.notifier)
-                          .toggleTaskStatus(task.id),
-                      onDelete: () => ref
-                          .read(taskStateProvider.notifier)
-                          .deleteTask(task.id),
-                      onEdit: () => _editTask(context, ref, task),
-                    )),
+              if (isProfessor) ...[
+                 if (notes.isEmpty)
+                   _buildEmptyState('No notes found')
+                 else
+                   ...notes.map((note) => _NoteCard(
+                     key: ValueKey(note.id),
+                     note: note,
+                     onDelete: () => ref.read(noteStateProvider.notifier).deleteNote(note.id),
+                   )),
+              ] else ...[
+                if (pendingPersonal.isEmpty && pendingCourse.isEmpty)
+                  _buildEmptyState('No pending tasks')
+                else ...[
+                  ...pendingCourse.map((task) => _TaskCard(
+                        key: ValueKey(task.id),
+                        task: task,
+                        isPersonal: false,
+                        onToggle: () => ref
+                            .read(taskStateProvider.notifier)
+                            .toggleTaskStatus(task.id),
+                        onDelete: null,
+                        onEdit: null,
+                      )),
+                  ...pendingPersonal.map((task) => _TaskCard(
+                        key: ValueKey(task.id),
+                        task: task,
+                        isPersonal: true,
+                        onToggle: () => ref
+                            .read(taskStateProvider.notifier)
+                            .toggleTaskStatus(task.id),
+                        onDelete: () => ref
+                            .read(taskStateProvider.notifier)
+                            .deleteTask(task.id),
+                        onEdit: () => _editTask(context, ref, task),
+                      )),
+                ],
               ],
 
               const SizedBox(height: 32),
 
-              // ── Completed Section ──────────────────────────────────────
-              Text(
-                isProfessor ? 'Completed Notes' : 'Completed Tasks',
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937)),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 32),
 
-              if (completedPersonal.isEmpty && completedCourse.isEmpty)
-                _buildEmptyState(
-                    isProfessor ? 'No completed notes' : 'No completed tasks')
-              else ...[
-                ...completedCourse.map((task) => _TaskCard(
-                      key: ValueKey(task.id),
-                      task: task,
-                      isPersonal: false,
-                      onToggle: () => ref
-                          .read(taskStateProvider.notifier)
-                          .toggleTaskStatus(task.id),
-                      onDelete: null,
-                      onEdit: null,
-                    )),
-                ...completedPersonal.map((task) => _TaskCard(
-                      key: ValueKey(task.id),
-                      task: task,
-                      isPersonal: true,
-                      onToggle: () => ref
-                          .read(taskStateProvider.notifier)
-                          .toggleTaskStatus(task.id),
-                      onDelete: () => ref
-                          .read(taskStateProvider.notifier)
-                          .deleteTask(task.id),
-                      onEdit: null,
-                    )),
+              // ── Completed Section ──────────────────────────────────────
+              if (!isProfessor) ...[
+                Text(
+                  'Completed Tasks',
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937)),
+                ),
+                const SizedBox(height: 12),
+
+                if (completedPersonal.isEmpty && completedCourse.isEmpty)
+                  _buildEmptyState('No completed tasks')
+                else ...[
+                  ...completedCourse.map((task) => _TaskCard(
+                        key: ValueKey(task.id),
+                        task: task,
+                        isPersonal: false,
+                        onToggle: () => ref
+                            .read(taskStateProvider.notifier)
+                            .toggleTaskStatus(task.id),
+                        onDelete: null,
+                        onEdit: null,
+                      )),
+                  ...completedPersonal.map((task) => _TaskCard(
+                        key: ValueKey(task.id),
+                        task: task,
+                        isPersonal: true,
+                        onToggle: () => ref
+                            .read(taskStateProvider.notifier)
+                            .toggleTaskStatus(task.id),
+                        onDelete: () => ref
+                            .read(taskStateProvider.notifier)
+                            .deleteTask(task.id),
+                        onEdit: null,
+                      )),
+                ],
               ],
 
               const SizedBox(height: 100),
@@ -301,19 +324,10 @@ class TasksPage extends ConsumerWidget {
     );
 
     if (result != null && result is Map) {
-      final task = Task(
-        id: '',
-        title: result['title'] ?? '',
-        description: result['description'],
-        priority: TaskPriority.medium,
-        dueDate: null,
-        status: TaskStatus.pending,
-        createdAt: DateTime.now(),
-        subject: 'Note',
-        taskType: TaskType.personal,
+      ref.read(noteStateProvider.notifier).addNote(
+         result['title'] ?? '',
+         result['description'],
       );
-
-      ref.read(taskStateProvider.notifier).addTask(task);
     }
   }
 
@@ -719,5 +733,49 @@ class _TaskCard extends ConsumerWidget {
     if (diff.inDays < 7) return '${diff.inDays} days';
 
     return '${date.month}/${date.day}';
+  }
+}
+
+// ── Note Card ────────────────────────────────────────────────────────────────
+class _NoteCard extends StatelessWidget {
+  final Note note;
+  final VoidCallback onDelete;
+
+  const _NoteCard({
+    super.key,
+    required this.note,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        title: Text(
+          note.title,
+          style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
+        ),
+        subtitle: note.content != null && note.content!.isNotEmpty
+            ? Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  note.content!,
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                ),
+              )
+            : null,
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: onDelete,
+        ),
+      ),
+    );
   }
 }

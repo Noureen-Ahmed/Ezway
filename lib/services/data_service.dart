@@ -11,6 +11,7 @@ import '../models/task.dart';
 import '../models/announcement.dart';
 import '../models/schedule_event.dart';
 import '../models/user.dart';
+import '../models/note.dart';
 
 class DataService {
   static Future<User?> login(String email, String password) async {
@@ -634,6 +635,88 @@ class DataService {
     }
   }
   
+  // ============ NOTES ============
+  
+  static Future<List<Note>> getNotes() async {
+    try {
+      print('[DataService] getNotes() called. URL: ${ApiConfig.baseUrl}/notes');
+      print('[DataService] Auth token present: ${ApiConfig.authToken != null}');
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/notes'),
+        headers: ApiConfig.authHeaders,
+      );
+      print('[DataService] getNotes response: ${response.statusCode} ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List notes = data['notes'] ?? [];
+        print('[DataService] getNotes parsed ${notes.length} notes');
+        return notes.map((n) => Note.fromJson(n)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('[DataService] Get notes error: $e');
+      return [];
+    }
+  }
+
+  static Future<Note?> createNote(String title, String? content) async {
+    try {
+      print('[DataService] createNote() called. title=$title, content=$content');
+      print('[DataService] URL: ${ApiConfig.baseUrl}/notes');
+      print('[DataService] Auth token present: ${ApiConfig.authToken != null}');
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/notes'),
+        headers: ApiConfig.authHeaders,
+        body: jsonEncode({
+          'title': title,
+          'content': content,
+        }),
+      );
+      print('[DataService] createNote response: ${response.statusCode} ${response.body}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return Note.fromJson(data['note']);
+      }
+      print('[DataService] createNote FAILED with status ${response.statusCode}');
+      return null;
+    } catch (e) {
+      print('[DataService] Create note error: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> updateNote(String id, String title, String? content) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/notes/$id'),
+        headers: ApiConfig.authHeaders,
+        body: jsonEncode({
+          'title': title,
+          'content': content,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('[DataService] Update note error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> deleteNote(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/notes/$id'),
+        headers: ApiConfig.authHeaders,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('[DataService] Delete note error: $e');
+      return false;
+    }
+  }
+  
   // ============ ANNOUNCEMENTS ============
   
   /// Get announcements
@@ -808,11 +891,11 @@ class DataService {
     }
   }
 
-  /// Mark all notifications as read for a user
-  static Future<bool> markAllNotificationsRead(String email) async {
+  /// Mark all notifications as read (uses JWT to identify the user)
+  static Future<bool> markAllNotificationsRead([String? email]) async {
     try {
       final response = await http.put(
-        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all/${Uri.encodeComponent(email)}'),
+        Uri.parse('${ApiConfig.baseUrl}/notifications/read-all'),
         headers: ApiConfig.authHeaders,
       );
       return response.statusCode == 200;
