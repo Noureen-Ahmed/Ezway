@@ -144,6 +144,31 @@ router.put('/read-all',
   }
 );
 
+// ============ DELETE ALL READ NOTIFICATIONS ============
+// Must be before DELETE /:id so Express doesn't swallow 'clear-read' as an id param
+
+router.delete('/clear-read',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const result = await prisma.notification.deleteMany({
+        where: {
+          userId: req.user.id,
+          isRead: true
+        }
+      });
+
+      res.json({
+        success: true,
+        message: 'Read notifications cleared',
+        count: result.count
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ DELETE NOTIFICATION ============
 
 router.delete('/:id',
@@ -192,30 +217,6 @@ router.put('/token',
       });
 
       res.json({ success: true, message: 'FCM token updated' });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// ============ DELETE ALL READ NOTIFICATIONS ============
-
-router.delete('/clear-read',
-  authenticate,
-  async (req, res, next) => {
-    try {
-      const result = await prisma.notification.deleteMany({
-        where: {
-          userId: req.user.id,
-          isRead: true
-        }
-      });
-
-      res.json({
-        success: true,
-        message: 'Read notifications cleared',
-        count: result.count
-      });
     } catch (error) {
       next(error);
     }

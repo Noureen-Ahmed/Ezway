@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../../core/api_config.dart';
 import '../../providers/app_session_provider.dart';
+import 'package:flutter/services.dart';
 
 class ScheduleImportPage extends ConsumerStatefulWidget {
   const ScheduleImportPage({super.key});
@@ -190,6 +191,15 @@ class _ScheduleImportPageState extends ConsumerState<ScheduleImportPage> {
                   _buildPreviewCard(_previewData!, theme),
                 if (_status == _ImportStatus.done && _importReport != null)
                   _buildResultCard(_importReport!, theme),
+                const SizedBox(height: 32),
+                const Divider(),
+                const SizedBox(height: 16),
+                _ProfessorCourseAssignmentSection(authHeader: _authHeader, apiBase: ApiConfig.baseUrl),
+                const SizedBox(height: 32),
+                const Divider(),
+                const SizedBox(height: 16),
+                _EnrollmentSyncSection(authHeader: _authHeader, apiBase: ApiConfig.baseUrl),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -510,6 +520,396 @@ class _ScheduleImportPageState extends ConsumerState<ScheduleImportPage> {
     _yearController.dispose();
     super.dispose();
   }
+}
+
+// ─── Professor → Course assignment section ────────────────────────────────────
+
+class _ProfessorCourseAssignmentSection extends StatefulWidget {
+  final Map<String, String> authHeader;
+  final String apiBase;
+  const _ProfessorCourseAssignmentSection({required this.authHeader, required this.apiBase});
+
+  @override
+  State<_ProfessorCourseAssignmentSection> createState() => _ProfessorCourseAssignmentSectionState();
+}
+
+class _ProfessorCourseAssignmentSectionState extends State<_ProfessorCourseAssignmentSection> {
+  List<Map<String, dynamic>> _professors = [];
+  List<Map<String, dynamic>> _allCourses = [];
+  bool _loading = false;
+  String? _error;
+  String? _success;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final headers = {...widget.authHeader, 'Content-Type': 'application/json'};
+      final results = await Future.wait([
+        http.get(Uri.parse('${widget.apiBase}/admin/users?role=PROFESSOR&limit=100'), headers: headers),
+        http.get(Uri.parse('${widget.apiBase}/admin/courses?limit=200'), headers: headers),
+      ]);
+      final profsData = jsonDecode(results[0].body);
+      final coursesData = jsonDecode(results[1].body);
+
+      // For each professor, also load their assigned courses
+      final profs = List<Map<String, dynamic>>.from(profsData['users'] ?? []);
+      for (final p in profs) {
+        final r = await http.get(
+          Uri.parse('${widget.apiBase}/admin/professors/${p['id']}/courses'),
+          headers: headers,
+        );
+        final d = jsonDecode(r.body);
+        p['assignedCourses'] = List<Map<String, dynamic>>.from(d['courses'] ?? []);
+      }
+
+      setState(() {
+        _professors = profs;
+        _allCourses = List<Map<String, dynamic>>.from(coursesData['courses'] ?? []);
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  Future<void> _assign(String professorId, String courseId) async {
+    try {
+      final r = await http.post(
+        Uri.parse('${widget.apiBase}/admin/courses/$courseId/instructors'),
+        headers: {...widget.authHeader, 'Content-Type': 'application/json'},
+        body: jsonEncode({'userId': professorId, 'isPrimary': true}),
+      );
+      if (r.statusCode == 200 || r.statusCode == 201) {
+        setState(() => _success = 'Assigned successfully');
+        await _load();
+      } else {
+        setState(() => _error = jsonDecode(r.body)['error']?.toString() ?? 'Failed');
+      }
+    } catch (e) {
+      setState(() => _error = e.toString());
+    }
+  }
+
+  Future<void> _remove(String professorId, String courseId) async {
+    try {
+      final r = await http.delete(
+        Uri.parse('${widget.apiBase}/admin/courses/$courseId/instructors/$professorId'),
+        headers: widget.authHeader,
+      );
+      if (r.statusCode == 200) {
+        setState(() => _success = 'Removed');
+        await _load();
+      } else {
+        setState(() => _error = 'Failed to remove');
+      }
+    } catch (e) {
+      setState(() => _error = e.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Text('Doctor → Course Assignment',
+              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF002147))),
+          const Spacer(),
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh), tooltip: 'Refresh'),
+        ]),
+        const SizedBox(height: 4),
+        Text('Assign each doctor to their courses so they can upload content.',
+            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600])),
+        const SizedBox(height: 16),
+        if (_error != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
+            child: Text(_error!, style: const TextStyle(color: Colors.red)),
+          ),
+        if (_success != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)),
+            child: Text(_success!, style: const TextStyle(color: Colors.green)),
+          ),
+        if (_loading)
+          const Center(child: CircularProgressIndicator(color: Color(0xFF002147)))
+        else if (_professors.isEmpty)
+          Card(
+            color: Colors.orange[50],
+            child: const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('No professor accounts found. Create a professor account first.'),
+            ),
+          )
+        else
+          ..._professors.map((prof) => _ProfessorCard(
+            professor: prof,
+            allCourses: _allCourses,
+            onAssign: (courseId) => _assign(prof['id'] as String, courseId),
+            onRemove: (courseId) => _remove(prof['id'] as String, courseId),
+          )),
+      ],
+    );
+  }
+}
+
+class _ProfessorCard extends StatefulWidget {
+  final Map<String, dynamic> professor;
+  final List<Map<String, dynamic>> allCourses;
+  final Future<void> Function(String courseId) onAssign;
+  final Future<void> Function(String courseId) onRemove;
+
+  const _ProfessorCard({required this.professor, required this.allCourses, required this.onAssign, required this.onRemove});
+
+  @override
+  State<_ProfessorCard> createState() => _ProfessorCardState();
+}
+
+class _ProfessorCardState extends State<_ProfessorCard> {
+  String? _selectedCourseId;
+
+  @override
+  Widget build(BuildContext context) {
+    final assigned = List<Map<String, dynamic>>.from(widget.professor['assignedCourses'] ?? []);
+    final assignedIds = assigned.map((c) => c['id'] as String).toSet();
+    final unassigned = widget.allCourses.where((c) => !assignedIds.contains(c['id'])).toList();
+
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: assigned.isEmpty ? Colors.red.shade200 : const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            CircleAvatar(
+              backgroundColor: const Color(0xFF002147),
+              child: Text(
+                (widget.professor['name'] as String? ?? 'P')[0].toUpperCase(),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(widget.professor['name'] as String? ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(widget.professor['email'] as String? ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ])),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: assigned.isEmpty ? Colors.red[50] : Colors.green[50],
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                assigned.isEmpty ? 'No courses assigned' : '${assigned.length} course(s)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: assigned.isEmpty ? Colors.red : Colors.green[700],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ]),
+
+          if (assigned.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text('Assigned courses:', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: assigned.map((c) => Chip(
+                label: Text('${c['code']} - ${c['name']}', style: const TextStyle(fontSize: 11)),
+                deleteIcon: const Icon(Icons.close, size: 14),
+                onDeleted: () => widget.onRemove(c['id'] as String),
+                backgroundColor: const Color(0xFFEFF6FF),
+              )).toList(),
+            ),
+          ],
+
+          if (unassigned.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedCourseId,
+                  decoration: const InputDecoration(
+                    labelText: 'Add a course',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: unassigned.map((c) => DropdownMenuItem(
+                    value: c['id'] as String,
+                    child: Text('${c['code']} – ${c['name']}', style: const TextStyle(fontSize: 13)),
+                  )).toList(),
+                  onChanged: (v) => setState(() => _selectedCourseId = v),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _selectedCourseId != null
+                    ? () async {
+                        await widget.onAssign(_selectedCourseId!);
+                        setState(() => _selectedCourseId = null);
+                      }
+                    : null,
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF002147)),
+                child: const Text('Assign'),
+              ),
+            ]),
+          ],
+        ]),
+      ),
+    );
+  }
+}
+
+// ─── Enrollment sync section ──────────────────────────────────────────────────
+
+class _EnrollmentSyncSection extends StatefulWidget {
+  final Map<String, String> authHeader;
+  final String apiBase;
+  const _EnrollmentSyncSection({required this.authHeader, required this.apiBase});
+
+  @override
+  State<_EnrollmentSyncSection> createState() => _EnrollmentSyncSectionState();
+}
+
+class _EnrollmentSyncSectionState extends State<_EnrollmentSyncSection> {
+  bool _loading = false;
+  Map<String, dynamic>? _result;
+  String? _error;
+
+  Future<void> _runSync() async {
+    setState(() { _loading = true; _error = null; _result = null; });
+    try {
+      final r = await http.post(
+        Uri.parse('${widget.apiBase}/admin/sync-enrollments'),
+        headers: widget.authHeader,
+      );
+      final data = jsonDecode(r.body) as Map<String, dynamic>;
+      if (data['success'] == true) {
+        setState(() { _result = data; _loading = false; });
+      } else {
+        setState(() { _error = data['error']?.toString() ?? 'Failed'; _loading = false; });
+      }
+    } catch (e) {
+      setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Student Enrollment Sync',
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF002147))),
+        const SizedBox(height: 4),
+        Text(
+          'Re-matches students\' UMS courses to DB courses and creates enrollment records. '
+          'Run this if students are not receiving notifications after the doctor uploads content.',
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _loading ? null : _runSync,
+          icon: _loading
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Icon(Icons.sync),
+          label: Text(_loading ? 'Syncing...' : 'Fix Enrollments Now'),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF002147),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          ),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
+            child: Text(_error!, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+        if (_result != null) ...[
+          const SizedBox(height: 12),
+          Card(
+            color: Colors.green[50],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.green),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Row(children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('Sync Complete', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.green)),
+                ]),
+                const SizedBox(height: 12),
+                _infoRow('Enrollments created/updated', '${_result!['totalEnrolled'] ?? 0}'),
+                _infoRow('Unmatched UMS courses', '${_result!['unmatchedCount'] ?? 0}'),
+                if ((_result!['unmatchedCount'] ?? 0) > 0) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Unmatched courses below — the course codes in the DB don\'t match what UMS returns. '
+                    'Fix the course codes in DB to match these:',
+                    style: TextStyle(fontSize: 12, color: Colors.orange),
+                  ),
+                  const SizedBox(height: 8),
+                  ...List<Map<String, dynamic>>.from(_result!['unmatchedCourses'] ?? []).take(10).map((m) =>
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(children: [
+                        const Icon(Icons.warning_amber, size: 14, color: Colors.orange),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(
+                          '${m['umsCode']} – ${m['umsName']} (student: ${m['student']})',
+                          style: const TextStyle(fontSize: 11),
+                        )),
+                        GestureDetector(
+                          onTap: () => Clipboard.setData(ClipboardData(text: m['umsCode'] as String? ?? '')),
+                          child: const Icon(Icons.copy, size: 14, color: Colors.grey),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ],
+              ]),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _infoRow(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(children: [
+      Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF6B7280)))),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF002147))),
+    ]),
+  );
 }
 
 // ─── Data models ──────────────────────────────────────────────────────────────

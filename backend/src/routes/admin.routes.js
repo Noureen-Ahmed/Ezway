@@ -966,6 +966,193 @@ router.put('/professors/:id/activate', async (req, res, next) => {
   }
 });
 
+// ============ NOTIFICATION / ENROLLMENT DIAGNOSTICS ============
+
+// Check why a student isn't receiving notifications for a course
+router.get('/debug/notifications', async (req, res, next) => {
+  try {
+    const { studentEmail, courseId } = req.query;
+
+    // 1. All DB courses (so admin can compare codes with UMS)
+    const allCourses = await prisma.course.findMany({
+      select: { id: true, code: true, name: true },
+      orderBy: { code: 'asc' }
+    });
+
+    // 2. All professors and their assigned courses
+    const professors = await prisma.user.findMany({
+      where: { role: 'PROFESSOR' },
+      select: {
+        id: true, email: true, name: true,
+        teachingCourses: {
+          include: { course: { select: { id: true, code: true, name: true } } }
+        }
+      }
+    });
+
+    // 3. If a student email is given, show their UMS courses vs actual enrollments
+    let studentInfo = null;
+    if (studentEmail) {
+      const student = await prisma.user.findFirst({
+        where: { email: studentEmail },
+        select: {
+          id: true, email: true, name: true,
+          enrollments: {
+            include: { course: { select: { id: true, code: true, name: true } } }
+          },
+          umsCourses: {
+            select: { courseCode: true, courseName: true, semester: true, academicYear: true }
+          }
+        }
+      });
+
+      if (student) {
+        const enrolledCodes = new Set(student.enrollments.map(e => e.course.code));
+        const unmatchedUms = student.umsCourses.filter(uc => {
+          const normalized = (uc.courseCode || '').replace(/\s+/g, '').toUpperCase();
+          return !enrolledCodes.has(normalized);
+        });
+
+        studentInfo = {
+          student: { id: student.id, email: student.email, name: student.name },
+          enrollments: student.enrollments.map(e => ({
+            courseId: e.course.id, code: e.course.code, name: e.course.name
+          })),
+          umsCourses: student.umsCourses,
+          unmatchedUmsCourses: unmatchedUms,
+          diagnosis: unmatchedUms.length > 0
+            ? `${unmatchedUms.length} UMS courses have no DB match — student won't receive notifications for these`
+            : 'All UMS courses are matched to enrollments'
+        };
+      }
+    }
+
+    // 4. If courseId is given, show who is enrolled vs who has UMS courses for it
+    let courseInfo = null;
+    if (courseId) {
+      const course = await prisma.course.findUnique({
+        where: { id: courseId },
+        include: {
+          instructors: { include: { user: { select: { id: true, email: true, name: true } } } },
+          enrollments: {
+            where: { status: 'ENROLLED' },
+            include: { user: { select: { id: true, email: true, name: true } } }
+          }
+        }
+      });
+
+      if (course) {
+        const enrolledUserIds = new Set(course.enrollments.map(e => e.user.id));
+        const umsMatches = await prisma.umsCourse.findMany({
+          where: {
+            OR: [
+              { courseCode: { contains: course.code } },
+              { courseName: { contains: course.name } }
+            ]
+          },
+          select: { userId: true, courseCode: true, courseName: true },
+          distinct: ['userId']
+        });
+        const umsNotEnrolled = umsMatches.filter(u => !enrolledUserIds.has(u.userId));
+
+        courseInfo = {
+          course: { id: course.id, code: course.code, name: course.name },
+          instructors: course.instructors.map(i => ({ id: i.user.id, email: i.user.email, name: i.user.name })),
+          enrolledCount: course.enrollments.length,
+          umsMatchCount: umsMatches.length,
+          umsNotEnrolledCount: umsNotEnrolled.length,
+          diagnosis: course.instructors.length === 0
+            ? 'NO INSTRUCTOR ASSIGNED — uploads will be rejected with 403'
+            : course.enrollments.length === 0
+              ? 'No students enrolled — notifications will reach nobody'
+              : `OK: ${course.enrollments.length} students enrolled, ${course.instructors.length} instructor(s)`
+        };
+      }
+    }
+
+    res.json({
+      success: true,
+      dbCourses: allCourses,
+      professors: professors.map(p => ({
+        id: p.id, email: p.email, name: p.name,
+        assignedCourses: p.teachingCourses.map(tc => ({
+          id: tc.course.id, code: tc.course.code, name: tc.course.name
+        }))
+      })),
+      studentInfo,
+      courseInfo
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Force re-sync enrollments for all students (run this after fixing course codes)
+router.post('/sync-enrollments', async (req, res, next) => {
+  try {
+    const students = await prisma.user.findMany({
+      where: { role: 'STUDENT' },
+      select: { id: true, email: true },
+    });
+
+    const allCourses = await prisma.course.findMany({
+      select: { id: true, code: true, name: true, nameAr: true }
+    });
+
+    let totalEnrolled = 0;
+    let totalSkipped = 0;
+    const details = [];
+
+    for (const student of students) {
+      const umsCourses = await prisma.umsCourse.findMany({ where: { userId: student.id } });
+      let enrolled = 0;
+
+      for (const uc of umsCourses) {
+        const normalizedCode = (uc.courseCode || '').replace(/\s+/g, '').toUpperCase();
+        const rawName = uc.courseName || '';
+
+        // Try code match (exact normalized), then name match (contains, case-insensitive)
+        let appCourse = allCourses.find(c => c.code === normalizedCode);
+
+        if (!appCourse && rawName) {
+          const lowerName = rawName.toLowerCase();
+          appCourse = allCourses.find(c =>
+            c.name?.toLowerCase().includes(lowerName) ||
+            c.nameAr?.includes(rawName) ||
+            lowerName.includes(c.name?.toLowerCase() || '')
+          );
+        }
+
+        if (appCourse) {
+          await prisma.enrollment.upsert({
+            where: { userId_courseId: { userId: student.id, courseId: appCourse.id } },
+            update: { status: 'ENROLLED' },
+            create: { userId: student.id, courseId: appCourse.id, status: 'ENROLLED' }
+          }).catch(() => {});
+          enrolled++;
+        } else {
+          totalSkipped++;
+          details.push({ student: student.email, umsCode: uc.courseCode, umsName: uc.courseName, matched: false });
+        }
+      }
+
+      totalEnrolled += enrolled;
+    }
+
+    logger.info(`[Admin] Enrollment sync: ${totalEnrolled} enrollments created/updated, ${totalSkipped} UMS courses unmatched`);
+
+    res.json({
+      success: true,
+      message: `Enrollment sync complete`,
+      totalEnrolled,
+      unmatchedCount: totalSkipped,
+      unmatchedCourses: details.slice(0, 50)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ============ FACULTIES ============
 
 router.get('/faculties', async (req, res, next) => {
