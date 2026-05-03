@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_session_provider.dart';
 import '../../providers/course_provider.dart';
+import '../../providers/note_provider.dart';
 import '../../models/course.dart';
+import '../../models/note.dart';
 import '../../models/user.dart';
 import '../../services/data_service.dart';
 import '../../widgets/loading_shimmer.dart';
@@ -20,7 +22,6 @@ class DoctorDashboardScreen extends ConsumerStatefulWidget {
 
 class _DoctorDashboardScreenState
     extends ConsumerState<DoctorDashboardScreen> {
-  final List<Map<String, dynamic>> _notes = [];
 
   void _addNote() {
     final controller = TextEditingController();
@@ -46,10 +47,7 @@ class _DoctorDashboardScreenState
             onPressed: () {
               final text = controller.text.trim();
               if (text.isNotEmpty) {
-                setState(() => _notes.add({
-                      'text': text,
-                      'date': DateTime.now().toString().substring(0, 16),
-                    }));
+                ref.read(noteStateProvider.notifier).addNote(text, null);
               }
               Navigator.pop(ctx);
             },
@@ -62,8 +60,52 @@ class _DoctorDashboardScreenState
     );
   }
 
-  void _deleteNote(int index) {
-    setState(() => _notes.removeAt(index));
+  void _editNote(Note note) {
+    final controller = TextEditingController(text: note.title);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Note'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          autofocus: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                ref.read(noteStateProvider.notifier).updateNote(
+                  Note(
+                    id: note.id,
+                    title: text,
+                    content: note.content,
+                    createdAt: note.createdAt,
+                    updatedAt: DateTime.now(),
+                  ),
+                );
+              }
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563eb)),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteNote(String id) {
+    ref.read(noteStateProvider.notifier).deleteNote(id);
   }
 
   void _pushScreen(Widget screen) {
@@ -77,6 +119,7 @@ class _DoctorDashboardScreenState
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
     final coursesAsync = ref.watch(professorCoursesProvider);
+    final noteState = ref.watch(noteStateProvider);
     final user = userAsync.valueOrNull;
 
     return Scaffold(
@@ -216,7 +259,9 @@ class _DoctorDashboardScreenState
                             ],
                           ),
                           const SizedBox(height: 4),
-                          if (_notes.isEmpty)
+                          if (noteState.isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else if (noteState.notes.isEmpty)
                             Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
@@ -239,10 +284,7 @@ class _DoctorDashboardScreenState
                               ),
                             )
                           else
-                            ..._notes
-                                .asMap()
-                                .entries
-                                .map((e) => _buildNoteCard(e.key, e.value)),
+                            ...noteState.notes.map((note) => _buildNoteCard(note)),
 
                           const SizedBox(height: 24),
 
@@ -327,7 +369,7 @@ class _DoctorDashboardScreenState
     );
   }
 
-  Widget _buildNoteCard(int index, Map<String, dynamic> note) {
+  Widget _buildNoteCard(Note note) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -346,11 +388,11 @@ class _DoctorDashboardScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(note['text'],
+                Text(note.title,
                     style: const TextStyle(fontSize: 14)),
                 const SizedBox(height: 4),
                 Text(
-                  note['date'],
+                  note.createdAt.toString().substring(0, 16),
                   style: const TextStyle(
                       fontSize: 11, color: Color(0xFF9ca3af)),
                 ),
@@ -358,7 +400,13 @@ class _DoctorDashboardScreenState
             ),
           ),
           GestureDetector(
-            onTap: () => _deleteNote(index),
+            onTap: () => _editNote(note),
+            child: const Icon(Icons.edit_outlined,
+                size: 18, color: Color(0xFF9ca3af)),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => _deleteNote(note.id),
             child: const Icon(Icons.close,
                 size: 18, color: Color(0xFF9ca3af)),
           ),
