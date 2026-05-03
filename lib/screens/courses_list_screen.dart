@@ -13,7 +13,7 @@ class CoursesListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appMode = ref.watch(appModeControllerProvider);
-    final isProfessor = appMode == AppMode.professor;
+    final isProfessor = appMode == AppMode.doctor;
     
     final coursesAsync = isProfessor 
         ? ref.watch(professorCoursesProvider)

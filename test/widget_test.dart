@@ -43,7 +43,7 @@ void main() {
         ProviderScope(
           overrides: [
             appModeControllerProvider.overrideWith(
-                (ref) => MockAppModeController(AppMode.professor)),
+                (ref) => MockAppModeController(AppMode.doctor)),
           ],
           child: const MaterialApp(
             home: DashboardShell(

@@ -20,7 +20,7 @@ class TasksPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appMode = ref.watch(appModeControllerProvider);
-    final isProfessor = appMode == AppMode.professor;
+    final isProfessor = appMode == AppMode.doctor;
     final pageTitle = isProfessor ? 'Notes & Exams' : 'Tasks';
 
     // Use direct provider (not async) for instant updates
@@ -167,7 +167,7 @@ class TasksPage extends ConsumerWidget {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     final mode = ref.read(appModeControllerProvider);
-                    if (mode == AppMode.professor) {
+                    if (mode == AppMode.doctor) {
                       _addNote(context, ref);
                     } else {
                       _addTask(context, ref);

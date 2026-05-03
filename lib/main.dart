@@ -14,6 +14,7 @@ import 'screens/advising_chat_screen.dart';
 import 'screens/courses_list_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'features/admin/schedule_import_page.dart';
+import 'screens/doctor/doctor_dashboard_screen.dart';
 import 'models/user.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
@@ -156,6 +157,10 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           path: '/admin',
           builder: (context, state) => const ScheduleImportPage(),
         ),
+        GoRoute(
+          path: '/doctor',
+          builder: (context, state) => const DoctorDashboardScreen(),
+        ),
 
         ShellRoute(
           builder: (context, state, child) {
@@ -274,11 +279,17 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
       } else if (authState is AuthAuthenticated) {
         final user = (authState as AuthAuthenticated).user;
         final isAdminRoute = currentLocation.startsWith('/admin');
+        final isDoctorRoute = currentLocation.startsWith('/doctor');
 
-        if (user.mode == AppMode.professor) {
-          // Admins/professors only see the admin panel
+        if (user.mode == AppMode.admin) {
+          // Admin only sees the admin panel (PDF upload)
           if (!isAdminRoute) {
             _router.go('/admin');
+          }
+        } else if (user.mode == AppMode.doctor) {
+          // Doctors see the doctor dashboard
+          if (!isDoctorRoute) {
+            _router.go('/doctor');
           }
         } else {
           // Students go to home

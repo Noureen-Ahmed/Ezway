@@ -43,7 +43,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         data: (user) {
           if (user == null) return const Center(child: Text('User not found'));
 
-          if (user.mode == AppMode.professor) {
+          if (user.mode == AppMode.doctor) {
             return const ProfessorProfileScreen();
           }
 

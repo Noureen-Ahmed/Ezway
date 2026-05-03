@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import 'app_session_provider.dart';
 
-/// App mode controller - manages student/professor mode
+/// App mode controller - manages student/doctor/admin mode
 final appModeControllerProvider = StateNotifierProvider<AppModeController, AppMode>((ref) {
   return AppModeController(ref);
 });
@@ -35,14 +35,23 @@ class AppModeController extends StateNotifier<AppMode> {
     }
   }
 
-  bool isProfessorMode() => state == AppMode.professor;
+  bool isDoctorMode() => state == AppMode.doctor;
+
+  bool isAdminMode() => state == AppMode.admin;
 
   bool isStudentMode() => state == AppMode.student;
 }
 
-/// Simple provider to check if user is professor
+/// Simple provider to check if user is professor/doctor
 final isProfessorProvider = Provider<bool>((ref) {
   final userAsync = ref.watch(currentUserProvider);
   final user = userAsync.valueOrNull;
-  return user?.mode == AppMode.professor;
+  return user?.mode == AppMode.doctor;
+});
+
+/// Simple provider to check if user is admin
+final isAdminProvider = Provider<bool>((ref) {
+  final userAsync = ref.watch(currentUserProvider);
+  final user = userAsync.valueOrNull;
+  return user?.mode == AppMode.admin;
 });

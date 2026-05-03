@@ -17,7 +17,7 @@ const path       = require('path');
 const SCRAPER_PATH = path.join(__dirname, '../../python/scrape_schedule.py');
 
 // On Windows use 'python'; override via env var for Linux/Mac deployments
-const PYTHON_BIN = process.env.PYTHON_BIN || 'python';
+// We read PYTHON_BIN dynamically at runtime inside runScraper
 
 // ─── DayOfWeek enum values (must match Prisma schema) ────────────────────────
 const VALID_DAYS = new Set([
@@ -35,7 +35,8 @@ function runScraper(pdfPath, semester, academicYear) {
       '--academic-year', academicYear,
     ];
 
-    const proc = spawn(PYTHON_BIN, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const pythonBin = process.env.PYTHON_BIN || 'python';
+    const proc = spawn(pythonBin, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
     let stdout = '';
     let stderr = '';
@@ -61,7 +62,7 @@ function runScraper(pdfPath, semester, academicYear) {
     proc.on('error', (err) => {
       reject(new Error(
         `Failed to start Python scraper: ${err.message}\n` +
-        `Make sure Python is installed and accessible as '${PYTHON_BIN}'`
+        `Make sure Python is installed and accessible as '${process.env.PYTHON_BIN || 'python'}'`
       ));
     });
   });

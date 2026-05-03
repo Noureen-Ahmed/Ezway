@@ -2,7 +2,7 @@
 /// Supports both students and professors
 library;
 
-enum AppMode { student, professor }
+enum AppMode { student, doctor, admin, guest }
 
 class User {
   final String id;
@@ -88,10 +88,15 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     // Handle mode/role conversion
     AppMode userMode = AppMode.student;
-    if (json['mode'] == 'professor' || 
-        json['role'] == 'professor' || 
-        json['role'] == 'PROFESSOR') {
-      userMode = AppMode.professor;
+    final mode = (json['mode'] ?? '').toString().toLowerCase();
+    final role = (json['role'] ?? '').toString().toLowerCase();
+    if (mode == 'admin' || role == 'admin') {
+      userMode = AppMode.admin;
+    } else if (mode == 'doctor' || role == 'doctor' || 
+               mode == 'professor' || role == 'professor') {
+      userMode = AppMode.doctor;
+    } else if (mode == 'guest' || role == 'guest') {
+      userMode = AppMode.guest;
     }
 
     return User(
@@ -145,7 +150,7 @@ class User {
       'gpa': gpa,
       'level': level,
       'enrolledCourses': enrolledCourses,
-      'mode': mode == AppMode.professor ? 'professor' : 'student',
+      'mode': mode.name,
       'isOnboardingComplete': isOnboardingComplete,
       'isVerified': isVerified,
       'advisorName': advisorName,
@@ -207,8 +212,14 @@ class User {
     );
   }
 
-  /// Check if user is a professor
-  bool get isProfessor => mode == AppMode.professor;
+  /// Check if user is a professor/doctor
+  bool get isProfessor => mode == AppMode.doctor;
+
+  /// Check if user is a doctor
+  bool get isDoctor => mode == AppMode.doctor;
+
+  /// Check if user is an admin
+  bool get isAdmin => mode == AppMode.admin;
 
   /// Check if user is a student
   bool get isStudent => mode == AppMode.student;

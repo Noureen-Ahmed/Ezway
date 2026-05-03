@@ -14,8 +14,12 @@ class AdaptiveDashboard extends ConsumerWidget {
 
     return userAsync.when(
       data: (user) {
-        if (user != null && user.mode == AppMode.professor) {
+        if (user != null && user.mode == AppMode.admin) {
           WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/admin'));
+          return const SizedBox.shrink();
+        }
+        if (user != null && user.mode == AppMode.doctor) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/doctor'));
           return const SizedBox.shrink();
         }
         return const HomeScreen();

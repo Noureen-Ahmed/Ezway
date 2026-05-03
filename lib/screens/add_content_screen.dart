@@ -418,7 +418,7 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
     final appMode = ref.watch(appModeControllerProvider);
 
     // Access check
-    if (appMode != AppMode.professor) {
+    if (appMode != AppMode.doctor) {
       return _buildAccessDenied();
     }
 

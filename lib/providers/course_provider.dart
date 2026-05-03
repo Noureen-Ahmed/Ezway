@@ -79,7 +79,7 @@ class ProfessorCoursesNotifier extends AsyncNotifier<List<Course>> {
   @override
   Future<List<Course>> build() async {
     final user = ref.watch(currentUserProvider).valueOrNull;
-    if (user == null || user.mode != AppMode.professor) return [];
+    if (user == null || user.mode != AppMode.doctor) return [];
     
     return DataService.getProfessorCourses(user.email);
   }

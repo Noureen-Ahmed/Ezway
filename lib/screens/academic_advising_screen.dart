@@ -32,7 +32,7 @@ class _AcademicAdvisingScreenState extends ConsumerState<AcademicAdvisingScreen>
       return const Center(child: Text('Please login to continue'));
     }
 
-    final isDoctor = session.user.mode == AppMode.professor;
+    final isDoctor = session.user.mode == AppMode.doctor;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
