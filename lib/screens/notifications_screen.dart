@@ -14,6 +14,15 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Force fresh fetch every time the screen opens so students see new content
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(announcementsProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final announcementsAsync = ref.watch(announcementsProvider);
 

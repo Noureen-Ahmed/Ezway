@@ -31,7 +31,9 @@ import 'screens/student_guide/explain_program.dart';
 import 'screens/guest/guest_dashboard_shell.dart';
 import 'screens/guest/guest_home_screen.dart';
 import 'screens/adaptive_dashboard.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'services/data_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +42,11 @@ void main() async {
   await StorageService.init();
   await NotificationService.init();
   await NotificationService.requestPermissions();
+
+  // Initialize Firebase (non-fatal if google-services.json is not yet added)
+  if (!kIsWeb) {
+    await NotificationService.initFirebase();
+  }
   
   runApp(const ProviderScope(child: PhoneFrameWrapper(child: StudentDashboardApp())));
 }
@@ -304,6 +311,20 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
     ref.listen<AuthState>(authStateProvider, (previous, next) {
       if (previous != next) {
         WidgetsBinding.instance.addPostFrameCallback((_) => handleRedirection());
+      }
+
+      // When a user logs in, send their FCM token to the backend
+      if (next is AuthAuthenticated && previous is! AuthAuthenticated) {
+        NotificationService.getFcmToken().then((token) {
+          if (token != null) DataService.updateFcmToken(token);
+        });
+
+        // Also keep the token fresh when Firebase rotates it
+        if (!kIsWeb) {
+          FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+            DataService.updateFcmToken(newToken);
+          });
+        }
       }
     });
     

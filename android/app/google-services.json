@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850260014364",
+    "project_id": "ezway-c90e3",
+    "storage_bucket": "ezway-c90e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850260014364:android:7642f1312a77b1fc6436d9",
+        "android_client_info": {
+          "package_name": "AndroidManifest.xml"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLMo0dt0rR3JMGtnLNfFVPfwlwcrPlI_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

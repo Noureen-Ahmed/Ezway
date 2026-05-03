@@ -177,6 +177,27 @@ router.delete('/:id',
   }
 );
 
+// ============ UPDATE FCM TOKEN ============
+
+router.put('/token',
+  authenticate,
+  [body('fcmToken').notEmpty().withMessage('FCM token is required'), validate],
+  async (req, res, next) => {
+    try {
+      const { fcmToken } = req.body;
+
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { fcmToken }
+      });
+
+      res.json({ success: true, message: 'FCM token updated' });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ DELETE ALL READ NOTIFICATIONS ============
 
 router.delete('/clear-read',

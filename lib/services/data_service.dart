@@ -905,8 +905,21 @@ class DataService {
     }
   }
   
+  /// Send the device FCM token to the backend so push notifications can reach this device.
+  static Future<void> updateFcmToken(String fcmToken) async {
+    try {
+      await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/notifications/token'),
+        headers: ApiConfig.authHeaders,
+        body: jsonEncode({'fcmToken': fcmToken}),
+      );
+    } catch (e) {
+      print('[DataService] FCM token update error: $e');
+    }
+  }
+
   // ============ UPLOAD ============
-  
+
   /// Upload file
   /// [type] can be: 'profile', 'submission', 'content', 'lecture', 'attachment'
   static Future<String?> uploadFile(List<int> bytes, String filename, {String? type}) async {
