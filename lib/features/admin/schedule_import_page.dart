@@ -1,18 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../../core/api_config.dart';
+import '../../providers/app_session_provider.dart';
 
-class ScheduleImportPage extends StatefulWidget {
+class ScheduleImportPage extends ConsumerStatefulWidget {
   const ScheduleImportPage({super.key});
 
   @override
-  State<ScheduleImportPage> createState() => _ScheduleImportPageState();
+  ConsumerState<ScheduleImportPage> createState() => _ScheduleImportPageState();
 }
 
-class _ScheduleImportPageState extends State<ScheduleImportPage> {
+class _ScheduleImportPageState extends ConsumerState<ScheduleImportPage> {
   PlatformFile? _selectedFile;
   String _semester     = 'Spring';
   String _academicYear = '2025/2026';
@@ -149,10 +151,20 @@ class _ScheduleImportPageState extends State<ScheduleImportPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Schedule Importer'),
+        title: const Text('Admin Panel'),
         backgroundColor: const Color(0xFF002147),
         foregroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await ref.read(appSessionControllerProvider.notifier).logout();
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

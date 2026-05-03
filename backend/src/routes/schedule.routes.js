@@ -168,12 +168,13 @@ router.get('/my-schedule',
               name: true,
               scheduleSlots: {
                 select: {
-                  id:        true,
-                  dayOfWeek: true,
-                  startTime: true,
-                  endTime:   true,
-                  location:  true,
-                  room:      true,
+                  id:         true,
+                  dayOfWeek:  true,
+                  startTime:  true,
+                  endTime:    true,
+                  location:   true,
+                  room:       true,
+                  lessonType: true,
                 }
               }
             }
@@ -194,7 +195,7 @@ router.get('/my-schedule',
             startTime:  slot.startTime,
             endTime:    slot.endTime,
             location:   slot.location || slot.room || null,
-            lessonType: 'LECTURE',
+            lessonType: slot.lessonType || 'LECTURE',
           });
         }
       }

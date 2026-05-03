@@ -9,13 +9,12 @@ import 'screens/schedule_screen.dart';
 import 'screens/navigate_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/course_detail_screen.dart';
-import 'screens/dr_course_details.dart';
-import 'screens/add_content_screen.dart';
 import 'screens/academic_advising_screen.dart';
 import 'screens/advising_chat_screen.dart';
-import 'screens/broadcast_message_screen.dart';
 import 'screens/courses_list_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'features/admin/schedule_import_page.dart';
+import 'models/user.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -31,8 +30,6 @@ import 'screens/student_guide/explain_program.dart';
 import 'screens/guest/guest_dashboard_shell.dart';
 import 'screens/guest/guest_home_screen.dart';
 import 'screens/adaptive_dashboard.dart';
-import 'screens/grading_dashboard.dart';
-import 'screens/create_exam_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() async {
@@ -155,6 +152,11 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           },
         ),
 
+        GoRoute(
+          path: '/admin',
+          builder: (context, state) => const ScheduleImportPage(),
+        ),
+
         ShellRoute(
           builder: (context, state, child) {
             return GuestDashboardShell(child: child);
@@ -215,41 +217,12 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
               },
             ),
             GoRoute(
-              path: '/dr-course/:courseId',
-              builder: (context, state) {
-                return const DrCourseDetails();
-              },
-            ),
-            GoRoute(
               path: '/notifications',
               builder: (context, state) => const NotificationsScreen(),
             ),
             GoRoute(
-              path: '/add-content',
-              builder: (context, state) => const AddContentScreen(),
-            ),
-            GoRoute(
               path: '/my-courses',
               builder: (context, state) => const CoursesListScreen(),
-            ),
-            GoRoute(
-              path: '/create-exam',
-              builder: (context, state) {
-                final extra = state.extra as Map<String, dynamic>?;
-                return CreateExamScreen(courseId: extra?['courseId']);
-              },
-            ),
-            GoRoute(
-              path: '/grading/:taskId',
-              builder: (context, state) {
-                final taskId = state.pathParameters['taskId']!;
-                final extra = state.extra as Map<String, dynamic>?;
-                return GradingDashboard(
-                  taskId: taskId,
-                  taskTitle: extra?['title'] ?? 'Assignment',
-                  maxPoints: extra?['maxPoints'] ?? 100,
-                );
-              },
             ),
             GoRoute(
               path: '/advising',
@@ -261,10 +234,6 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
                 final email = state.pathParameters['email']!;
                 return AdvisingChatScreen(otherUserEmail: email);
               },
-            ),
-            GoRoute(
-              path: '/advising/broadcast',
-              builder: (context, state) => const BroadcastMessageScreen(),
             ),
           ],
         ),
@@ -303,9 +272,19 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           _router.go('/course-selection', extra: {'email': user.email});
         }
       } else if (authState is AuthAuthenticated) {
-        // User is logged in AND has completed onboarding
-        if (isAuthRoute || isOnboardingRoute || isVerificationRoute || currentLocation == '/splash') {
-          _router.go('/home');
+        final user = (authState as AuthAuthenticated).user;
+        final isAdminRoute = currentLocation.startsWith('/admin');
+
+        if (user.mode == AppMode.professor) {
+          // Admins/professors only see the admin panel
+          if (!isAdminRoute) {
+            _router.go('/admin');
+          }
+        } else {
+          // Students go to home
+          if (isAuthRoute || isOnboardingRoute || isVerificationRoute || currentLocation == '/splash') {
+            _router.go('/home');
+          }
         }
       }
     }

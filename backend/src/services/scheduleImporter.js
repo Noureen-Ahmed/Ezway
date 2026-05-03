@@ -234,11 +234,12 @@ async function importScheduleFromPdf({ pdfPath, semester, academicYear, dryRun =
             await prisma.courseSchedule.create({
               data: {
                 courseId,
-                dayOfWeek: entry.dayOfWeek,
-                startTime: entry.startTime,
-                endTime:   entry.endTime || entry.startTime,
-                location:  entry.location || null,
-                room:      null,
+                dayOfWeek:  entry.dayOfWeek,
+                startTime:  entry.startTime,
+                endTime:    entry.endTime || entry.startTime,
+                location:   entry.location || null,
+                room:       null,
+                lessonType: entry.lessonType || 'LECTURE',
               },
             });
             report.schedulesInserted++;

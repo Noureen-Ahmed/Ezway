@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/app_session_provider.dart';
 import '../models/user.dart';
 import 'home_screen.dart';
-import 'professor_dashboard.dart';
 
-/// Adaptive Dashboard Widget
-/// Shows the correct dashboard based on user role (Student/Professor)
 class AdaptiveDashboard extends ConsumerWidget {
   const AdaptiveDashboard({super.key});
 
@@ -16,16 +14,10 @@ class AdaptiveDashboard extends ConsumerWidget {
 
     return userAsync.when(
       data: (user) {
-        if (user == null) {
-          return const HomeScreen();
+        if (user != null && user.mode == AppMode.professor) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/admin'));
+          return const SizedBox.shrink();
         }
-
-        // Show professor dashboard for professors
-        if (user.mode == AppMode.professor) {
-          return const ProfessorDashboard();
-        }
-
-        // Default to student home screen
         return const HomeScreen();
       },
       loading: () => Scaffold(

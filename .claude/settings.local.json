@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(ls -Path \"d:\\\\Ezway\" | ForEach-Object { \"$\\($_.Name\\) $\\(if\\($_.PSIsContainer\\){'[DIR]'} else {'[FILE]'}\\)\" })",
+      "Bash(npx prisma *)"
+    ]
+  }
+}

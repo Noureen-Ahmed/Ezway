@@ -327,16 +327,17 @@ enum ContentType {
 }
 
 model CourseSchedule {
-  id        Int      @id @default(autoincrement())
-  dayOfWeek DayOfWeek
-  startTime String   @map("start_time")
-  endTime   String   @map("end_time")
-  location  String?
-  room      String?
-  
-  courseId  String   @map("course_id")
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
+  id         Int       @id @default(autoincrement())
+  dayOfWeek  DayOfWeek
+  startTime  String    @map("start_time")
+  endTime    String    @map("end_time")
+  location   String?
+  room       String?
+  lessonType String?   @default("LECTURE") @map("lesson_type")
+
+  courseId   String    @map("course_id")
+  course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
   @@map("course_schedules")
 }
 
