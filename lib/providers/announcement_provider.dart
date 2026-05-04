@@ -1,75 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/announcement.dart';
 import '../services/data_service.dart';
-import 'app_session_provider.dart';
 
-/// Fetches both announcements AND backend notifications, merged into one list.
-/// Backend notifications (from /api/notifications/:email) are the primary source
-/// for student-targeted notifications (new assignments, exams, content, etc.)
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Announcements provider using DataService with local read status
 final announcementsProvider = FutureProvider<List<Announcement>>((ref) async {
-  // Get the current user email for fetching targeted notifications
-  final sessionState = ref.read(appSessionControllerProvider);
-  String? userEmail;
-  if (sessionState is AppSessionAuthenticated) {
-    userEmail = sessionState.user.email;
-  }
-
-  // Fetch announcements
   final announcements = await DataService.getAnnouncements();
-
-  // Fetch server notifications if we have an email
-  List<Map<String, dynamic>> rawNotifications = [];
-  if (userEmail != null) {
-    rawNotifications = await DataService.getNotifications(email: userEmail);
-  }
-
-  // Convert backend notifications to Announcement objects
-  final notificationItems = rawNotifications.map((n) {
-    final typeStr = (n['type'] ?? 'general').toString().toLowerCase();
-    AnnouncementType type = AnnouncementType.general;
-    if (typeStr == 'assignment') type = AnnouncementType.assignment;
-    if (typeStr == 'exam') type = AnnouncementType.exam;
-    if (typeStr == 'event' || typeStr == 'content' || typeStr == 'lecture') {
-      type = AnnouncementType.event;
+  final prefs = await SharedPreferences.getInstance();
+  final readIds = prefs.getStringList('read_announcements') ?? [];
+  
+  return announcements.map((a) {
+    if (readIds.contains(a.id)) {
+      return a.copyWith(isRead: true);
     }
-    if (typeStr == 'advising') type = AnnouncementType.general;
-
-    return Announcement(
-      id: 'notif_${n['id']}',
-      title: n['title']?.toString() ?? 'Notification',
-      message: n['message']?.toString() ?? '',
-      date: n['createdAt'] != null || n['created_at'] != null
-          ? DateTime.tryParse((n['createdAt'] ?? n['created_at']).toString()) ?? DateTime.now()
-          : DateTime.now(),
-      type: type,
-      isRead: n['isRead'] == true || n['is_read'] == true || n['is_read'] == 1,
-      serverId: n['id']?.toString(),
-    );
+    return a;
   }).toList();
-
-  // Merge: backend notifications first (more targeted), then announcements
-  // De-duplicate by title to avoid showing the same event twice
-  final merged = <Announcement>[...notificationItems];
-  final existingTitles = notificationItems.map((n) => n.title).toSet();
-
-  for (final a in announcements) {
-    if (!existingTitles.contains(a.title)) {
-      merged.add(a);
-    }
-  }
-
-  // Sort: unread first, then by date descending
-  merged.sort((a, b) {
-    if (a.isRead != b.isRead) return a.isRead ? 1 : -1;
-    return b.date.compareTo(a.date);
-  });
-
-  return merged;
 });
 
 /// Announcement controller for actions
-final announcementControllerProvider =
-    StateNotifierProvider<AnnouncementController, AsyncValue<void>>((ref) {
+final announcementControllerProvider = StateNotifierProvider<AnnouncementController, AsyncValue<void>>((ref) {
   return AnnouncementController(ref);
 });
 
@@ -79,13 +29,17 @@ class AnnouncementController extends StateNotifier<AsyncValue<void>> {
   AnnouncementController(this._ref) : super(const AsyncValue.data(null));
 
   Future<void> markAsRead(String id) async {
+    state = const AsyncValue.loading();
     try {
-      // If it's a server notification (id starts with 'notif_'), call real backend
-      if (id.startsWith('notif_')) {
-        final serverId = id.replaceFirst('notif_', '');
-        await DataService.markNotificationRead(serverId);
+      final prefs = await SharedPreferences.getInstance();
+      final readIds = prefs.getStringList('read_announcements') ?? [];
+      
+      if (!readIds.contains(id)) {
+        readIds.add(id);
+        await prefs.setStringList('read_announcements', readIds);
+        _ref.invalidate(announcementsProvider);
       }
-      _ref.invalidate(announcementsProvider);
+      
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -93,12 +47,25 @@ class AnnouncementController extends StateNotifier<AsyncValue<void>> {
   }
 
   Future<void> markAllAsRead() async {
+    state = const AsyncValue.loading();
     try {
-      final sessionState = _ref.read(appSessionControllerProvider);
-      if (sessionState is AppSessionAuthenticated) {
-        await DataService.markAllNotificationsRead(sessionState.user.email);
+      final announcements = await _ref.read(announcementsProvider.future);
+      final prefs = await SharedPreferences.getInstance();
+      final readIds = prefs.getStringList('read_announcements') ?? [];
+      
+      bool changed = false;
+      for (var a in announcements) {
+        if (!readIds.contains(a.id)) {
+          readIds.add(a.id);
+          changed = true;
+        }
       }
-      _ref.invalidate(announcementsProvider);
+      
+      if (changed) {
+        await prefs.setStringList('read_announcements', readIds);
+        _ref.invalidate(announcementsProvider);
+      }
+      
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -119,7 +86,7 @@ class AnnouncementController extends StateNotifier<AsyncValue<void>> {
         courseId: courseId,
         type: type,
       );
-
+      
       if (success) {
         _ref.invalidate(announcementsProvider);
       }

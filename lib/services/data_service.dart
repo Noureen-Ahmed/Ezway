@@ -918,6 +918,67 @@ class DataService {
     }
   }
 
+  /// Returns all unique courses extracted from UMS student data
+  /// (for doctor course discovery).
+  static Future<List<Map<String, dynamic>>> getAvailableUmsCourses() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/ums/available-courses'),
+        headers: ApiConfig.authHeaders,
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List raw = data['courses'] ?? [];
+        return raw.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      print('[DataService] getAvailableUmsCourses error: $e');
+      return [];
+    }
+  }
+
+  /// Create a course in the catalog (or return existing id).
+  static Future<String?> createCourse({
+    required String code,
+    required String name,
+    String category = 'GENERAL',
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/courses'),
+        headers: ApiConfig.authHeaders,
+        body: jsonEncode({'code': code, 'name': name, 'category': category}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data['courseId'] as String?;
+      }
+      return null;
+    } catch (e) {
+      print('[DataService] createCourse error: $e');
+      return null;
+    }
+  }
+
+  /// Assign a course to the doctor's teaching list.
+  static Future<bool> assignDoctorCourse({
+    required String doctorEmail,
+    required String courseId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/doctor-courses'),
+        headers: ApiConfig.authHeaders,
+        body: jsonEncode({'doctorEmail': doctorEmail, 'courseId': courseId, 'isPrimary': false}),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('[DataService] assignDoctorCourse error: $e');
+      return false;
+    }
+  }
+
   // ============ UPLOAD ============
 
   /// Upload file
@@ -958,6 +1019,25 @@ class DataService {
 
   // ============ CONTENT (Professor) ============
   
+  /// Get unified feed for a course (all announcements, lectures, exams, assignments)
+  static Future<List<Map<String, dynamic>>> getCourseFeed(String courseId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/courses/$courseId/feed'),
+        headers: ApiConfig.authHeaders,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data['feed'] ?? []);
+      }
+      return [];
+    } catch (e) {
+      print('[DataService] Get course feed error: $e');
+      return [];
+    }
+  }
+
   /// Create course content (lecture, material)
   static Future<bool> createContent({
     required String courseId,

@@ -6,7 +6,7 @@ import '../providers/app_session_provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/schedule_provider.dart';
-import '../providers/announcement_provider.dart';
+import '../providers/notification_provider.dart';
 import '../models/user.dart';
 import '../models/task.dart';
 import 'assignment_detail_screen.dart';
@@ -25,18 +25,14 @@ class HomeScreen extends ConsumerWidget {
     final coursesAsync = ref.watch(enrolledCoursesProvider);
     final taskState = ref.watch(taskStateProvider);
     final scheduleAsync = ref.watch(scheduleEventsProvider);
-    final announcementsAsync = ref.watch(announcementsProvider);
-    final unreadCount = announcementsAsync.whenOrNull(
-          data: (list) => list.where((a) => !a.isRead).length,
-        ) ??
-        0;
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(currentUserProvider);
-          ref.invalidate(announcementsProvider);
+          ref.invalidate(notificationsProvider);
           ref.read(taskStateProvider.notifier).fetchTasks(force: true);
           await Future.wait([
             ref.refresh(enrolledCoursesProvider.future),

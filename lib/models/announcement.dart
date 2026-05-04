@@ -9,8 +9,6 @@ class Announcement {
   final bool isRead;
   final String? courseCode;
   final String? courseName;
-  /// The numeric ID from the backend `notifications` table (if this came from there)
-  final String? serverId;
 
   Announcement({
     required this.id,
@@ -21,7 +19,6 @@ class Announcement {
     this.isRead = false,
     this.courseCode,
     this.courseName,
-    this.serverId,
   });
 
   Announcement copyWith({
@@ -33,7 +30,6 @@ class Announcement {
     bool? isRead,
     String? courseCode,
     String? courseName,
-    String? serverId,
   }) {
     return Announcement(
       id: id ?? this.id,
@@ -44,7 +40,6 @@ class Announcement {
       isRead: isRead ?? this.isRead,
       courseCode: courseCode ?? this.courseCode,
       courseName: courseName ?? this.courseName,
-      serverId: serverId ?? this.serverId,
     );
   }
 
@@ -66,17 +61,14 @@ class Announcement {
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       message: json['message']?.toString() ?? '',
-      date: json['date'] != null
-          ? DateTime.parse(json['date'])
-          : (json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : DateTime.now()),
+      date: json['date'] != null 
+          ? DateTime.parse(json['date']) 
+          : (json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now()),
       type: AnnouncementType.values.firstWhere(
-        (e) => e.name == (json['type'] ?? 'general').toString().toLowerCase(),
+        (e) => e.name == json['type'],
         orElse: () => AnnouncementType.general,
       ),
-      isRead: json['isRead'] == true || json['is_read'] == true || 
-              json['is_read'].toString() == '1' || json['isRead'].toString() == '1',
+      isRead: json['isRead'] ?? false,
       courseCode: json['courseCode'] ?? json['course']?['code'],
       courseName: json['courseName'] ?? json['course']?['name'],
     );

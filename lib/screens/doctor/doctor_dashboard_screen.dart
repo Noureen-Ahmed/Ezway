@@ -11,6 +11,7 @@ import '../../widgets/loading_shimmer.dart';
 import '../add_content_screen.dart';
 import '../create_exam_screen.dart';
 import '../grading_dashboard.dart';
+import 'course_feed_screen.dart';
 
 class DoctorDashboardScreen extends ConsumerStatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -112,7 +113,161 @@ class _DoctorDashboardScreenState
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => screen),
+    ).then((_) {
+      // Refresh courses when returning from content creation screens
+      ref.invalidate(professorCoursesProvider);
+    });
+  }
+
+  Future<void> _showClaimCoursesDialog(User? user) async {
+    if (user == null) return;
+
+    // Load available courses from UMS student data
+    List<Map<String, dynamic>> available = [];
+    bool loading = true;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            if (loading) {
+              DataService.getAvailableUmsCourses().then((courses) {
+                if (ctx.mounted) {
+                  setSheetState(() {
+                    available = courses;
+                    loading = false;
+                  });
+                }
+              });
+            }
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              maxChildSize: 0.9,
+              minChildSize: 0.4,
+              expand: false,
+              builder: (_, scrollController) => Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Courses found in UMS student data',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    child: Text(
+                      'Tap a course to add it to your teaching list.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : available.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No courses found yet.\nStudents need to sync their UMS data first.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Color(0xFF6B7280)),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                itemCount: available.length,
+                                itemBuilder: (_, i) {
+                                  final c = available[i];
+                                  final code = (c['normalized_code'] ?? c['course_code'] ?? '') as String;
+                                  final name = (c['course_name'] ?? code) as String;
+                                  final instructor = (c['instructor_name'] ?? '') as String;
+                                  final students = c['student_count'] ?? 0;
+
+                                  return Card(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    child: ListTile(
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFeff6ff),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(Icons.school, color: Color(0xFF2563eb), size: 20),
+                                      ),
+                                      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                      subtitle: Text(
+                                        '$code${instructor.isNotEmpty ? ' • $instructor' : ''}\n$students students enrolled',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      isThreeLine: true,
+                                      trailing: const Icon(Icons.add_circle, color: Color(0xFF2563eb)),
+                                      onTap: () async {
+                                        Navigator.pop(ctx);
+                                        await _claimCourse(user, code, name, c['course_id'] as String?);
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
+  }
+
+  Future<void> _claimCourse(User user, String code, String name, String? existingCourseId) async {
+    String? courseId = existingCourseId;
+
+    // Create course in catalog if it doesn't exist yet
+    if (courseId == null || courseId.isEmpty) {
+      courseId = await DataService.createCourse(code: code, name: name);
+    }
+
+    if (courseId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to create course'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    final success = await DataService.assignDoctorCourse(
+      doctorEmail: user.email,
+      courseId: courseId,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? '$name added to your courses!' : 'Failed to add course'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+      if (success) ref.invalidate(professorCoursesProvider);
+    }
   }
 
   @override
@@ -298,15 +453,43 @@ class _DoctorDashboardScreenState
                           coursesAsync.when(
                             data: (courses) {
                               if (courses.isEmpty) {
-                                return const Text(
-                                    'No courses assigned yet.',
-                                    style: TextStyle(
-                                        color: Color(0xFF6B7280)));
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'No courses assigned yet.',
+                                      style: TextStyle(color: Color(0xFF6B7280)),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ElevatedButton.icon(
+                                      onPressed: () => _showClaimCoursesDialog(user),
+                                      icon: const Icon(Icons.add, size: 18),
+                                      label: const Text('Browse & Add My Courses'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF2563eb),
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
                               }
                               return Column(
-                                children: courses
-                                    .map((c) => _buildCourseCard(c))
-                                    .toList(),
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ...courses.map((c) => _buildCourseCard(c)),
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _showClaimCoursesDialog(user),
+                                    icon: const Icon(Icons.add_circle_outline, size: 16),
+                                    label: const Text('Add another course'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: const Color(0xFF2563eb),
+                                    ),
+                                  ),
+                                ],
                               );
                             },
                             loading: () =>
@@ -417,48 +600,64 @@ class _DoctorDashboardScreenState
 
   Widget _buildCourseCard(Course course) {
     final students = (course.stats?['students'] ?? 0) as int;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFe5e7eb)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFeff6ff),
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CourseFeedScreen(
+              courseId: course.id,
+              courseName: course.name,
+              courseCode: course.code,
+              isDoctorView: true,
             ),
-            child: const Icon(Icons.school, color: Color(0xFF2563eb)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  course.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  course.code,
-                  style: const TextStyle(
-                      fontSize: 12, color: Color(0xFF6B7280)),
-                ),
-                if (students > 0)
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFe5e7eb)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFeff6ff),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.school, color: Color(0xFF2563eb)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    '$students students',
-                    style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF9CA3AF)),
+                    course.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-              ],
+                  Text(
+                    course.code,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280)),
+                  ),
+                  if (students > 0)
+                    Text(
+                      '$students students',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF9CA3AF)),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+          ],
+        ),
       ),
     );
   }

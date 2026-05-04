@@ -305,10 +305,31 @@ async function initDatabase() {
             'ALTER TABLE users ADD COLUMN academic_year VARCHAR(50)',
             'ALTER TABLE users ADD COLUMN advisor_name VARCHAR(255)',
             'ALTER TABLE users ADD COLUMN advisor_email VARCHAR(255)',
+            // FCM push token
+            'ALTER TABLE users ADD COLUMN fcm_token VARCHAR(500)',
+            // Tasks: extra columns used by professor content creation
+            'ALTER TABLE tasks ADD COLUMN task_type VARCHAR(30) DEFAULT \'ASSIGNMENT\'',
+            'ALTER TABLE tasks ADD COLUMN status VARCHAR(20) DEFAULT \'PENDING\'',
+            'ALTER TABLE tasks ADD COLUMN max_points INT DEFAULT 100',
+            'ALTER TABLE tasks ADD COLUMN created_by_id VARCHAR(100)',
+            // Announcements & content: creator foreign key
+            'ALTER TABLE announcements ADD COLUMN created_by_id VARCHAR(100)',
+            'ALTER TABLE course_content ADD COLUMN created_by_id VARCHAR(100)',
+            // course_content: camelCase alias for content_type (used by some INSERT paths)
+            'ALTER TABLE course_content ADD COLUMN contentType VARCHAR(30) DEFAULT \'LECTURE\'',
         ];
         for (const sql of alterColumns) {
             try { await connection.execute(sql); } catch (e) { /* column already exists */ }
         }
+
+        // Ensure notifications.id is VARCHAR so generateId() string values work.
+        // If the column is currently INT AUTO_INCREMENT (from the CREATE TABLE above),
+        // this converts existing rows ('1','2',...) and accepts new string IDs.
+        try {
+            await connection.execute(
+                `ALTER TABLE notifications MODIFY COLUMN id VARCHAR(50) NOT NULL DEFAULT ''`
+            );
+        } catch (_) { /* already VARCHAR or conversion not needed */ }
 
         connection.release();
         console.log('✅ Database tables initialized');
@@ -389,40 +410,125 @@ function parseJson(field) {
     }
 }
 
+// Upsert UMS course list into the courses catalog table so doctors can find and post to them.
+// Also auto-assigns matching doctors (by name) via doctor_courses.
+async function syncUmsCoursesToCatalog(umsCourses) {
+    for (const c of umsCourses) {
+        const rawCode = (c.courseCode || '').trim();
+        if (!rawCode) continue;
+        const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
+        const courseName = (c.courseName || normalizedCode).trim();
+
+        try {
+            // Upsert into courses table
+            const [existing] = await pool.execute('SELECT id, professors FROM courses WHERE code = ?', [normalizedCode]);
+            let courseDbId;
+            if (existing.length === 0) {
+                courseDbId = generateId();
+                const professors = c.instructorName ? JSON.stringify([{ name: c.instructorName }]) : '[]';
+                await pool.execute(
+                    'INSERT INTO courses (id, code, name, professors) VALUES (?, ?, ?, ?)',
+                    [courseDbId, normalizedCode, courseName, professors]
+                );
+                console.log(`📚 Created course: ${normalizedCode} - ${courseName}`);
+            } else {
+                courseDbId = existing[0].id;
+                // Add instructor to professors JSON if not already listed
+                if (c.instructorName) {
+                    const profs = parseJson(existing[0].professors || '[]');
+                    if (!profs.some(p => p.name === c.instructorName)) {
+                        profs.push({ name: c.instructorName });
+                        await pool.execute('UPDATE courses SET professors = ? WHERE id = ?', [JSON.stringify(profs), courseDbId]);
+                    }
+                }
+            }
+
+            // Try to auto-assign matching doctor by searching instructor name in users table
+            if (c.instructorName && c.instructorName.length >= 3) {
+                // Strip "Dr." prefix and use first word for matching
+                const searchTerm = c.instructorName.replace(/^dr\.?\s*/i, '').trim().split(/\s+/)[0];
+                if (searchTerm.length >= 3) {
+                    const [matchedDoctors] = await pool.execute(
+                        `SELECT id, email FROM users WHERE mode IN ('doctor', 'professor') AND LOWER(name) LIKE LOWER(?)`,
+                        [`%${searchTerm}%`]
+                    );
+                    for (const doctor of matchedDoctors) {
+                        await pool.execute(
+                            'INSERT IGNORE INTO doctor_courses (doctor_email, course_id) VALUES (?, ?)',
+                            [doctor.email, courseDbId]
+                        );
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(`[syncUmsCoursesToCatalog] Error for ${normalizedCode}:`, e.message);
+        }
+    }
+}
+
 // Send notification to students enrolled in a course (checks both legacy enrolled_courses and ums_courses)
 async function notifyStudentsInCourse(courseId, notification) {
     try {
+        // Resolve the course code from the courses table
+        let courseCode = courseId;
+        try {
+            const [courseRows] = await pool.execute('SELECT code FROM courses WHERE id = ?', [courseId]);
+            if (courseRows.length > 0 && courseRows[0].code) {
+                courseCode = courseRows[0].code;
+            }
+        } catch (_) {}
+
+        console.log(`🔍 Notifying students for courseId=${courseId}, courseCode=${courseCode}`);
+
         // Legacy: students whose enrolled_courses CSV contains this courseId
         const [legacyUsers] = await pool.execute(`
-            SELECT DISTINCT email FROM users 
-            WHERE mode = 'student' AND enrolled_courses LIKE ?
-        `, [`%${courseId}%`]);
+            SELECT DISTINCT id, email FROM users 
+            WHERE mode = 'student' AND (enrolled_courses LIKE ? OR enrolled_courses LIKE ?)
+        `, [`%${courseId}%`, `%${courseCode}%`]);
 
-        // UMS students: look up ums_courses by course_code matching the courseId
+        // UMS students: match by the resolved course code (e.g. COMP404)
+        // Also try partial match for codes with spaces like 'COMP 404'
+        const codeNoSpaces = courseCode.replace(/\s+/g, '');
         const [umsUsers] = await pool.execute(`
-            SELECT DISTINCT u.email
+            SELECT DISTINCT u.id, u.email
             FROM users u
             INNER JOIN ums_courses uc ON uc.user_id = u.id
             WHERE u.mode = 'student'
-              AND (uc.course_code = ? OR uc.course_code LIKE ?)
-        `, [courseId, `%${courseId}%`]);
+              AND (
+                uc.course_code = ?
+                OR REPLACE(uc.course_code, ' ', '') = ?
+                OR uc.course_code LIKE ?
+              )
+        `, [courseCode, codeNoSpaces, `%${codeNoSpaces}%`]);
 
-        // Merge unique emails
-        const emailSet = new Set();
-        for (const u of legacyUsers) emailSet.add(u.email);
-        for (const u of umsUsers) emailSet.add(u.email);
+        // Merge unique users by id -> email
+        const userMap = new Map();
+        for (const u of legacyUsers) userMap.set(u.id, u.email);
+        for (const u of umsUsers) userMap.set(u.id, u.email);
+
+        console.log(`📋 Found ${userMap.size} students (legacy: ${legacyUsers.length}, ums: ${umsUsers.length})`);
 
         let count = 0;
-        for (const email of emailSet) {
+        let notifType = (notification.type || 'GENERAL').toUpperCase();
+        if (!['GENERAL', 'ANNOUNCEMENT', 'ASSIGNMENT', 'EXAM', 'GRADE', 'REMINDER', 'SYSTEM'].includes(notifType)) {
+            notifType = 'GENERAL';
+        }
+        let refType = (notification.referenceType || 'ANNOUNCEMENT').toUpperCase();
+        if (!['ANNOUNCEMENT', 'ASSIGNMENT', 'EXAM', 'LECTURE', 'COURSE', 'USER'].includes(refType)) {
+            refType = null;
+        }
+
+        for (const [, userEmail] of userMap) {
             await pool.execute(`
-                INSERT INTO notifications (user_email, title, message, type, reference_type, reference_id)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO notifications (id, user_email, title, message, type, reference_type, reference_id, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
             `, [
-                email,
+                generateId(),
+                userEmail,
                 notification.title,
                 notification.message,
-                notification.type || 'general',
-                notification.referenceType || 'announcement',
+                notifType,
+                refType,
                 notification.referenceId || null
             ]);
             count++;
@@ -802,30 +908,33 @@ app.get('/api/users/professor/courses', async (req, res) => {
 // Create lecture/content for a course
 app.post('/api/content', async (req, res) => {
     try {
-        const { courseId, title, description, contentType, fileUrl, weekNumber, createdBy } = req.body;
+        const { courseId, title, description, contentType, fileUrl, weekNumber } = req.body;
+        const createdById = req.user?.id;
+
+        if (!createdById) return res.status(401).json({ error: 'Unauthorized' });
 
         const id = generateId();
 
         await pool.execute(`
-            INSERT INTO course_content (id, course_id, title, description, content_type, file_url, week_number, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [id, courseId, title, description, contentType, fileUrl, weekNumber, createdBy]);
+            INSERT INTO course_content (id, course_id, title, description, contentType, file_url, week_number, created_by_id, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `, [id, courseId, title, description || '', contentType || 'LECTURE', fileUrl || null, weekNumber || 0, createdById]);
 
         // Notify students
         await notifyStudentsInCourse(courseId, {
-            title: `New ${contentType}: ${title}`,
-            message: description,
-            type: contentType,
-            referenceType: 'content',
+            title: `New ${contentType || 'LECTURE'}: ${title}`,
+            message: description || '',
+            type: 'ANNOUNCEMENT',
+            referenceType: 'LECTURE',
             referenceId: id
         });
 
         // Also create an announcement
         const announcementId = generateId();
         await pool.execute(`
-            INSERT INTO announcements (id, title, message, type, course_id, created_by)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `, [announcementId, `New ${contentType}: ${title}`, description, contentType, courseId, createdBy]);
+            INSERT INTO announcements (id, title, message, type, course_id, created_by_id)
+            VALUES (?, ?, ?, 'LECTURE', ?, ?)
+        `, [announcementId, `New ${contentType || 'LECTURE'}: ${title}`, description || '', courseId, createdById]);
 
         console.log(`✅ Content created: ${title} for course ${courseId}`);
         res.json({ success: true, contentId: id });
@@ -838,35 +947,34 @@ app.post('/api/content', async (req, res) => {
 // Create assignment for a course
 app.post('/api/assignments', async (req, res) => {
     try {
-        const { courseId, title, description, dueDate, points, createdBy } = req.body;
+        const { courseId, title, description, dueDate, points } = req.body;
+        const createdById = req.user?.id;
+
+        if (!createdById) return res.status(401).json({ error: 'Unauthorized' });
 
         const id = generateId();
 
-        // Get course name
-        const [courseRows] = await pool.execute('SELECT name FROM courses WHERE id = ?', [courseId]);
-        const courseName = courseRows.length > 0 ? courseRows[0].name : 'Unknown Course';
-
         // Create task for the assignment
         await pool.execute(`
-            INSERT INTO tasks (id, title, course_id, course_name, priority, description, due_date, points, created_by)
-            VALUES (?, ?, ?, ?, 'medium', ?, ?, ?, ?)
-        `, [id, title, courseId, courseName, description, dueDate, points, createdBy]);
+            INSERT INTO tasks (id, title, course_id, task_type, priority, description, due_date, max_points, created_by_id, updated_at, status)
+            VALUES (?, ?, ?, 'ASSIGNMENT', 'medium', ?, ?, ?, ?, NOW(), 'PENDING')
+        `, [id, title, courseId, description || '', dueDate || null, points || 100, createdById]);
 
         // Notify students
         await notifyStudentsInCourse(courseId, {
             title: `New Assignment: ${title}`,
-            message: `Due: ${new Date(dueDate).toLocaleDateString()}. ${description}`,
-            type: 'assignment',
-            referenceType: 'task',
+            message: `Due: ${dueDate ? new Date(dueDate).toLocaleDateString() : 'TBA'}. ${description || ''}`,
+            type: 'ASSIGNMENT',
+            referenceType: 'ASSIGNMENT',
             referenceId: id
         });
 
         // Create announcement
         const announcementId = generateId();
         await pool.execute(`
-            INSERT INTO announcements (id, title, message, type, course_id, created_by)
-            VALUES (?, ?, ?, 'assignment', ?, ?)
-        `, [announcementId, `New Assignment: ${title}`, `Due: ${new Date(dueDate).toLocaleDateString()}`, courseId, createdBy]);
+            INSERT INTO announcements (id, title, message, type, course_id, created_by_id)
+            VALUES (?, ?, ?, 'ASSIGNMENT', ?, ?)
+        `, [announcementId, `New Assignment: ${title}`, `Due: ${dueDate ? new Date(dueDate).toLocaleDateString() : 'TBA'}`, courseId, createdById]);
 
         console.log(`✅ Assignment created: ${title} for course ${courseId}`);
         res.json({ success: true, assignmentId: id });
@@ -879,35 +987,34 @@ app.post('/api/assignments', async (req, res) => {
 // Create exam for a course
 app.post('/api/exams', async (req, res) => {
     try {
-        const { courseId, title, description, examDate, points, createdBy } = req.body;
+        const { courseId, title, description, examDate, points } = req.body;
+        const createdById = req.user?.id;
+
+        if (!createdById) return res.status(401).json({ error: 'Unauthorized' });
 
         const id = generateId();
 
-        // Get course name
-        const [courseRows] = await pool.execute('SELECT name FROM courses WHERE id = ?', [courseId]);
-        const courseName = courseRows.length > 0 ? courseRows[0].name : 'Unknown Course';
-
         // Create task for the exam
         await pool.execute(`
-            INSERT INTO tasks (id, title, course_id, course_name, priority, description, due_date, points, created_by)
-            VALUES (?, ?, ?, ?, 'high', ?, ?, ?, ?)
-        `, [id, title, courseId, courseName, description, examDate, points, createdBy]);
+            INSERT INTO tasks (id, title, course_id, task_type, priority, description, due_date, max_points, created_by_id, updated_at, status)
+            VALUES (?, ?, ?, 'EXAM', 'high', ?, ?, ?, ?, NOW(), 'PENDING')
+        `, [id, title, courseId, description || '', examDate || null, points || 100, createdById]);
 
         // Notify students
         await notifyStudentsInCourse(courseId, {
             title: `Exam Scheduled: ${title}`,
-            message: `Date: ${new Date(examDate).toLocaleDateString()}. ${description}`,
-            type: 'exam',
-            referenceType: 'task',
+            message: `Date: ${examDate ? new Date(examDate).toLocaleDateString() : 'TBA'}. ${description || ''}`,
+            type: 'EXAM',
+            referenceType: 'EXAM',
             referenceId: id
         });
 
         // Create announcement
         const announcementId = generateId();
         await pool.execute(`
-            INSERT INTO announcements (id, title, message, type, course_id, created_by)
-            VALUES (?, ?, ?, 'exam', ?, ?)
-        `, [announcementId, `Exam Scheduled: ${title}`, `Date: ${new Date(examDate).toLocaleDateString()}`, courseId, createdBy]);
+            INSERT INTO announcements (id, title, message, type, course_id, created_by_id)
+            VALUES (?, ?, ?, 'EXAM', ?, ?)
+        `, [announcementId, `Exam Scheduled: ${title}`, `Date: ${examDate ? new Date(examDate).toLocaleDateString() : 'TBA'}`, courseId, createdById]);
 
         console.log(`✅ Exam created: ${title} for course ${courseId}`);
         res.json({ success: true, examId: id });
@@ -917,12 +1024,51 @@ app.post('/api/exams', async (req, res) => {
     }
 });
 
+// Route aliases – the Flutter DataService calls /content/assignment and /content/exam
+app.post('/api/content/assignment', (req, res) => {
+    // Forward to the canonical /api/assignments handler
+    req.url = '/api/assignments';
+    app.handle(req, res);
+});
+
+app.post('/api/content/exam', (req, res) => {
+    // Forward to the canonical /api/exams handler
+    req.url = '/api/exams';
+    app.handle(req, res);
+});
+
+
 // ============ NOTIFICATIONS ENDPOINTS ============
 
-// Get notifications for a user
+// Get notifications for the logged-in user (JWT-based, no email in URL)
+app.get('/api/notifications', async (req, res) => {
+    try {
+        const email = req.user?.email;
+        if (!email) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        const [rows] = await pool.execute(`
+            SELECT * FROM notifications 
+            WHERE user_email = ? 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        `, [email]);
+
+        res.json({ success: true, notifications: rows });
+    } catch (error) {
+        console.error('Get notifications error:', error);
+        res.status(500).json({ error: 'Failed to get notifications' });
+    }
+});
+
+// Get notifications by email (legacy fallback)
 app.get('/api/notifications/:email', async (req, res) => {
     try {
         const { email } = req.params;
+        // Prevent matching other routes like /read-all
+        if (email === 'read-all' || email === 'token') {
+            return res.status(400).json({ error: 'Invalid email' });
+        }
         const [rows] = await pool.execute(`
             SELECT * FROM notifications 
             WHERE user_email = ? 
@@ -949,7 +1095,22 @@ app.put('/api/notifications/:id/read', async (req, res) => {
     }
 });
 
-// Mark all notifications as read for a user
+// Mark all notifications as read (JWT-based)
+app.put('/api/notifications/read-all', async (req, res) => {
+    try {
+        const email = req.user?.email;
+        if (!email) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        await pool.execute('UPDATE notifications SET is_read = TRUE WHERE user_email = ?', [email]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark all notifications read error:', error);
+        res.status(500).json({ error: 'Failed to mark notifications as read' });
+    }
+});
+
+// Mark all notifications as read for a user (legacy with email in URL)
 app.put('/api/notifications/read-all/:email', async (req, res) => {
     try {
         const { email } = req.params;
@@ -958,6 +1119,20 @@ app.put('/api/notifications/read-all/:email', async (req, res) => {
     } catch (error) {
         console.error('Mark all notifications read error:', error);
         res.status(500).json({ error: 'Failed to mark notifications as read' });
+    }
+});
+
+// Store/update FCM push token for the logged-in user
+app.put('/api/notifications/token', async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { fcmToken } = req.body;
+        if (!userId || !fcmToken) return res.status(400).json({ error: 'Missing userId or fcmToken' });
+        await pool.execute('UPDATE users SET fcm_token = ? WHERE id = ?', [fcmToken, userId]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Update FCM token error:', error);
+        res.status(500).json({ error: 'Failed to update FCM token' });
     }
 });
 
@@ -1031,7 +1206,9 @@ app.delete('/api/tasks/:id', async (req, res) => {
 
 app.get('/api/announcements', async (req, res) => {
     try {
-        const { courseId, userEmail } = req.query;
+        const { courseId } = req.query;
+        // Use query email if provided, otherwise fallback to JWT token email
+        const userEmail = req.query.userEmail || req.user?.email;
 
         let query = 'SELECT * FROM announcements ORDER BY date DESC LIMIT 50';
         let params = [];
@@ -1040,15 +1217,38 @@ app.get('/api/announcements', async (req, res) => {
             query = 'SELECT * FROM announcements WHERE course_id = ? ORDER BY date DESC';
             params = [courseId];
         } else if (userEmail) {
-            // Get announcements for courses the user is enrolled in
-            const [userRows] = await pool.execute('SELECT enrolled_courses FROM users WHERE email = ?', [userEmail]);
-            if (userRows.length > 0 && userRows[0].enrolled_courses) {
-                const courseIds = userRows[0].enrolled_courses.split(',').filter(c => c);
-                if (courseIds.length > 0) {
-                    const placeholders = courseIds.map(() => '?').join(',');
-                    query = `SELECT * FROM announcements WHERE course_id IN (${placeholders}) OR course_id IS NULL ORDER BY date DESC`;
-                    params = courseIds;
+            // Find all course IDs the user is enrolled in (Legacy + UMS)
+            const courseIds = new Set();
+            
+            // 1. Legacy enrolled_courses
+            const [userRows] = await pool.execute('SELECT id, enrolled_courses FROM users WHERE email = ?', [userEmail]);
+            if (userRows.length > 0) {
+                const legacyStr = userRows[0].enrolled_courses;
+                if (legacyStr) {
+                    legacyStr.split(',').filter(c => c).forEach(c => courseIds.add(c));
                 }
+                
+                // 2. UMS courses
+                const userId = userRows[0].id;
+                const [umsRows] = await pool.execute('SELECT course_code FROM ums_courses WHERE user_id = ?', [userId]);
+                
+                if (umsRows.length > 0) {
+                    const codes = umsRows.map(r => r.course_code);
+                    const placeholders = codes.map(() => '?').join(',');
+                    // We need to find the UUIDs in the courses table that match these UMS codes
+                    const [courseUUIDs] = await pool.execute(`SELECT id FROM courses WHERE code IN (${placeholders})`, codes);
+                    courseUUIDs.forEach(c => courseIds.add(c.id));
+                }
+            }
+
+            if (courseIds.size > 0) {
+                const ids = Array.from(courseIds);
+                const placeholders = ids.map(() => '?').join(',');
+                query = `SELECT * FROM announcements WHERE course_id IN (${placeholders}) OR course_id IS NULL ORDER BY date DESC LIMIT 50`;
+                params = ids;
+            } else {
+                // If no courses, just show general announcements
+                query = 'SELECT * FROM announcements WHERE course_id IS NULL ORDER BY date DESC LIMIT 50';
             }
         }
 
@@ -1062,21 +1262,30 @@ app.get('/api/announcements', async (req, res) => {
 
 app.post('/api/announcements', async (req, res) => {
     try {
-        const { title, message, type, courseId, createdBy } = req.body;
+        const { title, message, type, courseId } = req.body;
+        const createdById = req.user?.id;
+        
+        if (!createdById) return res.status(401).json({ error: 'Unauthorized' });
+
         const id = generateId();
+        
+        let annType = (type || 'GENERAL').toUpperCase();
+        if (!['GENERAL', 'ASSIGNMENT', 'EXAM', 'LECTURE', 'URGENT', 'MAINTENANCE'].includes(annType)) {
+             annType = 'GENERAL';
+        }
 
         await pool.execute(`
-            INSERT INTO announcements (id, title, message, type, course_id, created_by)
+            INSERT INTO announcements (id, title, message, type, course_id, created_by_id)
             VALUES (?, ?, ?, ?, ?, ?)
-        `, [id, title, message, type || 'general', courseId, createdBy]);
+        `, [id, title, message, annType, courseId || null, createdById]);
 
         // Notify students
         if (courseId) {
             await notifyStudentsInCourse(courseId, {
                 title,
                 message,
-                type: type || 'general',
-                referenceType: 'announcement',
+                type: 'ANNOUNCEMENT',
+                referenceType: 'ANNOUNCEMENT',
                 referenceId: id
             });
         }
@@ -1119,20 +1328,214 @@ app.get('/api/courses/:id', async (req, res) => {
         }
 
         const course = rows[0];
+        const courseId = course.id;
+
+        // Pull dynamic data from the DB tables
+        const [dynamicContent] = await pool.execute(
+            'SELECT * FROM course_content WHERE course_id = ? ORDER BY created_at DESC',
+            [courseId]
+        );
+        const [dynamicTasks] = await pool.execute(
+            'SELECT * FROM tasks WHERE course_id = ? ORDER BY created_at DESC',
+            [courseId]
+        );
+        const [dynamicAnnouncements] = await pool.execute(
+            'SELECT * FROM announcements WHERE course_id = ? ORDER BY date DESC',
+            [courseId]
+        );
+
+        // Merge static JSON content with dynamic DB content
+        const staticContent = parseJson(course.content);
+        const staticAssignments = parseJson(course.assignments);
+        const staticExams = parseJson(course.exams);
+
+        // Map dynamic course_content rows to the content format
+        const dbContent = dynamicContent.map(row => ({
+            week: row.week_number || 0,
+            topic: row.title,
+            description: row.description || '',
+            attachments: parseJson(row.file_url ? [row.file_url] : []),
+            id: row.id,
+            contentType: row.content_type,
+            createdBy: row.created_by,
+            createdAt: row.created_at,
+        }));
+
+        // Map dynamic tasks to assignments / exams format
+        const dbAssignments = dynamicTasks
+            .filter(t => (t.priority !== 'high') || (!t.title?.toLowerCase().includes('exam')))
+            .filter(t => {
+                const title = (t.title || '').toLowerCase();
+                return !title.includes('exam') && !title.startsWith('exam');
+            })
+            .map(t => ({
+                id: t.id,
+                title: t.title,
+                dueDate: t.due_date ? new Date(t.due_date).toISOString() : null,
+                maxScore: t.points || 100,
+                description: t.description || '',
+                isSubmitted: t.completed || false,
+                attachments: [],
+                status: t.status || 'PENDING',
+                createdBy: t.created_by,
+                createdAt: t.created_at,
+            }));
+
+        const dbExams = dynamicTasks
+            .filter(t => {
+                const title = (t.title || '').toLowerCase();
+                return title.includes('exam') || t.priority === 'high';
+            })
+            .map(t => ({
+                id: t.id,
+                title: t.title,
+                date: t.due_date ? new Date(t.due_date).toISOString() : null,
+                format: '',
+                gradingBreakdown: '',
+                attachments: [],
+                isSubmitted: t.completed || false,
+                status: t.status || 'PENDING',
+                createdBy: t.created_by,
+                createdAt: t.created_at,
+            }));
+
+        // Deduplicate: dynamic DB items take priority (by id overlap check)
+        const staticContentIds = new Set(staticContent.map(c => c.id).filter(Boolean));
+        const staticAssignmentIds = new Set(staticAssignments.map(a => a.id).filter(Boolean));
+        const staticExamIds = new Set(staticExams.map(e => e.id).filter(Boolean));
+
+        const mergedContent = [
+            ...dbContent.filter(c => !staticContentIds.has(c.id)),
+            ...staticContent,
+        ];
+        const mergedAssignments = [
+            ...dbAssignments.filter(a => !staticAssignmentIds.has(a.id)),
+            ...staticAssignments,
+        ];
+        const mergedExams = [
+            ...dbExams.filter(e => !staticExamIds.has(e.id)),
+            ...staticExams,
+        ];
+
+        // Get enrollment count
+        let enrollmentCount = 0;
+        try {
+            // Count from both legacy enrolled_courses and ums_courses
+            const [legacyCount] = await pool.execute(
+                `SELECT COUNT(*) as cnt FROM users WHERE mode = 'student' AND enrolled_courses LIKE ?`,
+                [`%${courseId}%`]
+            );
+            const [umsCount] = await pool.execute(
+                `SELECT COUNT(DISTINCT uc.user_id) as cnt FROM ums_courses uc
+                 INNER JOIN users u ON uc.user_id = u.id
+                 WHERE u.mode = 'student' AND (uc.course_code = ? OR uc.course_code LIKE ?)`,
+                [course.code, `%${course.code}%`]
+            );
+            enrollmentCount = (legacyCount[0]?.cnt || 0) + (umsCount[0]?.cnt || 0);
+        } catch (_) {}
+
         res.json({
             success: true,
             course: {
                 ...course,
                 professors: parseJson(course.professors),
                 schedule: parseJson(course.schedule),
-                content: parseJson(course.content),
-                assignments: parseJson(course.assignments),
-                exams: parseJson(course.exams),
+                content: mergedContent,
+                assignments: mergedAssignments,
+                exams: mergedExams,
+                announcements: dynamicAnnouncements,
+                enrollmentCount,
+                stats: { students: enrollmentCount },
             }
         });
     } catch (error) {
         console.error('Get course error:', error);
         res.status(500).json({ error: 'Failed to get course' });
+    }
+});
+
+// Get unified feed for a course (all activity: announcements, lectures, exams, assignments)
+app.get('/api/courses/:id/feed', async (req, res) => {
+    try {
+        const courseId = req.params.id;
+
+        // Verify course exists
+        const [courseRows] = await pool.execute('SELECT id, code, name FROM courses WHERE id = ?', [courseId]);
+        if (courseRows.length === 0) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+
+        // Fetch all dynamic items
+        const [contentRows] = await pool.execute(
+            'SELECT * FROM course_content WHERE course_id = ? ORDER BY created_at DESC',
+            [courseId]
+        );
+        const [taskRows] = await pool.execute(
+            'SELECT * FROM tasks WHERE course_id = ? ORDER BY created_at DESC',
+            [courseId]
+        );
+        const [announcementRows] = await pool.execute(
+            'SELECT * FROM announcements WHERE course_id = ? ORDER BY date DESC',
+            [courseId]
+        );
+
+        // Build unified feed
+        const feed = [];
+
+        for (const row of announcementRows) {
+            feed.push({
+                id: row.id,
+                feedType: 'announcement',
+                title: row.title,
+                message: row.message,
+                type: row.type,
+                courseId: row.course_id,
+                createdBy: row.created_by,
+                createdAt: row.date || row.created_at,
+            });
+        }
+
+        for (const row of contentRows) {
+            feed.push({
+                id: row.id,
+                feedType: 'lecture',
+                title: row.title,
+                message: row.description,
+                type: row.content_type,
+                courseId: row.course_id,
+                fileUrl: row.file_url,
+                weekNumber: row.week_number,
+                createdBy: row.created_by,
+                createdAt: row.created_at,
+            });
+        }
+
+        for (const row of taskRows) {
+            const title = (row.title || '').toLowerCase();
+            const isExam = title.includes('exam') || row.priority === 'high';
+
+            feed.push({
+                id: row.id,
+                feedType: isExam ? 'exam' : 'assignment',
+                title: row.title,
+                message: row.description,
+                type: isExam ? 'exam' : 'assignment',
+                courseId: row.course_id,
+                dueDate: row.due_date,
+                points: row.points,
+                status: row.status,
+                createdBy: row.created_by,
+                createdAt: row.created_at,
+            });
+        }
+
+        // Sort by createdAt descending
+        feed.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.json({ success: true, feed, course: courseRows[0] });
+    } catch (error) {
+        console.error('Get course feed error:', error);
+        res.status(500).json({ error: 'Failed to get course feed' });
     }
 });
 
@@ -1147,6 +1550,72 @@ app.get('/api/courses/:id/content', async (req, res) => {
     } catch (error) {
         console.error('Get course content error:', error);
         res.status(500).json({ error: 'Failed to get course content' });
+    }
+});
+
+// Get courses assigned to a professor (by email)
+app.get('/api/courses/professor/:email', async (req, res) => {
+    try {
+        const email = decodeURIComponent(req.params.email);
+
+        // 1. Courses where professor is in professors JSON or created content
+        const [rows] = await pool.execute(`
+            SELECT DISTINCT c.* FROM courses c
+            WHERE c.professors LIKE ?
+               OR c.professors LIKE ?
+               OR c.id IN (SELECT DISTINCT course_id FROM course_content WHERE created_by = ?)
+               OR c.id IN (SELECT DISTINCT course_id FROM tasks WHERE created_by = ?)
+               OR c.id IN (SELECT DISTINCT course_id FROM announcements WHERE created_by = ?)
+        `, [`%${email}%`, `%${email.split('@')[0]}%`, email, email, email]);
+
+        // 2. Also check doctor_courses table (explicit assignments)
+        const [dcRows] = await pool.execute(`
+            SELECT c.* FROM courses c
+            INNER JOIN doctor_courses dc ON dc.course_id = c.id
+            WHERE dc.doctor_email = ?
+        `, [email]);
+
+        // Merge, deduplicate by id
+        const courseMap = new Map();
+        for (const c of rows) courseMap.set(c.id, c);
+        for (const c of dcRows) {
+            if (!courseMap.has(c.id)) courseMap.set(c.id, c);
+        }
+
+        const courses = Array.from(courseMap.values()).map(course => ({
+            ...course,
+            professors: parseJson(course.professors),
+            schedule: parseJson(course.schedule),
+            content: parseJson(course.content),
+            assignments: parseJson(course.assignments),
+            exams: parseJson(course.exams),
+        }));
+
+        // Get enrollment counts for each course
+        for (const course of courses) {
+            try {
+                const [legacyCount] = await pool.execute(
+                    `SELECT COUNT(*) as cnt FROM users WHERE mode = 'student' AND enrolled_courses LIKE ?`,
+                    [`%${course.id}%`]
+                );
+                const [umsCount] = await pool.execute(
+                    `SELECT COUNT(DISTINCT uc.user_id) as cnt FROM ums_courses uc
+                     INNER JOIN users u ON uc.user_id = u.id
+                     WHERE u.mode = 'student' AND (uc.course_code = ? OR uc.course_code LIKE ?)`,
+                    [course.code, `%${course.code}%`]
+                );
+                const enrollmentCount = (legacyCount[0]?.cnt || 0) + (umsCount[0]?.cnt || 0);
+                course.enrollmentCount = enrollmentCount;
+                course.stats = { students: enrollmentCount };
+            } catch (_) {
+                course.stats = { students: 0 };
+            }
+        }
+
+        res.json({ success: true, courses });
+    } catch (error) {
+        console.error('Get professor courses error:', error);
+        res.status(500).json({ error: 'Failed to get professor courses' });
     }
 });
 
@@ -1390,6 +1859,9 @@ app.post('/api/ums/sync', async (req, res) => {
             `, [userId, c.courseCode || '', c.courseName || '', c.creditHours || null, c.section || null, c.instructorName || null, JSON.stringify(c.grades || {})]);
         }
 
+        // Sync courses into the courses table so doctors can post announcements for them
+        await syncUmsCoursesToCatalog(courses);
+
         for (const g of grades) {
             await pool.execute(`
                 INSERT INTO ums_grades (user_id, course_code, course_name, grade, grade_points, credit_hours)
@@ -1602,6 +2074,9 @@ app.post('/api/ums/login', async (req, res) => {
             `, [user.id, c.courseCode || '', c.courseName || '', c.creditHours || null, c.section || null, c.instructorName || null, JSON.stringify(c.grades || {})]);
         }
 
+        // Sync courses into the courses table so doctors can post announcements for them
+        await syncUmsCoursesToCatalog(courses);
+
         // Save grades
         await pool.execute('DELETE FROM ums_grades WHERE user_id = ?', [user.id]);
         for (const g of grades) {
@@ -1626,6 +2101,56 @@ app.post('/api/ums/login', async (req, res) => {
     }
 });
 
+
+// ============ COURSE CATALOG ============
+
+// Create a course (doctor/admin use)
+app.post('/api/courses', async (req, res) => {
+    try {
+        const { code, name, category, creditHours } = req.body;
+        if (!code || !name) return res.status(400).json({ error: 'code and name required' });
+
+        const normalizedCode = code.replace(/\s+/g, '').toUpperCase();
+        const [existing] = await pool.execute('SELECT id FROM courses WHERE code = ?', [normalizedCode]);
+        if (existing.length > 0) {
+            return res.json({ success: true, courseId: existing[0].id, existing: true });
+        }
+
+        const id = generateId();
+        await pool.execute(
+            'INSERT INTO courses (id, code, name, category, credit_hours) VALUES (?, ?, ?, ?, ?)',
+            [id, normalizedCode, name, category || 'GENERAL', creditHours || 3]
+        );
+        res.json({ success: true, courseId: id });
+    } catch (error) {
+        console.error('Create course error:', error);
+        res.status(500).json({ error: 'Failed to create course' });
+    }
+});
+
+// Get all unique courses from UMS data (for doctor course discovery)
+app.get('/api/ums/available-courses', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT
+                REPLACE(uc.course_code, ' ', '') AS normalized_code,
+                uc.course_code,
+                MAX(uc.course_name)               AS course_name,
+                MAX(uc.instructor_name)            AS instructor_name,
+                COUNT(DISTINCT uc.user_id)         AS student_count,
+                c.id                               AS course_id
+            FROM ums_courses uc
+            LEFT JOIN courses c ON c.code = REPLACE(uc.course_code, ' ', '')
+            WHERE uc.course_code IS NOT NULL AND uc.course_code != ''
+            GROUP BY REPLACE(uc.course_code, ' ', ''), uc.course_code, c.id
+            ORDER BY uc.course_code
+        `);
+        res.json({ success: true, courses: rows });
+    } catch (error) {
+        console.error('Get available courses error:', error);
+        res.status(500).json({ error: 'Failed to get available courses' });
+    }
+});
 
 // ============ HEALTH CHECK ============
 
