@@ -20,16 +20,20 @@ class AppNotification {
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
+    final rawRead = json['isRead'] ?? json['is_read'];
+    final rawDate = json['createdAt'] ?? json['created_at'];
+    final rawRefType = json['referenceType'] ?? json['reference_type'];
+    final rawRefId = json['referenceId'] ?? json['reference_id'];
     return AppNotification(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       message: json['message']?.toString() ?? '',
       type: (json['type']?.toString() ?? 'GENERAL').toUpperCase(),
-      referenceType: json['reference_type']?.toString()?.toUpperCase(),
-      referenceId: json['reference_id']?.toString(),
-      isRead: json['is_read'] == true || json['is_read'] == 1,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+      referenceType: rawRefType?.toString().toUpperCase(),
+      referenceId: rawRefId?.toString(),
+      isRead: rawRead == true || rawRead == 1,
+      createdAt: rawDate != null
+          ? DateTime.tryParse(rawDate.toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }

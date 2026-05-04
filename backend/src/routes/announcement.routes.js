@@ -163,9 +163,10 @@ router.post('/',
         }
       });
 
-      // Notify students if course-specific (non-fatal)
-      if (courseId) {
-        try {
+      // Notify students (non-fatal)
+      try {
+        if (courseId) {
+          // Course-specific: notify enrolled students only
           await notifyCourseStudents({
             courseId,
             title: `📢 ${title}`,
@@ -175,9 +176,28 @@ router.post('/',
             referenceId: announcement.id,
             excludeUserId: req.user.id
           });
-        } catch (notifError) {
-          logger.error(`Notification failed for announcement "${title}" (non-fatal):`, notifError.message);
+        } else {
+          // General announcement: notify all students
+          const students = await prisma.user.findMany({
+            where: { role: 'STUDENT' },
+            select: { id: true }
+          });
+          if (students.length > 0) {
+            await prisma.notification.createMany({
+              data: students.map(s => ({
+                userId: s.id,
+                title: `📢 ${title}`,
+                message: message.substring(0, 200),
+                type: 'ANNOUNCEMENT',
+                referenceType: 'ANNOUNCEMENT',
+                referenceId: announcement.id
+              }))
+            });
+            logger.info(`📢 Notified ${students.length} students about general announcement: ${title}`);
+          }
         }
+      } catch (notifError) {
+        logger.error(`Notification failed for announcement "${title}" (non-fatal):`, notifError.message);
       }
 
       logger.info(`✅ Announcement created: ${title}`);

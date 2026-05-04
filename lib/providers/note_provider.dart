@@ -47,15 +47,18 @@ class NoteStateNotifier extends StateNotifier<NoteState> {
   }
 
   Future<void> fetchNotes({bool force = false}) async {
+    if (!mounted) return;
     state = state.copyWith(isLoading: true, error: null);
     try {
       final notes = await DataService.getNotes();
+      if (!mounted) return;
       state = state.copyWith(
         notes: notes,
         isLoading: false,
         lastFetched: DateTime.now(),
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -74,12 +77,13 @@ class NoteStateNotifier extends StateNotifier<NoteState> {
       updatedAt: DateTime.now(),
     );
 
-    // Optimistic update
+    if (!mounted) return;
     state = state.copyWith(notes: [tempNote, ...state.notes]);
 
     try {
       final result = await DataService.createNote(title, content);
       print('[NoteProvider] createNote result: $result');
+      if (!mounted) return;
       if (result != null) {
         state = state.copyWith(
           notes: state.notes.map((n) => n.id == tempId ? result : n).toList(),
@@ -93,6 +97,7 @@ class NoteStateNotifier extends StateNotifier<NoteState> {
       }
     } catch (e) {
       print('[NoteProvider] addNote error: $e');
+      if (!mounted) return;
       state = state.copyWith(
         notes: state.notes.where((n) => n.id != tempId).toList(),
         error: e.toString(),
@@ -105,17 +110,18 @@ class NoteStateNotifier extends StateNotifier<NoteState> {
     if (noteIndex == -1) return;
 
     final oldNote = state.notes[noteIndex];
-    
-    // Optimistic update
+
+    if (!mounted) return;
     final updatedNotes = List<Note>.from(state.notes);
     updatedNotes[noteIndex] = note;
     state = state.copyWith(notes: updatedNotes);
 
     try {
       final success = await DataService.updateNote(note.id, note.title, note.content);
+      if (!mounted) return;
       if (!success) throw Exception('Failed to update');
     } catch (e) {
-      // Rollback
+      if (!mounted) return;
       final rollbackNotes = List<Note>.from(state.notes);
       rollbackNotes[noteIndex] = oldNote;
       state = state.copyWith(notes: rollbackNotes, error: 'Failed to update note');
@@ -128,16 +134,17 @@ class NoteStateNotifier extends StateNotifier<NoteState> {
 
     final oldNote = state.notes[noteIndex];
 
-    // Optimistic update
+    if (!mounted) return;
     state = state.copyWith(
       notes: state.notes.where((n) => n.id != id).toList()
     );
 
     try {
       final success = await DataService.deleteNote(id);
+      if (!mounted) return;
       if (!success) throw Exception('Failed to delete');
     } catch (e) {
-      // Rollback
+      if (!mounted) return;
       final rollbackNotes = List<Note>.from(state.notes);
       rollbackNotes.insert(noteIndex, oldNote);
       state = state.copyWith(notes: rollbackNotes, error: 'Failed to delete note');

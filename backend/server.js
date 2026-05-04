@@ -865,6 +865,29 @@ app.post('/api/doctor-courses', async (req, res) => {
     }
 });
 
+// Link a doctor to a course by course CODE (easier than knowing the DB UUID)
+// POST /api/doctor-courses/by-code  { doctorEmail, courseCode }
+app.post('/api/doctor-courses/by-code', async (req, res) => {
+    try {
+        const { doctorEmail, courseCode } = req.body;
+        if (!doctorEmail || !courseCode) return res.status(400).json({ error: 'doctorEmail and courseCode required' });
+
+        const normalized = courseCode.replace(/\s+/g, '').toUpperCase();
+        const [courseRows] = await pool.execute('SELECT id FROM courses WHERE code = ?', [normalized]);
+        if (courseRows.length === 0) return res.status(404).json({ error: `Course ${normalized} not found in courses table` });
+
+        const courseId = courseRows[0].id;
+        await pool.execute(
+            'INSERT IGNORE INTO doctor_courses (doctor_email, course_id, is_primary) VALUES (?, ?, TRUE)',
+            [doctorEmail, courseId]
+        );
+        res.json({ success: true, courseId, courseCode: normalized });
+    } catch (error) {
+        console.error('Link doctor by code error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Alias endpoint for Flutter getProfessorCourses (bridges /api/users/professor/courses?email=X)
 app.get('/api/users/professor/courses', async (req, res) => {
     try {
@@ -1037,6 +1060,73 @@ app.post('/api/content/exam', (req, res) => {
     app.handle(req, res);
 });
 
+
+// ============ DIAGNOSTIC ENDPOINT ============
+
+// Check doctor↔course↔student connections for debugging notifications.
+// Usage: GET /api/debug/connections?doctorEmail=X&courseCode=Y&studentId=Z
+app.get('/api/debug/connections', async (req, res) => {
+    try {
+        const { doctorEmail, courseCode, studentId } = req.query;
+        const result = {};
+
+        if (courseCode) {
+            const normalized = courseCode.replace(/\s+/g, '').toUpperCase();
+            const [courseRows] = await pool.execute('SELECT id, code, name, professors FROM courses WHERE code = ?', [normalized]);
+            result.course = courseRows[0] || null;
+
+            if (courseRows.length > 0) {
+                const courseDbId = courseRows[0].id;
+
+                if (doctorEmail) {
+                    const [dcRows] = await pool.execute(
+                        'SELECT * FROM doctor_courses WHERE doctor_email = ? AND course_id = ?',
+                        [doctorEmail, courseDbId]
+                    );
+                    result.doctorLinked = dcRows.length > 0;
+                    result.doctorCourseRow = dcRows[0] || null;
+                }
+
+                const [enrolledStudents] = await pool.execute(`
+                    SELECT DISTINCT u.id, u.email, u.name FROM users u
+                    INNER JOIN ums_courses uc ON uc.user_id = u.id
+                    WHERE u.mode = 'student'
+                      AND (uc.course_code = ? OR REPLACE(uc.course_code, ' ', '') = ?)
+                `, [normalized, normalized]);
+                result.studentsViaUms = enrolledStudents;
+            }
+        }
+
+        if (studentId) {
+            const [studentRows] = await pool.execute(
+                'SELECT id, email, name, student_id, enrolled_courses FROM users WHERE student_id = ? OR id = ?',
+                [studentId, studentId]
+            );
+            result.student = studentRows[0] || null;
+
+            if (studentRows.length > 0) {
+                const [umsCoursesRows] = await pool.execute(
+                    'SELECT course_code, course_name FROM ums_courses WHERE user_id = ?',
+                    [studentRows[0].id]
+                );
+                result.studentUmsCourses = umsCoursesRows;
+            }
+        }
+
+        if (doctorEmail) {
+            const [allDcRows] = await pool.execute(
+                'SELECT dc.course_id, c.code, c.name FROM doctor_courses dc LEFT JOIN courses c ON c.id = dc.course_id WHERE dc.doctor_email = ?',
+                [doctorEmail]
+            );
+            result.doctorAllCourses = allDcRows;
+        }
+
+        res.json({ success: true, ...result });
+    } catch (error) {
+        console.error('Debug connections error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // ============ NOTIFICATIONS ENDPOINTS ============
 
@@ -1231,11 +1321,11 @@ app.get('/api/announcements', async (req, res) => {
                 // 2. UMS courses
                 const userId = userRows[0].id;
                 const [umsRows] = await pool.execute('SELECT course_code FROM ums_courses WHERE user_id = ?', [userId]);
-                
+
                 if (umsRows.length > 0) {
-                    const codes = umsRows.map(r => r.course_code);
+                    // Normalize UMS codes (remove spaces, uppercase) to match courses.code format
+                    const codes = umsRows.map(r => (r.course_code || '').replace(/\s+/g, '').toUpperCase()).filter(Boolean);
                     const placeholders = codes.map(() => '?').join(',');
-                    // We need to find the UUIDs in the courses table that match these UMS codes
                     const [courseUUIDs] = await pool.execute(`SELECT id FROM courses WHERE code IN (${placeholders})`, codes);
                     courseUUIDs.forEach(c => courseIds.add(c.id));
                 }
