@@ -8,6 +8,7 @@ import '../../models/note.dart';
 import '../../models/user.dart';
 import '../../services/data_service.dart';
 import '../add_content_screen.dart';
+import '../course_detail_screen.dart';
 import '../create_exam_screen.dart';
 import '../grading_dashboard.dart';
 import 'course_feed_screen.dart';
@@ -572,10 +573,8 @@ class _CourseCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => CourseFeedScreen(
+            builder: (_) => CourseDetailScreen(
               courseId: course.id,
-              courseName: course.name,
-              courseCode: course.code,
               isDoctorView: true,
             ),
           ),

@@ -5,9 +5,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/course_provider.dart';
 import '../models/course.dart';
 import '../models/task.dart';
+import '../services/data_service.dart';
 import 'assignment_detail_screen.dart';
 import 'create_exam_screen.dart';
 import 'exam_runner_screen.dart';
+import 'grading_dashboard.dart';
 import '../providers/app_session_provider.dart';
 
 class CourseDetailScreen extends ConsumerStatefulWidget {
@@ -611,30 +613,43 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           ),
           child: InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AssignmentDetailScreen(
-                    task: Task(
-                      id: a.id,
-                      title: a.title,
-                      subject: course.name,
-                      dueDate: a.dueDate,
-                      status: a.status == 'GRADED' 
-                          ? TaskStatus.graded 
-                          : a.isSubmitted ? TaskStatus.submitted : TaskStatus.pending,
-                      submission: (a.grade != null || a.status == 'GRADED') 
-                          ? {'grade': a.grade, 'points': a.grade} 
-                          : null,
-                      priority: TaskPriority.medium,
-                      description: a.description,
-                      createdAt: DateTime.now(),
-                      taskType: TaskType.assignment,
-                      attachments: a.attachments,
+              if (widget.isDoctorView) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GradingDashboard(
+                      taskId: a.id,
+                      taskTitle: a.title,
+                      maxPoints: a.maxScore,
                     ),
                   ),
-                ),
-              );
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AssignmentDetailScreen(
+                      task: Task(
+                        id: a.id,
+                        title: a.title,
+                        subject: course.name,
+                        dueDate: a.dueDate,
+                        status: a.status == 'GRADED'
+                            ? TaskStatus.graded
+                            : a.isSubmitted ? TaskStatus.submitted : TaskStatus.pending,
+                        submission: (a.grade != null || a.status == 'GRADED')
+                            ? {'grade': a.grade, 'points': a.grade}
+                            : null,
+                        priority: TaskPriority.medium,
+                        description: a.description,
+                        createdAt: DateTime.now(),
+                        taskType: TaskType.assignment,
+                        attachments: a.attachments,
+                      ),
+                    ),
+                  ),
+                );
+              }
             },
 
             child: Padding(
@@ -818,13 +833,16 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           return InkWell(
             onTap: () {
               if (isProfessor) {
-                 context.push(
-                    '/grading/${e.id}',
-                    extra: {
-                      'title': e.title,
-                      'maxPoints': 100 // We might want to pass real max points if available in Exam model
-                    }
-                 );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GradingDashboard(
+                      taskId: e.id,
+                      taskTitle: e.title,
+                      maxPoints: 100,
+                    ),
+                  ),
+                );
               } else {
                 if (isSubmitted) {
                     String msg = 'You have already submitted this exam.';
