@@ -130,13 +130,14 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
 
     setState(() => _isSubmitting = false);
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assignment submitted successfully!')),
-      );
-      ref.invalidate(tasksProvider); // Refresh task list
-      _fetchTaskDetails(); // Refresh local details
-    } else {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Assignment submitted successfully!')),
+        );
+        // Force refresh tasks to update pending list
+        ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+        _fetchTaskDetails(); // Refresh local details
+      } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Submission failed. Please try again.')),
       );
@@ -168,19 +169,20 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
 
     setState(() => _isSubmitting = false);
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Submission removed.')),
-      );
-      // Reset local submission state
-      setState(() {
-        _uploadedFileUrl = null;
-        _uploadedFileName = null;
-        _notesController.clear();
-      });
-      ref.invalidate(tasksProvider); // Refresh task list
-      _fetchTaskDetails(); // Refresh local details
-    } else {
+     if (success) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Submission removed.')),
+       );
+       // Reset local submission state
+       setState(() {
+         _uploadedFileUrl = null;
+         _uploadedFileName = null;
+         _notesController.clear();
+       });
+       // Force refresh tasks to update pending list
+       ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+       _fetchTaskDetails(); // Refresh local details
+     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to remove submission.')),
       );

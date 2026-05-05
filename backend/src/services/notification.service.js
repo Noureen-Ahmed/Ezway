@@ -127,6 +127,18 @@ const sendToUsers = async (userIds, notification) => {
  */
 const sendToCourseEnrollees = async (courseId, notification, excludeUserId = null) => {
   try {
+    // 1. Get course code to support UMS students
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { code: true }
+    });
+
+    if (!course) {
+      logger.warn(`Course ${courseId} not found in sendToCourseEnrollees`);
+      return { total: 0, sent: 0, failed: 0 };
+    }
+
+    // 2. Find legacy enrollments
     const enrollments = await prisma.enrollment.findMany({
       where: {
         courseId,
@@ -140,12 +152,43 @@ const sendToCourseEnrollees = async (courseId, notification, excludeUserId = nul
       }
     });
 
-    const tokens = enrollments
-      .filter(e => e.user.fcmToken)
-      .map(e => e.user.fcmToken);
+    // 3. Find UMS students enrolled in this course
+    // UMS courses may have spaces, so we need to match by normalized code
+    const normalizedCode = course.code.replace(/\s+/g, '').toUpperCase();
+    
+    const allUmsCourses = await prisma.umsCourse.findMany({
+      where: {
+        ...(excludeUserId && { userId: { not: excludeUserId } })
+      },
+      include: {
+        user: {
+          select: { id: true, fcmToken: true }
+        }
+      }
+    });
+
+    const umsEnrollments = allUmsCourses.filter(uc => {
+      const normalizedUmsCode = uc.courseCode.replace(/\s+/g, '').toUpperCase();
+      return normalizedUmsCode === normalizedCode;
+    });
+
+    // 4. Combine and unique tokens
+    const allUsers = [...enrollments.map(e => e.user), ...umsEnrollments.map(e => e.user)];
+    
+    // Use Map to ensure unique users by ID
+    const uniqueUsersMap = new Map();
+    allUsers.forEach(u => {
+      if (u && !uniqueUsersMap.has(u.id)) {
+        uniqueUsersMap.set(u.id, u);
+      }
+    });
+
+    const tokens = Array.from(uniqueUsersMap.values())
+      .filter(u => u.fcmToken)
+      .map(u => u.fcmToken);
 
     if (tokens.length === 0) {
-      return { total: enrollments.length, sent: 0, failed: 0, reason: 'no_tokens' };
+      return { total: uniqueUsersMap.size, sent: 0, failed: 0, reason: 'no_tokens' };
     }
 
     const batchSize = 500;
@@ -178,7 +221,7 @@ const sendToCourseEnrollees = async (courseId, notification, excludeUserId = nul
       }
     }
 
-    return { total: enrollments.length, sent, failed };
+    return { total: uniqueUsersMap.size, sent, failed };
   } catch (error) {
     logger.error('sendToCourseEnrollees error:', error);
     return { total: 0, sent: 0, failed: 0 };
@@ -256,6 +299,21 @@ const notifyCourseStudents = async ({
   excludeUserId = null
 }) => {
   try {
+    // 1. Get course code to support UMS students
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { code: true }
+    });
+
+    if (!course) {
+      logger.warn(`Course ${courseId} not found in notifyCourseStudents`);
+      return { notified: 0 };
+    }
+
+    // Normalize course code for matching UMS courses
+    const normalizedCode = course.code.replace(/\s+/g, '').toUpperCase();
+
+    // 2. Find legacy enrollments
     const enrollments = await prisma.enrollment.findMany({
       where: {
         courseId,
@@ -265,15 +323,35 @@ const notifyCourseStudents = async ({
       select: { userId: true }
     });
 
-    const userIds = enrollments.map(e => e.userId);
+    // 3. Find UMS students enrolled in this course
+    // UMS courses may have spaces, so we need to match by normalized code
+    // We'll query all UMS courses and filter in code
+    const allUmsCourses = await prisma.umsCourse.findMany({
+      where: {
+        ...(excludeUserId && { userId: { not: excludeUserId } })
+      },
+      select: { userId: true, courseCode: true }
+    });
 
-    if (userIds.length === 0) {
+    const umsEnrollments = allUmsCourses.filter(uc => {
+      const normalizedUmsCode = uc.courseCode.replace(/\s+/g, '').toUpperCase();
+      return normalizedUmsCode === normalizedCode;
+    });
+
+    // 4. Combine and unique user IDs
+    const allUserIds = [
+      ...enrollments.map(e => e.userId),
+      ...umsEnrollments.map(e => e.userId)
+    ];
+    const uniqueUserIds = [...new Set(allUserIds)];
+
+    if (uniqueUserIds.length === 0) {
       return { notified: 0 };
     }
 
-    // Create in-app notifications in bulk
-    await prisma.notification.createMany({
-      data: userIds.map(userId => ({
+    // 5. Create in-app notifications in bulk
+    const createdNotifications = await prisma.notification.createMany({
+      data: uniqueUserIds.map(userId => ({
         userId,
         title,
         message,
@@ -287,12 +365,53 @@ const notifyCourseStudents = async ({
     let pushResult = { sent: 0, failed: 0 };
     try {
       pushResult = await sendToCourseEnrollees(courseId, { title, body: message }, excludeUserId);
+      
+      // Update isPushed flag for notifications that were successfully pushed
+      // We need to find the notifications we just created and update them
+      if (pushResult.sent > 0) {
+        // Get the notifications we just created by matching the criteria
+        const recentNotifications = await prisma.notification.findMany({
+          where: {
+            title,
+            message,
+            type,
+            referenceType,
+            referenceId,
+            userId: { in: uniqueUserIds }
+          },
+          select: { id: true, userId: true }
+        });
+
+        // Get users with FCM tokens who should have received push
+        const usersWithTokens = await prisma.user.findMany({
+          where: {
+            id: { in: uniqueUserIds },
+            fcmToken: { not: null }
+          },
+          select: { id: true }
+        });
+
+        const userIdsWithTokens = new Set(usersWithTokens.map(u => u.id));
+
+        // Update isPushed for users who have tokens
+        const notificationIdsToUpdate = recentNotifications
+          .filter(n => userIdsWithTokens.has(n.userId))
+          .map(n => n.id);
+
+        if (notificationIdsToUpdate.length > 0) {
+          await prisma.notification.updateMany({
+            where: { id: { in: notificationIdsToUpdate } },
+            data: { isPushed: true }
+          });
+          logger.info(`✅ Updated isPushed=true for ${notificationIdsToUpdate.length} notifications`);
+        }
+      }
     } catch (pushError) {
       logger.error('Push notification failed (non-fatal):', pushError.message);
     }
 
-    logger.info(`📢 Notified ${userIds.length} students about: ${title}`);
-    return { notified: userIds.length, pushResult };
+    logger.info(`📢 Notified ${uniqueUserIds.length} students about: ${title} (Push sent: ${pushResult.sent}, Failed: ${pushResult.failed})`);
+    return { notified: uniqueUserIds.length, pushResult };
   } catch (error) {
     // Log but NEVER re-throw — notification failure must not crash the calling route
     logger.error('notifyCourseStudents failed (non-fatal):', error.message);

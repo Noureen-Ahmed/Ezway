@@ -438,15 +438,18 @@ router.post('/courses',
     try {
       const { code, name, category, creditHours = 3, description, semester, year } = req.body;
 
+      // Normalize course code (remove spaces and convert to uppercase)
+      const normalizedCode = code.replace(/\s+/g, '').toUpperCase();
+
       // Check existing
-      const existing = await prisma.course.findUnique({ where: { code } });
+      const existing = await prisma.course.findUnique({ where: { code: normalizedCode } });
       if (existing) {
         throw new ApiError(409, 'Course with this code already exists');
       }
 
       const course = await prisma.course.create({
         data: {
-          code,
+          code: normalizedCode,
           name,
           category,
           creditHours,
@@ -456,7 +459,7 @@ router.post('/courses',
         }
       });
 
-      logger.info(`✅ Admin created course: ${code}`);
+      logger.info(`✅ Admin created course: ${normalizedCode}`);
 
       res.status(201).json({
         success: true,

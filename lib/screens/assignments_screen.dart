@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
+import 'assignment_detail_screen.dart';
+import 'exam_runner_screen.dart';
 
 class AssignmentsScreen extends ConsumerStatefulWidget {
   const AssignmentsScreen({super.key});
@@ -114,6 +116,34 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: ListTile(
+              onTap: () {
+                if (task.taskType == TaskType.assignment) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AssignmentDetailScreen(task: task)),
+                  ).then((_) =>
+                      ref.read(taskStateProvider.notifier).fetchTasks(force: true));
+                } else if (task.taskType == TaskType.exam) {
+                  if (task.status == TaskStatus.submitted ||
+                      task.status == TaskStatus.graded ||
+                      task.status == TaskStatus.completed) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('You have already submitted this exam.')),
+                    );
+                  } else {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                          builder: (context) => ExamRunnerScreen(
+                                taskId: task.id,
+                                courseId: task.courseId ?? '',
+                              )),
+                    ).then((_) =>
+                        ref.read(taskStateProvider.notifier).fetchTasks(force: true));
+                  }
+                }
+              },
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -165,16 +195,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
                 ],
               ),
               trailing: isPending 
-                ? Transform.scale(
-                    scale: 1.2,
-                    child: Checkbox(
-                      value: false, 
-                      onChanged: (val) {
-                        ref.read(taskStateProvider.notifier).toggleTaskStatus(task.id);
-                      },
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    ),
-                  )
+                ? const Icon(Icons.arrow_forward_ios, size: 16)
                 : const Icon(Icons.check_circle, color: Colors.green),
             ),
           ),

@@ -9,7 +9,7 @@ const { prisma } = require('../utils/database');
 const { validate } = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
-const logger = require('../utils/logger');
+const { createNotification } = require('../services/notification.service');
 
 // ============ GET PROFESSOR EXAM OVERVIEW ============
 // Returns exams/assignments created by professor with enrolled student counts
@@ -156,8 +156,8 @@ router.get('/',
           }
         },
         orderBy: [
-          { dueDate: 'asc' },
-          { priority: 'desc' }
+          { createdAt: 'desc' },
+          { dueDate: 'asc' }
         ]
       });
 
@@ -664,16 +664,15 @@ router.post('/submissions/:submissionId/grade',
         include: { task: true }
       });
 
-      // Create Notification
-      await prisma.notification.create({
-        data: {
-          title: 'Assignment Graded',
-          message: `Your assignment for "${submission.task.title}" has been graded. You received ${points} points.`,
-          type: 'GRADE',
-          userId: submission.studentId,
-          referenceId: submission.taskId,
-          referenceType: 'TASK'
-        }
+      // Create Notification with push
+      await createNotification({
+        userId: submission.studentId,
+        title: 'Assignment Graded',
+        message: `Your assignment for "${submission.task.title}" has been graded. You received ${points} points.`,
+        type: 'GRADE',
+        referenceId: submission.taskId,
+        referenceType: 'TASK',
+        sendPush: true
       });
 
       res.json({

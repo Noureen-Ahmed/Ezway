@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
 import '../services/data_service.dart';
 import '../providers/course_provider.dart';
+import '../providers/task_provider.dart';
 
 class ExamRunnerScreen extends ConsumerStatefulWidget {
   final String taskId;
@@ -539,25 +540,28 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
       startedAt: _startTime,
     );
     
-    if (success) {
-      if (mounted) {
-         if (autoSubmit) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Time is up! Exam submitted.')));
-         } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam submitted successfully!')));
-         }
-         
-         // Invalidate course cache to refresh task status
-         ref.invalidate(courseByIdProvider(widget.courseId));
-         
-         // Pop back
-         if (context.canPop()) {
-           context.pop();
-         } else {
-           context.go('/home');
-         }
-      }
-    } else {
+     if (success) {
+       if (mounted) {
+          if (autoSubmit) {
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Time is up! Exam submitted.')));
+          } else {
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam submitted successfully!')));
+          }
+          
+          // Force refresh tasks to update pending list
+          ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+          
+          // Invalidate course cache to refresh task status
+          ref.invalidate(courseByIdProvider(widget.courseId));
+          
+          // Pop back
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+       }
+     } else {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to submit exam. Please try again.')));

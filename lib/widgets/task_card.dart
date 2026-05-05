@@ -13,8 +13,17 @@ class TaskCard extends StatelessWidget {
     this.onCheckboxChanged,
   });
 
+  // Check if task is a personal task (can be manually checked)
+  bool get _isPersonalTask => task.taskType == TaskType.personal;
+
   @override
   Widget build(BuildContext context) {
+    final isCompleted = task.status == TaskStatus.completed;
+    final showCheckbox = _isPersonalTask;
+    final isOverdue = task.dueDate != null && task.dueDate!.isBefore(DateTime.now());
+    final isSubmittedOrGraded = task.status == TaskStatus.submitted || task.status == TaskStatus.graded;
+    final effectiveCompleted = isCompleted || isSubmittedOrGraded || (task.status == TaskStatus.pending && isOverdue);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       elevation: 2,
@@ -25,13 +34,16 @@ class TaskCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Checkbox
-              Checkbox(
-                value: task.status == TaskStatus.completed,
-                onChanged: onCheckboxChanged,
-              ),
+              // Checkbox - only shown for personal tasks
+              if (showCheckbox)
+                Checkbox(
+                  value: isCompleted,
+                  onChanged: onCheckboxChanged,
+                )
+              else
+                const SizedBox(width: 38), // Same width as checkbox for alignment
               const SizedBox(width: 12),
-              
+
               // Task content
               Expanded(
                 child: Column(
@@ -41,12 +53,8 @@ class TaskCard extends StatelessWidget {
                       task.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        decoration: task.status == TaskStatus.completed
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: task.status == TaskStatus.completed
-                            ? Colors.grey.shade600
-                            : null,
+                        decoration: effectiveCompleted ? TextDecoration.lineThrough : null,
+                        color: effectiveCompleted ? Colors.grey.shade600 : null,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -86,7 +94,7 @@ class TaskCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                         ],
-                        
+
                         // Priority badge
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -111,7 +119,7 @@ class TaskCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // More options button
               PopupMenuButton<String>(
                 onSelected: (value) {
@@ -128,52 +136,83 @@ class TaskCard extends StatelessWidget {
                     case 'mark_incomplete':
                       onCheckboxChanged?.call(false);
                       break;
+                    case 'view_submission':
+                      // View submission details
+                      break;
                   }
                 },
-                itemBuilder: (context) => [
-                  if (task.status == TaskStatus.pending)
-                    const PopupMenuItem(
-                      value: 'mark_complete',
+                itemBuilder: (context) {
+                  final items = <PopupMenuEntry<String>>[];
+
+                  if (task.taskType == TaskType.personal) {
+                    if (task.status == TaskStatus.pending) {
+                      items.add(const PopupMenuItem(
+                        value: 'mark_complete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check),
+                            SizedBox(width: 8),
+                            Text('Mark Complete'),
+                          ],
+                        ),
+                      ));
+                    } else if (task.status == TaskStatus.completed) {
+                      items.add(const PopupMenuItem(
+                        value: 'mark_incomplete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.undo),
+                            SizedBox(width: 8),
+                            Text('Mark Incomplete'),
+                          ],
+                        ),
+                      ));
+                    }
+                  } else if (task.taskType == TaskType.assignment || task.taskType == TaskType.exam) {
+                    if (isSubmittedOrGraded) {
+                      items.add(const PopupMenuItem(
+                        value: 'view_submission',
+                        child: Row(
+                          children: [
+                            Icon(Icons.assignment_turned_in),
+                            SizedBox(width: 8),
+                            Text('View Submission'),
+                          ],
+                        ),
+                      ));
+                    }
+                  }
+
+                  // Edit option for personal tasks
+                  if (task.taskType == TaskType.personal) {
+                    items.add(const PopupMenuItem(
+                      value: 'edit',
                       child: Row(
                         children: [
-                          Icon(Icons.check),
+                          Icon(Icons.edit),
                           SizedBox(width: 8),
-                          Text('Mark Complete'),
+                          Text('Edit'),
                         ],
                       ),
-                    ),
-                  if (task.status == TaskStatus.completed)
-                    const PopupMenuItem(
-                      value: 'mark_incomplete',
+                    ));
+                  }
+
+                  // Delete option for personal tasks
+                  if (task.taskType == TaskType.personal) {
+                    items.add(const PopupMenuItem(
+                      value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.undo),
+                          Icon(Icons.delete),
                           SizedBox(width: 8),
-                          Text('Mark Incomplete'),
+                          Text('Delete'),
                         ],
                       ),
-                    ),
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit),
-                        SizedBox(width: 8),
-                        Text('Edit'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete),
-                        SizedBox(width: 8),
-                        Text('Delete'),
-                      ],
-                    ),
-                  ),
-                ],
+                    ));
+                  }
+
+                  return items;
+                },
               ),
             ],
           ),
@@ -185,7 +224,7 @@ class TaskCard extends StatelessWidget {
   Color _getDueDateColor(DateTime dueDate) {
     final now = DateTime.now();
     final difference = dueDate.difference(now);
-    
+
     if (difference.isNegative) {
       return Colors.red; // Overdue
     } else if (difference.inDays <= 1) {
@@ -211,7 +250,7 @@ class TaskCard extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {

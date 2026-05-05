@@ -7,6 +7,7 @@ class AppNotification {
   final String? referenceId;
   final bool isRead;
   final DateTime createdAt;
+  final DateTime? readAt;
 
   const AppNotification({
     required this.id,
@@ -17,11 +18,13 @@ class AppNotification {
     this.referenceId,
     required this.isRead,
     required this.createdAt,
+    this.readAt,
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     final rawRead = json['isRead'] ?? json['is_read'];
     final rawDate = json['createdAt'] ?? json['created_at'];
+    final rawReadAt = json['readAt'] ?? json['read_at'];
     final rawRefType = json['referenceType'] ?? json['reference_type'];
     final rawRefId = json['referenceId'] ?? json['reference_id'];
     return AppNotification(
@@ -35,10 +38,13 @@ class AppNotification {
       createdAt: rawDate != null
           ? DateTime.tryParse(rawDate.toString()) ?? DateTime.now()
           : DateTime.now(),
+      readAt: rawReadAt != null
+          ? DateTime.tryParse(rawReadAt.toString())
+          : null,
     );
   }
 
-  AppNotification copyWith({bool? isRead}) {
+  AppNotification copyWith({bool? isRead, DateTime? readAt}) {
     return AppNotification(
       id: id,
       title: title,
@@ -48,6 +54,7 @@ class AppNotification {
       referenceId: referenceId,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt,
+      readAt: readAt ?? this.readAt,
     );
   }
 }

@@ -251,7 +251,7 @@ class HomeScreen extends ConsumerWidget {
 
                         return Column(
                           children: tasks
-                              .take(3)
+                              .take(10)
                               .map((task) => _TaskItem(
                                     task: task,
                                   ))

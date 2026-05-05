@@ -511,6 +511,20 @@ class _TaskCard extends ConsumerWidget {
         ),
         onTap: () {
           if (task.taskType == TaskType.assignment) {
+            if (isCompleted) {
+              String message = 'This assignment has been completed.';
+              if (task.status == TaskStatus.submitted) {
+                message = 'You have already submitted this assignment.';
+              } else if (task.status == TaskStatus.graded) {
+                message = 'This assignment has been graded.';
+              } else if (task.status == TaskStatus.pending && isOverdue) {
+                message = 'This assignment has expired.';
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(message), backgroundColor: Colors.red),
+              );
+              return;
+            }
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -610,25 +624,26 @@ class _TaskCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.access_time,
-                    size: 14,
-                    color:
-                        _getDueDateColor(task.dueDate!, task.status),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _getDueDateText(task.dueDate!, task.status),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _getDueDateColor(task.dueDate!, task.status),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                 ],
               ),
             ],
+            if (task.status == TaskStatus.submitted)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Submitted',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                   ),
+               ),
+              ),
             if (task.status == TaskStatus.graded &&
                 task.submission != null)
               Container(

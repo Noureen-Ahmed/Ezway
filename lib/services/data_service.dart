@@ -861,18 +861,33 @@ class DataService {
   /// Get notifications for a user by email (from the notifications table)
   static Future<List<Map<String, dynamic>>> getNotifications({String? email}) async {
     try {
+      print('[DataService] Fetching notifications from: ${ApiConfig.baseUrl}/notifications');
+      print('[DataService] Auth token present: ${ApiConfig.authToken != null}');
+      
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/notifications'),
         headers: ApiConfig.authHeaders,
       );
 
+      print('[DataService] Response status: ${response.statusCode}');
+      print('[DataService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+        print('[DataService] Parsed data keys: ${data.keys.toList()}');
+        final notifications = List<Map<String, dynamic>>.from(data['notifications'] ?? []);
+        print('[DataService] Notifications count: ${notifications.length}');
+        return notifications;
+      } else if (response.statusCode == 401) {
+        print('[DataService] Authentication failed - token may be expired');
+        return [];
+      } else {
+        print('[DataService] Error response: ${response.statusCode} - ${response.body}');
+        return [];
       }
-      return [];
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('[DataService] Get notifications error: $e');
+      print('[DataService] Stack trace: $stackTrace');
       return [];
     }
   }

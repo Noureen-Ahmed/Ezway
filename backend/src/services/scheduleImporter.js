@@ -89,21 +89,24 @@ async function upsertCourse(entry) {
 
   if (!courseCode) return null;
 
+  // Normalize course code (remove spaces and convert to uppercase)
+  const normalizedCode = courseCode.replace(/\s+/g, '').toUpperCase();
+
   const programRecord = await prisma.program.findFirst({
     where: { name: program },
     select: { id: true, departmentId: true },
   });
 
   const upserted = await prisma.course.upsert({
-    where: { code: courseCode },
+    where: { code: normalizedCode },
     update: {
       semester,
       academicYear,
       ...(courseName && { name: courseName }),
     },
     create: {
-      code:        courseCode,
-      name:        courseName || courseCode,
+      code:        normalizedCode,
+      name:        courseName || normalizedCode,
       creditHours: creditHours || 3,
       semester,
       academicYear,

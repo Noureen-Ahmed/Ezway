@@ -18,6 +18,8 @@ router.get('/',
     try {
       const { unreadOnly, limit = 50 } = req.query;
 
+      logger.info(`[Notifications] Fetching notifications for userId: ${req.user.id}, unreadOnly: ${unreadOnly}, limit: ${limit}`);
+
       const notifications = await prisma.notification.findMany({
         where: {
           userId: req.user.id,
@@ -27,6 +29,8 @@ router.get('/',
         take: parseInt(limit)
       });
 
+      logger.info(`[Notifications] Found ${notifications.length} notifications for userId: ${req.user.id}`);
+
       // Get unread count
       const unreadCount = await prisma.notification.count({
         where: {
@@ -34,6 +38,8 @@ router.get('/',
           isRead: false
         }
       });
+
+      logger.info(`[Notifications] Unread count: ${unreadCount} for userId: ${req.user.id}`);
 
       res.json({
         success: true,
@@ -51,6 +57,7 @@ router.get('/',
         unreadCount
       });
     } catch (error) {
+      logger.error('[Notifications] Error fetching notifications:', error);
       next(error);
     }
   }

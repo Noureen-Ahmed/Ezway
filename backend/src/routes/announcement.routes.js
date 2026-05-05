@@ -9,7 +9,7 @@ const { prisma } = require('../utils/database');
 const { validate } = require('../middleware/validate');
 const { authenticate, requireProfessor } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
-const { notifyCourseStudents } = require('../services/notification.service');
+const { notifyCourseStudents, sendToUsers } = require('../services/notification.service');
 const logger = require('../utils/logger');
 
 // ============ GET ANNOUNCEMENTS ============
@@ -26,17 +26,39 @@ router.get('/',
         // Get announcements for specific course
         where.courseId = courseId;
       } else {
-        // Get announcements for user's enrolled courses + general announcements
+        // Get announcements for user's enrolled courses (legacy + UMS) + general announcements
+        
+        // 1. Get legacy enrollments
         const enrollments = await prisma.enrollment.findMany({
           where: { userId: req.user.id, status: 'ENROLLED' },
           select: { courseId: true }
         });
 
-        const courseIds = enrollments.map(e => e.courseId);
+        // 2. Get UMS courses and find matching internal course IDs
+        const umsCourses = await prisma.umsCourse.findMany({
+          where: { userId: req.user.id },
+          select: { courseCode: true }
+        });
+        
+        // Normalize UMS course codes (remove spaces) for matching
+        const normalizedUmsCodes = umsCourses.map(c => c.courseCode.replace(/\s+/g, '').toUpperCase());
+        
+        const internalUmsCourses = await prisma.course.findMany({
+          where: { code: { in: normalizedUmsCodes } },
+          select: { id: true }
+        });
+
+        const courseIds = [
+          ...enrollments.map(e => e.courseId),
+          ...internalUmsCourses.map(c => c.id)
+        ];
+        
+        // Ensure unique IDs
+        const uniqueCourseIds = [...new Set(courseIds)];
 
         where = {
           OR: [
-            { courseId: { in: courseIds } },
+            { courseId: { in: uniqueCourseIds } },
             { courseId: null }
           ]
         };
@@ -183,6 +205,9 @@ router.post('/',
             select: { id: true }
           });
           if (students.length > 0) {
+            const studentIds = students.map(s => s.id);
+            
+            // Create in-app notifications
             await prisma.notification.createMany({
               data: students.map(s => ({
                 userId: s.id,
@@ -193,7 +218,44 @@ router.post('/',
                 referenceId: announcement.id
               }))
             });
-            logger.info(`📢 Notified ${students.length} students about general announcement: ${title}`);
+
+            // Send push notifications (best-effort)
+            try {
+              const pushResult = await sendToUsers(studentIds, {
+                title: `📢 ${title}`,
+                body: message.substring(0, 200),
+                data: {
+                  type: 'ANNOUNCEMENT',
+                  referenceId: announcement.id
+                }
+              });
+
+              // Update isPushed flag for notifications that were successfully pushed
+              if (pushResult.sent > 0) {
+                const recentNotifications = await prisma.notification.findMany({
+                  where: {
+                    title: `📢 ${title}`,
+                    referenceType: 'ANNOUNCEMENT',
+                    referenceId: announcement.id,
+                    userId: { in: studentIds }
+                  },
+                  select: { id: true }
+                });
+
+                if (recentNotifications.length > 0) {
+                  await prisma.notification.updateMany({
+                    where: { id: { in: recentNotifications.map(n => n.id) } },
+                    data: { isPushed: true }
+                  });
+                  logger.info(`✅ Updated isPushed=true for ${recentNotifications.length} general announcement notifications`);
+                }
+              }
+
+              logger.info(`📢 Notified ${students.length} students about general announcement: ${title} (Push sent: ${pushResult.sent}, Failed: ${pushResult.failed})`);
+            } catch (pushError) {
+              logger.error(`Push notification failed for general announcement "${title}" (non-fatal):`, pushError.message);
+              logger.info(`📢 Notified ${students.length} students about general announcement: ${title}`);
+            }
           }
         }
       } catch (notifError) {
