@@ -7,6 +7,7 @@ import '../widgets/user_avatar.dart';
 
 import '../models/task.dart';
 import 'exam_grading_screen.dart';
+import 'assignment_grading_screen.dart';
 
 class GradingDashboard extends ConsumerStatefulWidget {
   final String taskId;
@@ -94,7 +95,6 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
   }
 
   void _showGradingDialog(Map<String, dynamic> submission) async {
-    // If it's an exam (has answers), go to detailed grading screen
     if (submission['answers'] != null) {
       if (_task == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -118,139 +118,20 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
       return;
     }
 
-    final pointsController =
-        TextEditingController(text: submission['points']?.toString() ?? '');
-    final feedbackController =
-        TextEditingController(text: submission['feedback'] ?? '');
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Grade Submission'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Student Info
-              Row(
-                children: [
-                  UserAvatar(
-                    name: submission['student']['name'] ?? 'S',
-                    avatarUrl: submission['student']['avatar'],
-                    size: 40,
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(submission['student']['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(submission['student']['email'],
-                          style:
-                              TextStyle(color: Colors.grey[600], fontSize: 12)),
-                    ],
-                  )
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Submission Link
-              if (submission['fileUrl'] != null)
-                ListTile(
-                  leading: const Icon(Icons.attach_file, color: Colors.blue),
-                  title: const Text('View Submission File',
-                      style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline)),
-                  onTap: () => _openFile(submission['fileUrl']),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                ),
-
-              if (submission['notes'] != null && submission['notes'].isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(submission['notes']),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 16),
-
-              // Grade Input
-              TextField(
-                controller: pointsController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Points (Max: ${widget.maxPoints})',
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Feedback Input
-              TextField(
-                controller: feedbackController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Feedback (Optional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AssignmentGradingScreen(
+          submission: submission,
+          taskTitle: widget.taskTitle,
+          maxPoints: widget.maxPoints,
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              final points = double.tryParse(pointsController.text);
-              if (points == null || points < 0 || points > widget.maxPoints) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Invalid points')),
-                );
-                return;
-              }
-
-              final success = await DataService.gradeSubmission(
-                submissionId: submission['id'],
-                points: points,
-                feedback: feedbackController.text,
-              );
-
-              if (mounted) {
-                Navigator.pop(context);
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Grade saved!'),
-                        backgroundColor: Colors.green),
-                  );
-                  _loadSubmissions(); // Reload
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Failed to save grade'),
-                        backgroundColor: Colors.red),
-                  );
-                }
-              }
-            },
-            child: const Text('Save Grade'),
-          ),
-        ],
       ),
     );
+
+    if (result == true) {
+      _loadSubmissions();
+    }
   }
 
   @override

@@ -219,12 +219,14 @@ class CourseContent {
   final String topic;
   final String description;
   final List<String> attachments;
+  final String? contentType;
 
   CourseContent({
     required this.week,
     required this.topic,
     required this.description,
     this.attachments = const [],
+    this.contentType,
   });
 
   Map<String, dynamic> toJson() {
@@ -233,6 +235,7 @@ class CourseContent {
       'topic': topic,
       'description': description,
       'attachments': attachments,
+      if (contentType != null) 'contentType': contentType,
     };
   }
 
@@ -245,6 +248,7 @@ class CourseContent {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      contentType: json['contentType']?.toString(),
     );
   }
 }

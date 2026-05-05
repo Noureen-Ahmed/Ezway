@@ -27,7 +27,7 @@ class CourseDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
-  // 0: Content, 1: Assignments, 2: Exams
+  // 0: Content, 1: Assignments, 2: Exams, 3: Grades
   int _selectedSegment = 1;
 
   @override
@@ -339,6 +339,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                           _segmentButton('Content', 0),
                           _segmentButton('Assignments', 1),
                           _segmentButton('Exams', 2),
+                          _segmentButton('Grades', 3),
                         ],
                       ),
                     ),
@@ -351,8 +352,10 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                     _buildContentSection(course),
                   ] else if (_selectedSegment == 1) ...[
                     _buildAssignmentsSection(course),
-                  ] else ...[
+                  ] else if (_selectedSegment == 2) ...[
                     _buildExamsSection(course),
+                  ] else ...[
+                    _buildGradesSection(course),
                   ],
 
                   const SizedBox(height: 40),
@@ -917,6 +920,133 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           ),
       ],
     );
+  }
+
+  Widget _buildGradesSection(Course course) {
+    final gradesItems = course.content.where((c) => c.contentType == 'GRADES').toList();
+    
+    if (gradesItems.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.grade_outlined, size: 64, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              Text('No grades posted yet',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Grades will appear here when your professor posts them',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: gradesItems.map((g) {
+        return InkWell(
+          onTap: () {
+            if (g.attachments.isNotEmpty) {
+              _openFile(g.attachments.first);
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFEB3B).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.grade, color: Color(0xFFFF9800), size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        g.topic.isNotEmpty ? g.topic : 'Grades Report',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (g.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          g.description,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (g.attachments.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E6AFF).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.picture_as_pdf, size: 16, color: Colors.blue[700]),
+                        const SizedBox(width: 4),
+                        Text(
+                          'View',
+                          style: TextStyle(
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _openFile(String url) async {
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open file')),
+        );
+      }
+    }
   }
 
   String _formatDate(DateTime date) {

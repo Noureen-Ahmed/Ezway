@@ -18,6 +18,7 @@ enum ContentType {
   assignment,
   lectureMaterial,
   announcement,
+  grades,
 }
 
 // ---- SCREEN -----------------------------------------------------------------
@@ -35,12 +36,14 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
     ContentType.assignment: 'Assignment',
     ContentType.lectureMaterial: 'Lecture Material',
     ContentType.announcement: 'Announcement',
+    ContentType.grades: 'Grades',
   };
 
   final Map<ContentType, IconData> _contentTypeIcons = {
     ContentType.assignment: Icons.assignment_outlined,
     ContentType.lectureMaterial: Icons.menu_book_outlined,
     ContentType.announcement: Icons.campaign_outlined,
+    ContentType.grades: Icons.grade_outlined,
   };
 
   ContentType _selectedType = ContentType.assignment;
@@ -247,8 +250,15 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
 
   Future<void> _pickAndUploadFile() async {
     try {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.any);
+      FilePickerResult? result;
+      if (_selectedType == ContentType.grades) {
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        );
+      } else {
+        result = await FilePicker.platform.pickFiles(type: FileType.any);
+      }
 
       if (result != null) {
         setState(() => _isUploading = true);
@@ -361,6 +371,15 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
             message: _descriptionController.text.trim(),
             courseId: _selectedCourseId,
             type: 'GENERAL',
+          );
+          break;
+        case ContentType.grades:
+          success = await DataService.createContent(
+            courseId: _selectedCourseId!,
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            contentType: 'GRADES',
+            attachments: _uploadedFiles,
           );
           break;
       }
@@ -918,20 +937,24 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
             child: _DottedBorderBox(
               child: _isUploading
                   ? const CircularProgressIndicator()
-                  : const Column(
+                  : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.cloud_upload_outlined,
                             size: 34, color: Color(0xFF7A6CF5)),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
-                          'Click to upload or drag and drop',
+                          _selectedType == ContentType.grades
+                              ? 'Click to upload PDF'
+                              : 'Click to upload or drag and drop',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
-                          'PDF, DOC, DOCX, PPT, PPTX (max 10MB)',
+                          _selectedType == ContentType.grades
+                              ? 'PDF only (max 10MB)'
+                              : 'PDF, DOC, DOCX, PPT, PPTX (max 10MB)',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 11, color: Colors.grey),
                         ),
