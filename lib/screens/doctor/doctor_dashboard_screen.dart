@@ -7,11 +7,11 @@ import '../../models/course.dart';
 import '../../models/note.dart';
 import '../../models/user.dart';
 import '../../services/data_service.dart';
-import '../../widgets/loading_shimmer.dart';
 import '../add_content_screen.dart';
 import '../create_exam_screen.dart';
 import '../grading_dashboard.dart';
 import 'course_feed_screen.dart';
+import '../TaskPages/AddNote.dart';
 
 class DoctorDashboardScreen extends ConsumerStatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -23,106 +23,395 @@ class DoctorDashboardScreen extends ConsumerStatefulWidget {
 
 class _DoctorDashboardScreenState
     extends ConsumerState<DoctorDashboardScreen> {
+  int _currentIndex = 0;
 
-  void _addNote() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Note'),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Write your note...',
-            border: OutlineInputBorder(),
-          ),
+  final List<String> _titles = ['Home', 'Courses', 'Grading', 'Notes'];
+
+  @override
+  Widget build(BuildContext context) {
+    final userAsync = ref.watch(currentUserProvider);
+    final user = userAsync.valueOrNull;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF002147),
+        title: Text(
+          _titles[_currentIndex],
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isNotEmpty) {
-                ref.read(noteStateProvider.notifier).addNote(text, null);
-              }
-              Navigator.pop(ctx);
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await ref.read(appSessionControllerProvider.notifier).logout();
             },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563eb)),
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
           ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _HomeTab(user: user),
+          _CoursesTab(user: user, onRefresh: () => ref.invalidate(professorCoursesProvider)),
+          const _GradingTab(),
+          const _NotesTab(),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        height: 80,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: Color(0xFFE5E7EB),
+              width: 1,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+            _buildNavItem(1, Icons.school_outlined, Icons.school, 'Courses'),
+            _buildNavItem(2, Icons.grade_outlined, Icons.grade, 'Grading'),
+            _buildNavItem(3, Icons.note_outlined, Icons.note, 'Notes'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+    final isActive = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isActive ? activeIcon : icon,
+              size: 24,
+              color: isActive ? const Color(0xFF4338CA) : const Color(0xFF9CA3AF),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive ? const Color(0xFF4338CA) : const Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeTab extends StatelessWidget {
+  final User? user;
+  const _HomeTab({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildWelcomeCard(),
+          const SizedBox(height: 24),
+          const Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _ActionCard(
+                icon: Icons.add_circle_outline,
+                label: 'Add Exam',
+                color: const Color(0xFF8B5CF6),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateExamScreen()),
+                ),
+              )),
+              const SizedBox(width: 12),
+              Expanded(child: _ActionCard(
+                icon: Icons.content_copy_outlined,
+                label: 'Add Content',
+                color: const Color(0xFF10B981),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddContentScreen()),
+                ),
+              )),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildAccountCard(),
         ],
       ),
     );
   }
 
-  void _editNote(Note note) {
-    final controller = TextEditingController(text: note.title);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Note'),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          autofocus: true,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
+  Widget _buildWelcomeCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF002147), Color(0xFF1E3A5F)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isNotEmpty) {
-                ref.read(noteStateProvider.notifier).updateNote(
-                  Note(
-                    id: note.id,
-                    title: text,
-                    content: note.content,
-                    createdAt: note.createdAt,
-                    updatedAt: DateTime.now(),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome back,',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14,
                   ),
-                );
-              }
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563eb)),
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?.name ?? 'Doctor',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Manage your courses and student work',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.medical_services_outlined,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _deleteNote(String id) {
-    ref.read(noteStateProvider.notifier).deleteNote(id);
+  Widget _buildAccountCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFeff6ff),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF2563eb)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Account Information',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Row(children: [
+            const Icon(Icons.person, color: Color(0xFF2563eb)),
+            const SizedBox(width: 8),
+            Text(user?.name ?? 'Doctor'),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            const Icon(Icons.email, color: Color(0xFF2563eb)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(user?.email ?? '')),
+          ]),
+          const SizedBox(height: 8),
+          const Row(children: [
+            Icon(Icons.badge, color: Color(0xFF2563eb)),
+            SizedBox(width: 8),
+            Text('Doctor Account'),
+          ]),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoursesTab extends ConsumerWidget {
+  final User? user;
+  final VoidCallback onRefresh;
+
+  const _CoursesTab({required this.user, required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final coursesAsync = ref.watch(professorCoursesProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        onRefresh();
+      },
+      child: coursesAsync.when(
+        data: (courses) {
+          if (courses.isEmpty) {
+            return _buildEmptyState(context, ref);
+          }
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ...courses.map((c) => _CourseCard(course: c)),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () => _showClaimCoursesDialog(context, ref, user),
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  label: const Text('Add another course'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF2563eb),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => const Center(
+          child: Text(
+            'Failed to load courses.',
+            style: TextStyle(color: Color(0xFF6B7280)),
+          ),
+        ),
+      ),
+    );
   }
 
-  void _pushScreen(Widget screen) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => screen),
-    ).then((_) {
-      // Refresh courses when returning from content creation screens
-      ref.invalidate(professorCoursesProvider);
-    });
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.school_outlined, size: 64, color: Color(0xFF9CA3AF)),
+          const SizedBox(height: 16),
+          const Text(
+            'No courses assigned yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Add courses from UMS student data',
+            style: TextStyle(color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _showClaimCoursesDialog(context, ref, user),
+            icon: const Icon(Icons.add),
+            label: const Text('Add Course'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563eb),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  Future<void> _showClaimCoursesDialog(User? user) async {
+  Future<void> _showClaimCoursesDialog(BuildContext context, WidgetRef ref, User? user) async {
     if (user == null) return;
 
-    // Load available courses from UMS student data
     List<Map<String, dynamic>> available = [];
     bool loading = true;
 
@@ -221,7 +510,7 @@ class _DoctorDashboardScreenState
                                       trailing: const Icon(Icons.add_circle, color: Color(0xFF2563eb)),
                                       onTap: () async {
                                         Navigator.pop(ctx);
-                                        await _claimCourse(user, code, name, c['course_id'] as String?);
+                                        await _claimCourse(context, user, code, name, c['course_id'] as String?, ref);
                                       },
                                     ),
                                   );
@@ -237,16 +526,15 @@ class _DoctorDashboardScreenState
     );
   }
 
-  Future<void> _claimCourse(User user, String code, String name, String? existingCourseId) async {
+  Future<void> _claimCourse(BuildContext context, User user, String code, String name, String? existingCourseId, WidgetRef ref) async {
     String? courseId = existingCourseId;
 
-    // Create course in catalog if it doesn't exist yet
     if (courseId == null || courseId.isEmpty) {
       courseId = await DataService.createCourse(code: code, name: name);
     }
 
     if (courseId == null) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to create course'), backgroundColor: Colors.red),
         );
@@ -259,346 +547,25 @@ class _DoctorDashboardScreenState
       courseId: courseId,
     );
 
-    if (mounted) {
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? '$name added to your courses!' : 'Failed to add course'),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
-      if (success) ref.invalidate(professorCoursesProvider);
+      if (success) onRefresh();
     }
   }
+}
+
+class _CourseCard extends StatelessWidget {
+  final Course course;
+
+  const _CourseCard({required this.course});
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(currentUserProvider);
-    final coursesAsync = ref.watch(professorCoursesProvider);
-    final noteState = ref.watch(noteStateProvider);
-    final user = userAsync.valueOrNull;
-
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // ── Header ────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Doctor Dashboard',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        IconButton(
-                          icon:
-                              const Icon(Icons.logout, color: Colors.white),
-                          onPressed: () async {
-                            await ref
-                                .read(appSessionControllerProvider.notifier)
-                                .logout();
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Welcome, ${user?.name ?? 'Doctor'}',
-                      style: const TextStyle(
-                        color: Color(0xFFd1d5db),
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ── White Content Area ─────────────────────────────────────
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(32)),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      await ref
-                          .read(appSessionControllerProvider.notifier)
-                          .refreshProfile();
-                      ref.invalidate(professorCoursesProvider);
-                    },
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Account info card
-                          _buildAccountCard(user),
-                          const SizedBox(height: 24),
-
-                          // Quick Actions
-                          const Text(
-                            'Quick Actions',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ActionCard(
-                                  icon: Icons.fact_check_outlined,
-                                  label: 'Create\nExam',
-                                  color: const Color(0xFF8B5CF6),
-                                  onTap: () => _pushScreen(
-                                      const CreateExamScreen()),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _ActionCard(
-                                  icon: Icons.upload_file_outlined,
-                                  label: 'Add\nContent',
-                                  color: const Color(0xFF10B981),
-                                  onTap: () => _pushScreen(
-                                      const AddContentScreen()),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          _ActionCardWide(
-                            icon: Icons.grading_outlined,
-                            label: 'Grade Assignments & Exams',
-                            color: const Color(0xFFEF4444),
-                            onTap: () => _pushScreen(
-                                const _GradingListScreen()),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Notes section
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'My Notes',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add_circle,
-                                    color: Color(0xFF2563eb)),
-                                onPressed: _addNote,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          if (noteState.isLoading)
-                            const Center(child: CircularProgressIndicator())
-                          else if (noteState.notes.isEmpty)
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFf9fafb),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: const Color(0xFFe5e7eb)),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.sticky_note_2_outlined,
-                                      color: Color(0xFF9ca3af)),
-                                  SizedBox(width: 12),
-                                  Text(
-                                    'No notes yet. Tap + to add one.',
-                                    style:
-                                        TextStyle(color: Color(0xFF9ca3af)),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else
-                            ...noteState.notes.map((note) => _buildNoteCard(note)),
-
-                          const SizedBox(height: 24),
-
-                          // Teaching Courses
-                          const Text(
-                            'Teaching Courses',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 12),
-                          coursesAsync.when(
-                            data: (courses) {
-                              if (courses.isEmpty) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'No courses assigned yet.',
-                                      style: TextStyle(color: Color(0xFF6B7280)),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    ElevatedButton.icon(
-                                      onPressed: () => _showClaimCoursesDialog(user),
-                                      icon: const Icon(Icons.add, size: 18),
-                                      label: const Text('Browse & Add My Courses'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF2563eb),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ...courses.map((c) => _buildCourseCard(c)),
-                                  const SizedBox(height: 8),
-                                  TextButton.icon(
-                                    onPressed: () => _showClaimCoursesDialog(user),
-                                    icon: const Icon(Icons.add_circle_outline, size: 16),
-                                    label: const Text('Add another course'),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: const Color(0xFF2563eb),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                            loading: () =>
-                                const LoadingShimmer(height: 100),
-                            error: (_, __) => const Text(
-                              'Failed to load courses.',
-                              style: TextStyle(color: Color(0xFF6B7280)),
-                            ),
-                          ),
-
-                          const SizedBox(height: 32),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAccountCard(User? user) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFeff6ff),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF2563eb)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Account Information',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          Row(children: [
-            const Icon(Icons.person, color: Color(0xFF2563eb)),
-            const SizedBox(width: 8),
-            Text(user?.name ?? 'Doctor'),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            const Icon(Icons.email, color: Color(0xFF2563eb)),
-            const SizedBox(width: 8),
-            Expanded(child: Text(user?.email ?? '')),
-          ]),
-          const SizedBox(height: 8),
-          const Row(children: [
-            Icon(Icons.badge, color: Color(0xFF2563eb)),
-            SizedBox(width: 8),
-            Text('Doctor Account'),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoteCard(Note note) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFDE68A)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.sticky_note_2,
-              color: Color(0xFFF59E0B), size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(note.title,
-                    style: const TextStyle(fontSize: 14)),
-                const SizedBox(height: 4),
-                Text(
-                  note.createdAt.toString().substring(0, 16),
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF9ca3af)),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _editNote(note),
-            child: const Icon(Icons.edit_outlined,
-                size: 18, color: Color(0xFF9ca3af)),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => _deleteNote(note.id),
-            child: const Icon(Icons.close,
-                size: 18, color: Color(0xFF9ca3af)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCourseCard(Course course) {
     final students = (course.stats?['students'] ?? 0) as int;
     return GestureDetector(
       onTap: () {
@@ -644,13 +611,15 @@ class _DoctorDashboardScreenState
                   Text(
                     course.code,
                     style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF6B7280)),
+                      fontSize: 12, color: Color(0xFF6B7280),
+                    ),
                   ),
                   if (students > 0)
                     Text(
                       '$students students',
                       style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF9CA3AF)),
+                        fontSize: 12, color: Color(0xFF9CA3AF),
+                      ),
                     ),
                 ],
               ),
@@ -663,127 +632,14 @@ class _DoctorDashboardScreenState
   }
 }
 
-// ── Half-width action card ──────────────────────────────────────────────────
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionCard({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
+class _GradingTab extends StatefulWidget {
+  const _GradingTab();
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 26),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-                height: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<_GradingTab> createState() => _GradingTabState();
 }
 
-// ── Full-width action card ──────────────────────────────────────────────────
-
-class _ActionCardWide extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionCardWide({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 26),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios,
-                color: color.withValues(alpha: 0.5), size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Grading list screen ─────────────────────────────────────────────────────
-
-class _GradingListScreen extends StatefulWidget {
-  const _GradingListScreen();
-
-  @override
-  State<_GradingListScreen> createState() => _GradingListScreenState();
-}
-
-class _GradingListScreenState extends State<_GradingListScreen> {
+class _GradingTabState extends State<_GradingTab> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _tasks = [];
   String? _error;
@@ -820,30 +676,20 @@ class _GradingListScreenState extends State<_GradingListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Grade Work'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1F2937),
-        elevation: 0,
-      ),
-      backgroundColor: const Color(0xFFF9FAFB),
-      body: _isLoading
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline,
-                          size: 48, color: Colors.grey),
+                      const Icon(Icons.error_outline, size: 48, color: Colors.grey),
                       const SizedBox(height: 12),
-                      Text(_error!,
-                          style:
-                              const TextStyle(color: Color(0xFF6B7280))),
+                      Text(_error!, style: const TextStyle(color: Color(0xFF6B7280))),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                          onPressed: _load, child: const Text('Retry')),
+                      ElevatedButton(onPressed: _load, child: const Text('Retry')),
                     ],
                   ),
                 )
@@ -852,8 +698,7 @@ class _GradingListScreenState extends State<_GradingListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.grading_outlined,
-                              size: 64, color: Colors.grey),
+                          Icon(Icons.grading_outlined, size: 64, color: Colors.grey),
                           SizedBox(height: 16),
                           Text(
                             'No assignments or exams yet.',
@@ -862,16 +707,11 @@ class _GradingListScreenState extends State<_GradingListScreen> {
                         ],
                       ),
                     )
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _tasks.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, i) =>
-                            _buildTaskCard(context, _tasks[i]),
-                      ),
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _tasks.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) => _buildTaskCard(context, _tasks[i]),
                     ),
     );
   }
@@ -879,8 +719,7 @@ class _GradingListScreenState extends State<_GradingListScreen> {
   Widget _buildTaskCard(BuildContext context, Map<String, dynamic> task) {
     final type = (task['taskType'] ?? 'TASK') as String;
     final isExam = type == 'EXAM';
-    final color =
-        isExam ? const Color(0xFF8B5CF6) : const Color(0xFF3B82F6);
+    final color = isExam ? const Color(0xFF8B5CF6) : const Color(0xFF3B82F6);
     final submissionCount = (task['submissionCount'] ?? 0) as int;
     final enrolledCount = (task['enrolledStudentCount'] ?? 0) as int;
     final course = task['course'] as Map?;
@@ -916,9 +755,7 @@ class _GradingListScreenState extends State<_GradingListScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  isExam
-                      ? Icons.fact_check_outlined
-                      : Icons.assignment_outlined,
+                  isExam ? Icons.fact_check_outlined : Icons.assignment_outlined,
                   color: color,
                   size: 24,
                 ),
@@ -938,8 +775,7 @@ class _GradingListScreenState extends State<_GradingListScreen> {
                     if (course != null && course['code'] != null)
                       Text(
                         course['code'] as String,
-                        style: const TextStyle(
-                            fontSize: 12, color: Color(0xFF6B7280)),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                       ),
                     const SizedBox(height: 4),
                     Row(
@@ -947,18 +783,14 @@ class _GradingListScreenState extends State<_GradingListScreen> {
                         Icon(
                           Icons.people_outline,
                           size: 14,
-                          color: submissionCount > 0
-                              ? const Color(0xFF10B981)
-                              : Colors.grey,
+                          color: submissionCount > 0 ? const Color(0xFF10B981) : Colors.grey,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '$submissionCount / $enrolledCount submitted',
                           style: TextStyle(
                             fontSize: 12,
-                            color: submissionCount > 0
-                                ? const Color(0xFF10B981)
-                                : Colors.grey,
+                            color: submissionCount > 0 ? const Color(0xFF10B981) : Colors.grey,
                           ),
                         ),
                       ],
@@ -969,6 +801,250 @@ class _GradingListScreenState extends State<_GradingListScreen> {
               const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotesTab extends ConsumerWidget {
+  const _NotesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final noteState = ref.watch(noteStateProvider);
+    final notes = noteState.notes;
+    final isLoading = noteState.isLoading;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(noteStateProvider.notifier).fetchNotes(force: true);
+        },
+        child: notes.isEmpty && !isLoading
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 100),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.note_outlined, size: 64, color: Color(0xFF9CA3AF)),
+                        SizedBox(height: 16),
+                        Text(
+                          'No notes yet',
+                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 16),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Tap + to add your first note',
+                          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: notes.length,
+                itemBuilder: (context, index) {
+                  final note = notes[index];
+                  return _NoteCard(
+                    key: ValueKey(note.id),
+                    note: note,
+                    onEdit: () => _editNote(context, ref, note),
+                    onDelete: () => ref.read(noteStateProvider.notifier).deleteNote(note.id),
+                  );
+                },
+              ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _addNote(context, ref),
+        backgroundColor: const Color(0xFF002147),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Future<void> _addNote(BuildContext context, WidgetRef ref) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddNotePage()),
+    );
+
+    if (result != null && result is Map) {
+      ref.read(noteStateProvider.notifier).addNote(
+        result['title'] ?? '',
+        result['description'],
+      );
+    }
+  }
+
+  Future<void> _editNote(BuildContext context, WidgetRef ref, Note note) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => _NoteEditPage(note: note)),
+    );
+
+    if (result != null && result is Map) {
+      ref.read(noteStateProvider.notifier).updateNote(
+        Note(
+          id: note.id,
+          title: result['title'] ?? note.title,
+          content: result['description'] ?? note.content,
+          createdAt: note.createdAt,
+          updatedAt: DateTime.now(),
+        ),
+      );
+    }
+  }
+}
+
+class _NoteCard extends StatelessWidget {
+  final Note note;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _NoteCard({
+    super.key,
+    required this.note,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.note, color: Color(0xFFF59E0B)),
+        ),
+        title: Text(
+          note.title,
+          style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
+        ),
+        subtitle: note.content != null && note.content!.isNotEmpty
+            ? Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  note.content!,
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            : null,
+        trailing: PopupMenuButton(
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'edit', child: Text('Edit')),
+            const PopupMenuItem(value: 'delete', child: Text('Delete')),
+          ],
+          onSelected: (value) {
+            if (value == 'edit') onEdit();
+            if (value == 'delete') onDelete();
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _NoteEditPage extends StatefulWidget {
+  final Note note;
+  const _NoteEditPage({required this.note});
+
+  @override
+  State<_NoteEditPage> createState() => _NoteEditPageState();
+}
+
+class _NoteEditPageState extends State<_NoteEditPage> {
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.note.title);
+    _contentController = TextEditingController(text: widget.note.content ?? '');
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  void _saveNote() {
+    if (_titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title cannot be empty')),
+      );
+      return;
+    }
+
+    Navigator.pop(context, {
+      'title': _titleController.text,
+      'description': _contentController.text,
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Note'),
+        backgroundColor: const Color(0xFF002147),
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Note Title',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _contentController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Note Content',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _saveNote,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF002147),
+                ),
+                child: const Text('Save Changes'),
+              ),
+            ),
+          ],
         ),
       ),
     );

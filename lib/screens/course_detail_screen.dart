@@ -12,10 +12,12 @@ import '../providers/app_session_provider.dart';
 
 class CourseDetailScreen extends ConsumerStatefulWidget {
   final String courseId;
+  final bool isDoctorView;
 
   const CourseDetailScreen({
     super.key,
     required this.courseId,
+    this.isDoctorView = false,
   });
 
   @override
@@ -778,7 +780,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
             ),
           ),
           
-        if (isProfessor)
+        if (isProfessor && !widget.isDoctorView)
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: SizedBox(
