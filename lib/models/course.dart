@@ -14,6 +14,7 @@ class Course {
   final List<CourseContent> content;
   final List<Assignment> assignments;
   final List<Exam> exams;
+  final List<Grades> grades;
   final EnrollmentStatus enrollmentStatus;
   final Map<String, dynamic>? stats;
   final bool isPrimary; // View-specific field for professors
@@ -30,6 +31,7 @@ class Course {
     required this.content,
     required this.assignments,
     required this.exams,
+    required this.grades,
     this.enrollmentStatus = EnrollmentStatus.available,
     this.stats,
     this.isPrimary = false,
@@ -43,11 +45,12 @@ class Course {
     int? creditHours,
     List<String>? professors,
     String? description,
-    List<CourseSchedule>? schedule,
-    List<CourseContent>? content,
-    List<Assignment>? assignments,
-    List<Exam>? exams,
-    EnrollmentStatus? enrollmentStatus,
+      List<CourseSchedule>? schedule,
+      List<CourseContent>? content,
+      List<Assignment>? assignments,
+      List<Exam>? exams,
+      List<Grades>? grades,
+      EnrollmentStatus? enrollmentStatus,
     bool? isPrimary,
   }) {
     return Course(
@@ -62,6 +65,7 @@ class Course {
       content: content ?? this.content,
       assignments: assignments ?? this.assignments,
       exams: exams ?? this.exams,
+      grades: grades ?? this.grades,
       enrollmentStatus: enrollmentStatus ?? this.enrollmentStatus,
       isPrimary: isPrimary ?? this.isPrimary,
     );
@@ -80,6 +84,7 @@ class Course {
       'content': content.map((e) => e.toJson()).toList(),
       'assignments': assignments.map((e) => e.toJson()).toList(),
       'exams': exams.map((e) => e.toJson()).toList(),
+      'grades': grades.map((e) => e.toJson()).toList(),
       'enrollmentStatus': enrollmentStatus.name,
       'stats': stats,
       'isPrimary': isPrimary,
@@ -94,70 +99,41 @@ class Course {
     CourseCategory cat = CourseCategory.comp;
     final catStr = json['category']?.toString();
     if (catStr != null) {
-      cat = CourseCategory.values.firstWhere(
-        (e) => e.name == catStr,
-        orElse: () => CourseCategory.comp,
-      );
+      try {
+        cat = CourseCategory.values.firstWhere(
+          (e) => e.name.toLowerCase() == catStr.toLowerCase(),
+          orElse: () => CourseCategory.comp,
+        );
+      } catch (_) {}
     }
-    
-    // Parse lists safely
-    List<CourseSchedule> scheduleList = [];
-    if (json['schedule'] != null && json['schedule'] is List) {
-      scheduleList = (json['schedule'] as List)
-          .map((e) => CourseSchedule.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    
-    List<CourseContent> contentList = [];
-    if (json['content'] != null && json['content'] is List) {
-      contentList = (json['content'] as List)
-          .map((e) => CourseContent.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    
-    List<Assignment> assignmentList = [];
-    if (json['assignments'] != null && json['assignments'] is List) {
-      assignmentList = (json['assignments'] as List)
-          .map((e) => Assignment.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    
-    List<Exam> examList = [];
-    if (json['exams'] != null && json['exams'] is List) {
-      examList = (json['exams'] as List)
-          .map((e) => Exam.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    
-    // Parse professors safely
-    List<String> profs = [];
-    if (json['professors'] != null && json['professors'] is List) {
-      profs = (json['professors'] as List).map((p) {
-        if (p is Map) {
-          return p['name']?.toString() ?? 'Unknown';
-        }
-        return p?.toString() ?? 'Unknown';
-      }).toList();
-    }
-    
+
     return Course(
       id: json['id']?.toString() ?? '',
       code: json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       category: cat,
       creditHours: creditHrs is int ? creditHrs : int.tryParse(creditHrs.toString()) ?? 3,
-      professors: profs,
+      professors: (json['professors'] as List?)
+              ?.map((e) => e is Map ? (e['name'] ?? '').toString() : e.toString())
+              .toList() ?? [],
       description: json['description']?.toString() ?? '',
-      schedule: scheduleList,
-      content: contentList,
-      assignments: assignmentList,
-      exams: examList,
-      enrollmentStatus: json['enrollmentStatus'] != null
-          ? EnrollmentStatus.values.firstWhere(
-              (e) => e.name == json['enrollmentStatus'],
-              orElse: () => EnrollmentStatus.available)
-          : EnrollmentStatus.available,
-      stats: json['stats'] ?? (json['enrollmentCount'] != null ? {'students': json['enrollmentCount']} : null),
+      schedule: (json['schedule'] as List?)
+              ?.map((e) => CourseSchedule.fromJson(e))
+              .toList() ?? [],
+      content: (json['content'] as List?)
+              ?.map((e) => CourseContent.fromJson(e))
+              .toList() ?? [],
+      assignments: (json['assignments'] as List?)
+              ?.map((e) => Assignment.fromJson(e))
+              .toList() ?? [],
+      exams: (json['exams'] as List?)
+              ?.map((e) => Exam.fromJson(e))
+              .toList() ?? [],
+      grades: (json['grades'] as List?)
+              ?.map((e) => Grades.fromJson(e))
+              .toList() ?? [],
+      enrollmentStatus: json['enrollmentStatus'] == 'enrolled' ? EnrollmentStatus.enrolled : EnrollmentStatus.available,
+      stats: json['stats'] as Map<String, dynamic>?,
       isPrimary: json['isPrimary'] == true,
     );
   }
@@ -165,37 +141,14 @@ class Course {
 
 class CourseSchedule {
   final String day;
-  final String time; // example: "10:00 - 12:00"
-  final String location; // example: "Room 201"
+  final String time;
+  final String location;
 
   CourseSchedule({
     required this.day,
     required this.time,
     required this.location,
   });
-
-  /// Parse start time
-  DateTime? get startTime {
-    try {
-      final parts = time.split('-');
-      return DateTime.parse("2024-01-01 ${parts[0].trim()}:00");
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Parse end time
-  DateTime? get endTime {
-    try {
-      final parts = time.split('-');
-      return DateTime.parse("2024-01-01 ${parts[1].trim()}:00");
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Room = location
-  String get room => location;
 
   Map<String, dynamic> toJson() {
     return {
@@ -207,9 +160,9 @@ class CourseSchedule {
 
   factory CourseSchedule.fromJson(Map<String, dynamic> json) {
     return CourseSchedule(
-      day: json['day']?.toString() ?? 'TBD',
-      time: json['time']?.toString() ?? 'TBD',
-      location: json['location']?.toString() ?? 'TBD',
+      day: json['day']?.toString() ?? '',
+      time: json['time']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
     );
   }
 }
@@ -219,14 +172,12 @@ class CourseContent {
   final String topic;
   final String description;
   final List<String> attachments;
-  final String? contentType;
 
   CourseContent({
     required this.week,
     required this.topic,
     required this.description,
     this.attachments = const [],
-    this.contentType,
   });
 
   Map<String, dynamic> toJson() {
@@ -235,7 +186,6 @@ class CourseContent {
       'topic': topic,
       'description': description,
       'attachments': attachments,
-      if (contentType != null) 'contentType': contentType,
     };
   }
 
@@ -246,9 +196,7 @@ class CourseContent {
       description: json['description']?.toString() ?? '',
       attachments: (json['attachments'] as List?)
               ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      contentType: json['contentType']?.toString(),
+              .toList() ?? [],
     );
   }
 }
@@ -310,12 +258,51 @@ class Assignment {
   get points => null;
 }
 
+class Grades {
+  final String id;
+  final String title;
+  final String description;
+  final List<String> attachments;
+  final DateTime createdAt;
+
+  Grades({
+    required this.id,
+    required this.title,
+    required this.description,
+    this.attachments = const [],
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'attachments': attachments,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
+
+  factory Grades.fromJson(Map<String, dynamic> json) {
+    return Grades(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      attachments: (json['attachments'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ?? [],
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now() : DateTime.now(),
+    );
+  }
+}
+
 class Exam {
   final String id;
   final String title;
   final DateTime date;
   final String format;
   final String gradingBreakdown;
+  final int maxPoints;
   final List<String> attachments;
   final bool isSubmitted;
   final String? status;
@@ -327,6 +314,7 @@ class Exam {
     required this.date,
     required this.format,
     required this.gradingBreakdown,
+    this.maxPoints = 100,
     this.attachments = const [],
     this.isSubmitted = false,
     this.status,
@@ -340,6 +328,7 @@ class Exam {
       'date': date.toIso8601String(),
       'format': format,
       'gradingBreakdown': gradingBreakdown,
+      'maxPoints': maxPoints,
       'attachments': attachments,
       'isSubmitted': isSubmitted,
       'status': status,
@@ -353,6 +342,7 @@ class Exam {
       date: json['date'] != null ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now() : DateTime.now(),
       format: json['format']?.toString() ?? '',
       gradingBreakdown: json['gradingBreakdown']?.toString() ?? '',
+      maxPoints: json['maxPoints'] is int ? json['maxPoints'] : int.tryParse(json['maxPoints']?.toString() ?? '100') ?? 100,
       attachments: (json['attachments'] as List?)
           ?.map((e) => e.toString())
           .toList() ?? [],

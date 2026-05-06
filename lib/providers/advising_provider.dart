@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/advising_message.dart';
 import '../models/user.dart';
 import '../providers/app_session_provider.dart';
+import '../core/api_config.dart';
 
 final advisingProvider = StateNotifierProvider<AdvisingNotifier, AdvisingState>((ref) {
   return AdvisingNotifier(ref);
@@ -43,7 +44,7 @@ class AdvisingState {
 
 class AdvisingNotifier extends StateNotifier<AdvisingState> {
   final Ref _ref;
-  final String _baseUrl = 'https://ezway-production.up.railway.app/api/advising';
+  final String _baseUrl = '${ApiConfig.baseUrl}/advising';
 
   AdvisingNotifier(this._ref) : super(AdvisingState());
 

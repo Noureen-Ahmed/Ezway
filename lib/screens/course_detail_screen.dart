@@ -46,332 +46,318 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
 
           return SafeArea(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1000),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  // ---------- Header Card ----------
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF2749F0),
-                          Color(0xFF1A3AE0),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header row with back button and course code
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Colors.white),
-                              onPressed: () {
-                                if (context.canPop()) {
-                                  context.pop();
-                                } else {
-                                  context.go('/home');
-                                }
-                              },
-                            ),
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.menu_book_rounded,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                course.code,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          course.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            height: 1.15,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.8,
-                          child: Text(
-                            course.description,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 13,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Container(
-                            height: 1, color: Colors.white.withOpacity(0.18)),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Credit Hours',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.85),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    '${course.creditHours}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Professor(s)',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.85),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    course.professors.isNotEmpty
-                                        ? course.professors.join(', ')
-                                        : '-',
-                                    textAlign: TextAlign.right,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  // ---------- Class Schedule Title ----------
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today_outlined, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Class Schedule',
-                        style: TextStyle(
-                          color: Colors.grey.shade800,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // ---------- Schedule Cards ----------
-                  Column(
-                    children: course.schedule.map((s) {
-                      // expecting schedule item fields: day, time, location
-                      final String day = s.day;
-                      final String time = s.time;
-                      final String location = s.location;
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
+                      // ---------- Header Card ----------
+                      Container(
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.grey.shade200),
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF2749F0),
+                              Color(0xFF1A3AE0),
+                            ],
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 12),
-                        child: Row(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF4FF),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.schedule,
-                                  size: 18,
-                                  color: Color(0xFF2E6AFF),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                                  onPressed: () {
+                                    if (context.canPop()) {
+                                      context.pop();
+                                    } else {
+                                      context.go('/home');
+                                    }
+                                  },
                                 ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 12),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    day,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.menu_book_rounded,
+                                      color: Colors.white,
+                                      size: 22,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '$time • $location',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    course.code,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
                                       fontSize: 13,
                                     ),
                                   ),
-                                ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              course.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                height: 1.15,
                               ),
                             ),
-
-                            const SizedBox(width: 8),
-
-                            // Location Display (Non-clickable)
-                            Flexible(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.location_on_outlined,
-                                      size: 18),
-                                  const SizedBox(width: 6),
-                                  Flexible(
-                                    child: Text(
-                                      location,
-                                      style: TextStyle(
-                                        color: Colors.grey.shade700,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.8,
+                              child: Text(
+                                course.description,
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            ),
+                            const SizedBox(height: 14),
+                            Container(height: 1, color: Colors.white.withOpacity(0.18)),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Credit Hours',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.85),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${course.creditHours}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'Professor(s)',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.85),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        course.professors.isNotEmpty ? course.professors.join(', ') : '-',
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // ---------- Segmented Control ----------
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(30),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+
+                      const SizedBox(height: 22),
+
+                      // ---------- Class Schedule Title ----------
+                      Row(
                         children: [
-                          _segmentButton('Content', 0),
-                          _segmentButton('Assignments', 1),
-                          _segmentButton('Exams', 2),
-                          _segmentButton('Grades', 3),
+                          const Icon(Icons.calendar_today_outlined, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Class Schedule',
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+
+                      const SizedBox(height: 12),
+
+                      // ---------- Schedule Cards ----------
+                      Column(
+                        children: course.schedule.map((s) {
+                          final String day = s.day;
+                          final String time = s.time;
+                          final String location = s.location;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF4FF),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.schedule,
+                                      size: 18,
+                                      color: Color(0xFF2E6AFF),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        day,
+                                        style: const TextStyle(fontWeight: FontWeight.w700),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '$time • $location',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.location_on_outlined, size: 18),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          location,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade700,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // ---------- Segmented Control ----------
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _segmentButton('Content', 0),
+                                _segmentButton('Assignments', 1),
+                                _segmentButton('Exams', 2),
+                                _segmentButton('Grades', 3),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // ---------- Selected Section ----------
+                      if (_selectedSegment == 0) ...[
+                        _buildContentSection(course),
+                      ] else if (_selectedSegment == 1) ...[
+                        _buildAssignmentsSection(course),
+                      ] else if (_selectedSegment == 2) ...[
+                        _buildExamsSection(course),
+                      ] else ...[
+                        _buildGradesSection(course),
+                      ],
+
+                      const SizedBox(height: 100),
+                    ],
                   ),
-
-                  const SizedBox(height: 18),
-
-                  // ---------- Selected Section ----------
-                  if (_selectedSegment == 0) ...[
-                    _buildContentSection(course),
-                  ] else if (_selectedSegment == 1) ...[
-                    _buildAssignmentsSection(course),
-                  ] else if (_selectedSegment == 2) ...[
-                    _buildExamsSection(course),
-                  ] else ...[
-                    _buildGradesSection(course),
-                  ],
-
-                  const SizedBox(height: 40),
-                  const SizedBox(height: 100), // Bottom padding for navigation bar
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      );
-    },
-  ),
+          );
+        },
+      ),
     );
   }
 
-  // ---------- helper: segmented buttons ----------
   Widget _segmentButton(String label, int index) {
     final bool selected = _selectedSegment == index;
     return GestureDetector(
@@ -404,14 +390,12 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     );
   }
 
-  // ---------- Content section ----------
   Widget _buildContentSection(Course course) {
     if (course.content.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 28),
-          child: Text('No content yet',
-              style: TextStyle(color: Colors.grey.shade600)),
+          child: Text('No content yet', style: TextStyle(color: Colors.grey.shade600)),
         ),
       );
     }
@@ -419,187 +403,143 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     return Column(
       children: course.content.map((c) {
         return InkWell(
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) => FractionallySizedBox(
-                  heightFactor: 0.9,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (context) => FractionallySizedBox(
+                heightFactor: 0.9,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  c.topic,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                      ),
+                      const SizedBox(height: 24),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(c.topic, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              Text('Week ${c.week}', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                              const SizedBox(height: 24),
+                              const Text('Description', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 8),
+                              Text(c.description, style: TextStyle(color: Colors.grey[700], height: 1.5)),
+                              const SizedBox(height: 24),
+                              if (c.attachments.isNotEmpty) ...[
+                                const Text('Attachments', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
-                                Text(
-                                  'Week ${c.week}',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                const Text(
-                                  'Description',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  c.description,
-                                  style: TextStyle(
-                                    color: Colors.grey[700],
-                                    height: 1.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                if (c.attachments.isNotEmpty) ...[
-                                  const Text(
-                                    'Attachments',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ...c.attachments.map((url) => InkWell(
-                                        onTap: () async {
-                                          final uri = Uri.parse(url);
-                                          if (await canLaunchUrl(uri)) {
-                                            await launchUrl(uri);
-                                          }
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(bottom: 8.0),
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.attach_file,
-                                                  color: Colors.blue),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  url.split('/').last,
-                                                  style: const TextStyle(
-                                                    color: Colors.blue,
-                                                    decoration: TextDecoration.underline,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                ...c.attachments.map((url) => InkWell(
+                                  onTap: () async {
+                                    final uri = Uri.parse(url);
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(uri);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.attach_file, color: Colors.blue),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            url.split('/').last,
+                                            style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
                                           ),
                                         ),
-                                      )),
-                                  const SizedBox(height: 32),
-                                ],
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: () => context.pop(),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF2E6AFF),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
+                                      ],
                                     ),
-                                    child: const Text('Close'),
                                   ),
-                                ),
-                                const SizedBox(height: 20),
+                                )),
+                                const SizedBox(height: 32),
                               ],
-                            ),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () => context.pop(),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2E6AFF),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  child: const Text('Close'),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade200),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF4FF),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                        child: Text('W${c.week}',
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w700))),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF4FF),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(c.topic,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 6),
-                        Text(c.description,
-                            style: TextStyle(color: Colors.grey.shade600)),
-                      ],
-                    ),
+                  child: Center(child: Text('W${c.week}', style: const TextStyle(fontWeight: FontWeight.w700))),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(c.topic, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      Text(c.description, style: TextStyle(color: Colors.grey.shade600)),
+                    ],
                   ),
-                ],
-              ),
-            ));
+                ),
+              ],
+            ),
+          ),
+        );
       }).toList(),
     );
   }
 
-  // ---------- Assignments section ----------
   Widget _buildAssignmentsSection(Course course) {
     if (course.assignments.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 28),
-        child: Center(
-            child: Text('No assignments yet',
-                style: TextStyle(color: Colors.grey.shade600))),
+        child: Center(child: Text('No assignments yet', style: TextStyle(color: Colors.grey.shade600))),
       );
     }
 
@@ -617,19 +557,11 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           child: InkWell(
             onTap: () {
               if (widget.isDoctorView) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => GradingDashboard(
-                      taskId: a.id,
-                      taskTitle: a.title,
-                      maxPoints: a.maxScore,
-                    ),
-                  ),
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(builder: (context) => GradingDashboard(taskId: a.id, taskTitle: a.title, maxPoints: a.maxScore)),
                 );
               } else {
-                Navigator.push(
-                  context,
+                Navigator.of(context, rootNavigator: true).push(
                   MaterialPageRoute(
                     builder: (context) => AssignmentDetailScreen(
                       task: Task(
@@ -637,12 +569,8 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                         title: a.title,
                         subject: course.name,
                         dueDate: a.dueDate,
-                        status: a.status == 'GRADED'
-                            ? TaskStatus.graded
-                            : a.isSubmitted ? TaskStatus.submitted : TaskStatus.pending,
-                        submission: (a.grade != null || a.status == 'GRADED')
-                            ? {'grade': a.grade, 'points': a.grade}
-                            : null,
+                        status: a.status == 'GRADED' ? TaskStatus.graded : a.isSubmitted ? TaskStatus.submitted : TaskStatus.pending,
+                        submission: (a.grade != null || a.status == 'GRADED') ? {'grade': a.grade, 'points': a.grade} : null,
                         priority: TaskPriority.medium,
                         description: a.description,
                         createdAt: DateTime.now(),
@@ -654,72 +582,36 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                 );
               }
             },
-
             child: Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // title + points pill
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          a.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
+                      Expanded(child: Text(a.title, style: const TextStyle(fontWeight: FontWeight.w700))),
                       if (a.status == 'GRADED' && a.grade != null)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: Colors.green[200]!),
-                          ),
-                          child: Text('${a.grade} pts',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: Colors.green[700])),
+                          decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.green[200]!)),
+                          child: Text('${a.grade} pts', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.green[700])),
                         )
                       else
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF4FF),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: const Color(0xFF2E6AFF).withOpacity(0.15)),
-                          ),
-                          child: Text('${a.maxScore} pts',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: Color(0xFF2E6AFF))),
+                          decoration: BoxDecoration(color: const Color(0xFFEFF4FF), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFF2E6AFF).withOpacity(0.15))),
+                          child: Text('${a.maxScore} pts', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF2E6AFF))),
                         )
                     ],
                   ),
-
                   const SizedBox(height: 8),
-
-                  // description
-                  Text(
-                    a.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-
+                  Text(a.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.grey.shade700)),
                   const SizedBox(height: 12),
-
-                  // due date row
                   Row(
                     children: [
                       const Icon(Icons.calendar_month_outlined, size: 16),
                       const SizedBox(width: 8),
-                      Text('Due: ${_formatDate(a.dueDate)}',
-                          style: TextStyle(color: Colors.grey.shade600)),
+                      Text('Due: ${_formatDate(a.dueDate)}', style: TextStyle(color: Colors.grey.shade600)),
                       const Spacer(),
                       Icon(Icons.chevron_right, color: Colors.grey[400]),
                     ],
@@ -733,71 +625,20 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     );
   }
 
-  // ---------- Exams section ----------
   Widget _buildExamsSection(Course course) {
-    // Check if current user is a professor using the session state directly or currentUserProvider
     final sessionState = ref.watch(appSessionControllerProvider);
     final isProfessor = sessionState is AppSessionAuthenticated && sessionState.user.isProfessor;
     
-    // If empty and not professor, show empty state
     if (course.exams.isEmpty && !isProfessor) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 28),
-        child: Center(
-            child: Text('No exams scheduled',
-                style: TextStyle(color: Colors.grey.shade600))),
+        child: Center(child: Text('No exams scheduled', style: TextStyle(color: Colors.grey.shade600))),
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (isProfessor)
-          Container(
-            margin: const EdgeInsets.only(bottom: 16.0),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF4FF),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF2E6AFF).withOpacity(0.2)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2E6AFF).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.people_alt_rounded, color: Color(0xFF2E6AFF), size: 24),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Enrolled Students',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${course.stats?['students'] ?? 0} Students taking this exam',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
         if (isProfessor && !widget.isDoctorView)
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
@@ -805,140 +646,75 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CreateExamScreen(courseId: widget.courseId),
-                    ),
-                  );
-                  if (result == true) {
-                    ref.invalidate(courseByIdProvider(widget.courseId));
-                  }
+                  final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => CreateExamScreen(courseId: widget.courseId)));
+                  if (result == true) ref.invalidate(courseByIdProvider(widget.courseId));
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Add Exam'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E6AFF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E6AFF), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
               ),
             ),
           ),
-          
         ...course.exams.map((e) {
           final isSubmitted = e.isSubmitted;
           final isGraded = e.status == 'GRADED';
-          
           return InkWell(
             onTap: () {
               if (isProfessor) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => GradingDashboard(
-                      taskId: e.id,
-                      taskTitle: e.title,
-                      maxPoints: 100,
-                    ),
-                  ),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (_) => GradingDashboard(taskId: e.id, taskTitle: e.title, maxPoints: e.maxPoints)));
               } else {
                 if (isSubmitted) {
-                    String msg = 'You have already submitted this exam.';
-                    if (e.status == 'GRADED' && e.grade != null) {
-                       msg += ' Grade: ${e.grade}';
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(msg)),
-                    );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ExamRunnerScreen(taskId: e.id, courseId: widget.courseId)),
+                  String msg = 'You have already submitted this exam.';
+                  if (e.status == 'GRADED' && e.grade != null) msg += ' Grade: ${e.grade}';
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                } else if (e.date != null && DateTime.now().isAfter(e.date)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('This exam has expired and is no longer accessible.'))
                   );
+                } else {
+                  Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (_) => ExamRunnerScreen(taskId: e.id, courseId: widget.courseId)));
                 }
               }
             },
             child: Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isSubmitted ? Colors.green[50] : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isSubmitted ? Colors.green[200]! : Colors.grey.shade200
-                ),
-              ),
+              decoration: BoxDecoration(color: isSubmitted ? Colors.green[50] : Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: isSubmitted ? Colors.green[200]! : Colors.grey.shade200)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(e.title,
-                            style: const TextStyle(fontWeight: FontWeight.w700)),
-                      ),
-                      if (isSubmitted)
-                        Chip(
-                          label: Text(isGraded ? 'Graded' : 'Submitted'),
-                          backgroundColor: Colors.green[100],
-                          labelStyle: TextStyle(color: Colors.green[900], fontSize: 12),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                        ),
+                      Expanded(child: Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700))),
+                      if (isSubmitted) Chip(label: Text(isGraded ? 'Graded' : 'Submitted'), backgroundColor: Colors.green[100], labelStyle: TextStyle(color: Colors.green[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Date: ${_formatDate(e.date)}',
-                      style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Date: ${_formatDate(e.date)}', style: TextStyle(color: Colors.grey.shade600)),
                   const SizedBox(height: 6),
-                  Text('Format: ${e.format}',
-                      style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Format: ${e.format}', style: TextStyle(color: Colors.grey.shade600)),
                   const SizedBox(height: 6),
-                  Text('Grading: ${e.gradingBreakdown}',
-                      style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Grading: ${e.gradingBreakdown}', style: TextStyle(color: Colors.grey.shade600)),
                 ],
               ),
             ),
           );
         }),
-        
-        if (course.exams.isEmpty && isProfessor)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Center(
-              child: Text(
-                'No exams scheduled yet',
-                 style: TextStyle(color: Colors.grey.shade500),
-              ),
-            ),
-          ),
       ],
     );
   }
 
   Widget _buildGradesSection(Course course) {
-    final gradesItems = course.content.where((c) => c.contentType == 'GRADES').toList();
-    
-    if (gradesItems.isEmpty) {
+    if (course.grades.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 28),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.grade_outlined, size: 64, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              Text('No grades posted yet',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
-              const SizedBox(height: 8),
-              Text('Grades will appear here when your professor posts them',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+              Text('No grades posted yet', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
             ],
           ),
         ),
@@ -946,89 +722,19 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     }
 
     return Column(
-      children: gradesItems.map((g) {
+      children: course.grades.map((g) {
         return InkWell(
-          onTap: () {
-            if (g.attachments.isNotEmpty) {
-              _openFile(g.attachments.first);
-            }
-          },
+          onTap: () { if (g.attachments.isNotEmpty) _openFile(g.attachments.first); },
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEB3B).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.grade, color: Color(0xFFFF9800), size: 28),
-                ),
+                Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFFFEB3B).withOpacity(0.2), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.grade, color: Color(0xFFFF9800), size: 28)),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        g.topic.isNotEmpty ? g.topic : 'Grades Report',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      if (g.description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          g.description,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (g.attachments.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E6AFF).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.picture_as_pdf, size: 16, color: Colors.blue[700]),
-                        const SizedBox(width: 4),
-                        Text(
-                          'View',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                Expanded(child: Text(g.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+                if (g.attachments.isNotEmpty) const Icon(Icons.picture_as_pdf, color: Colors.red),
               ],
             ),
           ),
@@ -1040,12 +746,6 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
   Future<void> _openFile(String url) async {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open file')),
-        );
-      }
     }
   }
 

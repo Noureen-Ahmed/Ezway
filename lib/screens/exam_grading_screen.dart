@@ -309,12 +309,27 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                           ..selection = TextSelection.collapsed(
                               offset: currentPoints.toString().length),
                     onChanged: (val) {
+                      if (val.isEmpty) return;
                       final newPoints = double.tryParse(val);
                       if (newPoints != null) {
-                        setState(() {
-                          _points[qId] = newPoints;
-                          _calculateTotal();
-                        });
+                        if (newPoints > maxPoints) {
+                          // Cap it at max points
+                          setState(() {
+                            _points[qId] = maxPoints;
+                            _calculateTotal();
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Cannot exceed max points ($maxPoints)'),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            _points[qId] = newPoints;
+                            _calculateTotal();
+                          });
+                        }
                       }
                     },
                   ),

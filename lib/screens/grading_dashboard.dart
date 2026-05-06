@@ -285,7 +285,7 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
                     ),
                     child: Text(
                       isGraded
-                          ? '${submission['points']} / ${widget.maxPoints}'
+                          ? '${submission['points']} / ${_task?.maxPoints ?? widget.maxPoints}'
                           : 'Pending',
                       style: TextStyle(
                         color:

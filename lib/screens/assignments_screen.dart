@@ -132,6 +132,10 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
                       const SnackBar(
                           content: Text('You have already submitted this exam.')),
                     );
+                  } else if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This exam has expired and is no longer accessible.')),
+                    );
                   } else {
                     Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(

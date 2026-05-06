@@ -19,6 +19,7 @@ const { prisma } = require('./utils/database');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const courseRoutes = require('./routes/course.routes');
+const doctorCourseRoutes = require('./routes/doctorCourse.routes');
 const taskRoutes = require('./routes/task.routes');
 const announcementRoutes = require('./routes/announcement.routes');
 const notificationRoutes = require('./routes/notification.routes');
@@ -111,6 +112,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/doctor-courses', doctorCourseRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/notifications', notificationRoutes);

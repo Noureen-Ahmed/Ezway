@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import '../../core/api_config.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
@@ -19,7 +20,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
 
-  static const String _baseUrl = 'https://ezway-production.up.railway.app/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   @override
   void dispose() {

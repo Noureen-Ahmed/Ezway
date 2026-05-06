@@ -460,8 +460,10 @@ function parseCoursesHtml(html) {
     const text = $(el).text().trim();
     const match = text.match(/(.*)\[(.*)\]/);
     if (match) {
+      const rawCode = match[2].trim();
+      const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
       courses.push({
-        courseCode: match[2].trim(),
+        courseCode: normalizedCode,
         courseName: match[1].trim(),
         creditHours: null
       });
@@ -475,8 +477,10 @@ function parseCoursesHtml(html) {
         if (i === 0) return;
         const cells = $(row).find('td');
         if (cells.length >= 2) {
+          const rawCode = $(cells[0]).text().trim();
+          const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
           const course = {
-            courseCode: $(cells[0]).text().trim(),
+            courseCode: normalizedCode,
             courseName: $(cells[1]).text().trim(),
             creditHours: cells.length > 2 ? parseInt($(cells[2]).text().trim()) || null : null,
             section: cells.length > 3 ? $(cells[3]).text().trim() : null,
@@ -503,8 +507,10 @@ function parseGradesHtml(html) {
       if (i === 0) return;
       const cells = $(row).find('td');
       if (cells.length >= 2) {
+        const rawCode = $(cells[0]).text().trim();
+        const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
         const grade = {
-          courseCode: $(cells[0]).text().trim(),
+          courseCode: normalizedCode,
           courseName: $(cells[1]).text().trim(),
           grade: cells.length > 2 ? $(cells[2]).text().trim() : null,
           gradePoints: cells.length > 3 ? parseFloat($(cells[3]).text().trim()) || null : null,
@@ -529,17 +535,21 @@ async function syncStudentData(userId, umsResult) {
   // Sync courses
   for (const course of (umsResult.courses || [])) {
     try {
+      const rawCode = course.courseCode || 'UNKNOWN';
+      const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
+      const rawName = course.courseName || '';
+
       await prisma.umsCourse.upsert({
         where: {
           userId_courseCode_semester_academicYear: {
             userId,
-            courseCode: course.courseCode || 'UNKNOWN',
+            courseCode: normalizedCode,
             semester: course.semester || 'current',
             academicYear: course.academicYear || new Date().getFullYear().toString()
           }
         },
         update: {
-          courseName: course.courseName || '',
+          courseName: rawName,
           creditHours: course.creditHours,
           section: course.section,
           instructorName: course.instructorName,
@@ -548,8 +558,8 @@ async function syncStudentData(userId, umsResult) {
         },
         create: {
           userId,
-          courseCode: course.courseCode || 'UNKNOWN',
-          courseName: course.courseName || '',
+          courseCode: normalizedCode,
+          courseName: rawName,
           creditHours: course.creditHours,
           section: course.section,
           semester: course.semester || 'current',
@@ -561,11 +571,7 @@ async function syncStudentData(userId, umsResult) {
       results.courses++;
 
       // Auto-enroll in specific App Courses, linking them appropriately
-      if (course.courseCode) {
-        const rawCode = course.courseCode || 'UNKNOWN';
-        const rawName = course.courseName || '';
-        const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
-        
+      if (normalizedCode) {
         // 1. Match by normalized code
         let appCourse = await prisma.course.findFirst({
           where: { code: normalizedCode }

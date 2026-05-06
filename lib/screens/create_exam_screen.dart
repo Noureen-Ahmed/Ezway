@@ -37,8 +37,8 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
 
   // Settings
   bool _shuffleQuestions = false;
-  bool _showResultsImmediately = false;
-  bool _isPublished = false;
+  bool _showResultsImmediately = true;
+  bool _isPublished = true;
 
   bool _isLoading = false;
 
@@ -338,8 +338,6 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                   _buildBasicInfoSection(),
                   const SizedBox(height: 24),
                   _buildQuestionsSection(),
-                  const SizedBox(height: 24),
-                  _buildSettingsSection(),
                   const SizedBox(height: 32),
                   _buildSubmitButton(),
                   const SizedBox(height: 120), // Extra padding for bottom nav
@@ -408,6 +406,9 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
           ),
           maxLines: 3,
         ),
+        const SizedBox(height: 24),
+        const Text('Deadline',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -416,7 +417,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                 onTap: () => _showExamDatePicker(),
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Date',
+                    labelText: 'Deadline Date',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.calendar_today),
                   ),
@@ -438,7 +439,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                 },
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Time',
+                    labelText: 'Deadline Time',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.access_time),
                   ),
@@ -574,81 +575,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
     );
   }
 
-  Widget _buildSettingsSection() {
-    // Check if there are any written/TEXT questions
-    final hasWrittenQuestions = _questions.any((q) => q['type'] == 'TEXT');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.settings, color: Color(0xFF002147)),
-              SizedBox(width: 8),
-              Text('Exam Settings',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SwitchListTile(
-            title: const Text('Shuffle Questions'),
-            subtitle: const Text('Randomize question order for each student'),
-            value: _shuffleQuestions,
-            onChanged: (v) => setState(() => _shuffleQuestions = v),
-            contentPadding: EdgeInsets.zero,
-            activeThumbColor: const Color(0xFF002147),
-          ),
-          // Only show if there are NO written questions (auto-grading only works for MCQ/True-False)
-          if (!hasWrittenQuestions)
-            SwitchListTile(
-              title: const Text('Show Results Immediately'),
-              subtitle: const Text(
-                  'Allow students to see their score after submission'),
-              value: _showResultsImmediately,
-              onChanged: (v) => setState(() => _showResultsImmediately = v),
-              contentPadding: EdgeInsets.zero,
-              activeThumbColor: const Color(0xFF002147),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3CD),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline, color: Color(0xFF856404), size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'This exam contains written questions and requires manual grading.',
-                      style: TextStyle(color: Color(0xFF856404), fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          SwitchListTile(
-            title: const Text('Publish Immediately'),
-            subtitle: const Text('Make visible to students now'),
-            value: _isPublished,
-            onChanged: (v) => setState(() => _isPublished = v),
-            contentPadding: EdgeInsets.zero,
-            activeThumbColor: const Color(0xFF002147),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSubmitButton() {
     return SizedBox(

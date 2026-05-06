@@ -11,6 +11,7 @@ import '../widgets/loading_shimmer.dart';
 import 'event_detail_screen.dart';
 import 'assignment_detail_screen.dart';
 import 'TaskPages/Taskdetails.dart';
+import 'exam_runner_screen.dart';
 import 'package:intl/intl.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
@@ -62,27 +63,20 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           ),
         );
       }
-    } else if (type == 'exam' || event.title.toLowerCase().contains('exam')) {
-      // Navigate to course detail for exam info if courseId available
-      if (event.courseId != null && event.courseId!.isNotEmpty) {
-        context.push('/course/${event.courseId}');
-      } else {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => EventDetailScreen(eventId: event.id),
-          ),
-        );
-      }
+    } else if (type == 'exam' || title.contains('exam')) {
+      _navigateToExam(event);
     } else if (type == 'task') {
       // Navigate to task details
       _navigateToTask(event);
     } else {
-      // Default: navigate to event detail screen
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => EventDetailScreen(eventId: event.id),
-        ),
-      );
+      // Default fallback: navigate to course detail if available, else show message
+      if (event.courseId != null && event.courseId!.isNotEmpty) {
+        context.push('/course/${event.courseId}');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Detail for ${event.title} is not available.')),
+        );
+      }
     }
   }
 
@@ -112,11 +106,57 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
       );
     }
     
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (context) => AssignmentDetailScreen(task: matchingTask!),
       ),
     );
+  }
+
+  /// Navigate to exam runner or show submitted toast
+  void _navigateToExam(ScheduleEvent event) {
+    final tasks = ref.read(tasksProvider);
+    Task? matchingTask;
+    
+    try {
+      matchingTask = tasks.firstWhere(
+        (t) => t.id == event.id || t.title.toLowerCase() == event.title.toLowerCase(),
+      );
+    } catch (_) {
+       // Fallback to course detail if no task found
+       if (event.courseId != null) {
+         context.push('/course/${event.courseId}');
+         return;
+       }
+    }
+
+    if (matchingTask != null) {
+      if (matchingTask.status == TaskStatus.submitted || 
+          matchingTask.status == TaskStatus.graded ||
+          matchingTask.status == TaskStatus.completed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exam already submitted')),
+        );
+      } else if (matchingTask.dueDate != null && DateTime.now().isAfter(matchingTask.dueDate!)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This exam has expired and is no longer accessible.')),
+        );
+      } else {
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (context) => ExamRunnerScreen(
+              taskId: matchingTask!.id,
+              courseId: event.courseId ?? '',
+            ),
+          ),
+        );
+      }
+    } else {
+      // If no task and no course ID, show snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exam details not available yet.')),
+      );
+    }
   }
 
   /// Navigate to task detail screen

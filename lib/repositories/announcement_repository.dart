@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/announcement.dart';
+import '../core/api_config.dart';
 
 abstract class AnnouncementRepository {
   Future<List<Announcement>> getAnnouncements();
@@ -10,7 +11,7 @@ abstract class AnnouncementRepository {
 }
 
 class ApiAnnouncementRepository implements AnnouncementRepository {
-  static const String _baseUrl = 'https://ezway-production.up.railway.app/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   @override
   Future<List<Announcement>> getAnnouncements() async {

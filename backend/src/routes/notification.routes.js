@@ -9,6 +9,7 @@ const { prisma } = require('../utils/database');
 const { validate } = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
+const logger = require('../utils/logger');
 
 // ============ GET USER NOTIFICATIONS ============
 
@@ -18,7 +19,7 @@ router.get('/',
     try {
       const { unreadOnly, limit = 50 } = req.query;
 
-      logger.info(`[Notifications] Fetching notifications for userId: ${req.user.id}, unreadOnly: ${unreadOnly}, limit: ${limit}`);
+      logger.info(`[Notifications] Fetching notifications for userId: ${req.user.id}, email: ${req.user.email}, unreadOnly: ${unreadOnly}, limit: ${limit}`);
 
       const notifications = await prisma.notification.findMany({
         where: {

@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
+import '../core/api_config.dart';
 
 /// API Configuration
 class ApiConfig {
-  static const String baseUrl = 'https://ezway-production.up.railway.app/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
   static String? _authToken;
 
   static void setAuthToken(String? token) {

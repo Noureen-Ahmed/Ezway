@@ -43,10 +43,14 @@ router.get('/',
         // Normalize UMS course codes (remove spaces) for matching
         const normalizedUmsCodes = umsCourses.map(c => c.courseCode.replace(/\s+/g, '').toUpperCase());
         
-        const internalUmsCourses = await prisma.course.findMany({
-          where: { code: { in: normalizedUmsCodes } },
-          select: { id: true }
+        // Fetch all courses and filter in memory for robust matching
+        const allCourses = await prisma.course.findMany({
+          select: { id: true, code: true }
         });
+
+        const internalUmsCourses = allCourses.filter(c => 
+          c.code && normalizedUmsCodes.includes(c.code.replace(/\s+/g, '').toUpperCase())
+        );
 
         const courseIds = [
           ...enrollments.map(e => e.courseId),

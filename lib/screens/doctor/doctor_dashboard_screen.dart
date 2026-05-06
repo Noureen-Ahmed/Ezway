@@ -10,7 +10,7 @@ import '../../services/data_service.dart';
 import '../add_content_screen.dart';
 import '../course_detail_screen.dart';
 import '../create_exam_screen.dart';
-import '../grading_dashboard.dart';
+
 import 'course_feed_screen.dart';
 import '../TaskPages/AddNote.dart';
 
@@ -26,7 +26,7 @@ class _DoctorDashboardScreenState
     extends ConsumerState<DoctorDashboardScreen> {
   int _currentIndex = 0;
 
-  final List<String> _titles = ['Home', 'Courses', 'Grading', 'Notes'];
+  final List<String> _titles = ['Home', 'Courses', 'Notes'];
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,6 @@ class _DoctorDashboardScreenState
         children: [
           _HomeTab(user: user),
           _CoursesTab(user: user, onRefresh: () => ref.invalidate(professorCoursesProvider)),
-          const _GradingTab(),
           const _NotesTab(),
         ],
       ),
@@ -77,15 +76,14 @@ class _DoctorDashboardScreenState
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-            _buildNavItem(1, Icons.school_outlined, Icons.school, 'Courses'),
-            _buildNavItem(2, Icons.grade_outlined, Icons.grade, 'Grading'),
-            _buildNavItem(3, Icons.note_outlined, Icons.note, 'Notes'),
-          ],
-        ),
+         child: Row(
+           mainAxisAlignment: MainAxisAlignment.spaceAround,
+           children: [
+             _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+             _buildNavItem(1, Icons.school_outlined, Icons.school, 'Courses'),
+             _buildNavItem(2, Icons.note_outlined, Icons.note, 'Notes'),
+           ],
+         ),
       ),
     );
   }
@@ -631,180 +629,7 @@ class _CourseCard extends StatelessWidget {
   }
 }
 
-class _GradingTab extends StatefulWidget {
-  const _GradingTab();
 
-  @override
-  State<_GradingTab> createState() => _GradingTabState();
-}
-
-class _GradingTabState extends State<_GradingTab> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _tasks = [];
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final data = await DataService.getProfessorExams();
-      if (mounted) {
-        setState(() {
-          _tasks = List<Map<String, dynamic>>.from(
-              (data['exams'] as List?) ?? []);
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load. Pull down to retry.';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                      const SizedBox(height: 12),
-                      Text(_error!, style: const TextStyle(color: Color(0xFF6B7280))),
-                      const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _load, child: const Text('Retry')),
-                    ],
-                  ),
-                )
-              : _tasks.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.grading_outlined, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            'No assignments or exams yet.',
-                            style: TextStyle(color: Color(0xFF6B7280)),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _tasks.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, i) => _buildTaskCard(context, _tasks[i]),
-                    ),
-    );
-  }
-
-  Widget _buildTaskCard(BuildContext context, Map<String, dynamic> task) {
-    final type = (task['taskType'] ?? 'TASK') as String;
-    final isExam = type == 'EXAM';
-    final color = isExam ? const Color(0xFF8B5CF6) : const Color(0xFF3B82F6);
-    final submissionCount = (task['submissionCount'] ?? 0) as int;
-    final enrolledCount = (task['enrolledStudentCount'] ?? 0) as int;
-    final course = task['course'] as Map?;
-    final maxPoints = (task['maxPoints'] ?? 100) as int;
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GradingDashboard(
-              taskId: task['id'] as String,
-              taskTitle: task['title'] as String,
-              maxPoints: maxPoints,
-            ),
-          ),
-        ).then((_) => _load()),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  isExam ? Icons.fact_check_outlined : Icons.assignment_outlined,
-                  color: color,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task['title'] as String,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (course != null && course['code'] != null)
-                      Text(
-                        course['code'] as String,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-                      ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 14,
-                          color: submissionCount > 0 ? const Color(0xFF10B981) : Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$submissionCount / $enrolledCount submitted',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: submissionCount > 0 ? const Color(0xFF10B981) : Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _NotesTab extends ConsumerWidget {
   const _NotesTab();

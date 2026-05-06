@@ -123,7 +123,8 @@ router.post('/login', async (req, res, next) => {
 
         let enrolledCount = 0;
         for (const umsCourse of umsCourses) {
-          const normalizedCode = (umsCourse.courseCode || '').replace(/\s+/g, '').toUpperCase();
+          const rawCode = umsCourse.courseCode || '';
+          const normalizedCode = rawCode.replace(/\s+/g, '').toUpperCase();
           const rawName = umsCourse.courseName || '';
 
           let appCourse = await prisma.course.findFirst({
@@ -144,12 +145,18 @@ router.post('/login', async (req, res, next) => {
           }
 
           if (appCourse) {
-            await prisma.enrollment.upsert({
-              where: { userId_courseId: { userId: localUser.id, courseId: appCourse.id } },
-              update: { status: 'ENROLLED' },
-              create: { userId: localUser.id, courseId: appCourse.id, status: 'ENROLLED' }
-            }).catch(() => {});
-            enrolledCount++;
+            try {
+              await prisma.enrollment.upsert({
+                where: { userId_courseId: { userId: localUser.id, courseId: appCourse.id } },
+                update: { status: 'ENROLLED' },
+                create: { userId: localUser.id, courseId: appCourse.id, status: 'ENROLLED' }
+              });
+              enrolledCount++;
+            } catch (err) {
+              logger.error(`[UMS] Enrollment sync error for ${normalizedCode}:`, err.message);
+            }
+          } else {
+            logger.debug(`[UMS] No matching DB course found for ${normalizedCode} (${rawName})`);
           }
         }
         if (enrolledCount > 0) {
@@ -491,6 +498,39 @@ router.delete('/session', async (req, res, next) => {
     }
 
     res.json({ message: 'UMS session disconnected', dataCleared: clearData === 'true' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============ GET /api/ums/available-courses ============
+// Returns all unique courses extracted from UMS student data (for doctor course discovery)
+router.get('/available-courses', async (req, res, next) => {
+  try {
+    const courses = await prisma.$queryRaw`
+      SELECT 
+        uc.course_code,
+        uc.course_name,
+        uc.instructor_name,
+        c.id as course_id,
+        c.code as normalized_code,
+        COUNT(uc.id) as student_count
+      FROM ums_courses uc
+      LEFT JOIN courses c ON REPLACE(uc.course_code, ' ', '') = REPLACE(c.code, ' ', '')
+      GROUP BY uc.course_code, uc.course_name, uc.instructor_name, c.id, c.code
+      ORDER BY student_count DESC
+    `;
+
+    // Convert BigInt to Number for JSON serialization
+    const serializedCourses = courses.map(c => ({
+      ...c,
+      student_count: Number(c.student_count)
+    }));
+
+    res.json({
+      success: true,
+      courses: serializedCourses
+    });
   } catch (error) {
     next(error);
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../core/api_config.dart';
 
 /// Notification model
 class AppNotification {
@@ -44,7 +45,7 @@ class AppNotification {
 
 /// API Service for notifications
 class ApiNotificationService {
-  static const String _baseUrl = 'https://ezway-production.up.railway.app/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   /// Get notifications for a user
   static Future<List<AppNotification>> getNotifications(String userEmail) async {

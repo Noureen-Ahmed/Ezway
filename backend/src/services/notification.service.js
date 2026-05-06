@@ -152,11 +152,10 @@ const sendToCourseEnrollees = async (courseId, notification, excludeUserId = nul
       }
     });
 
-    // 3. Find UMS students enrolled in this course
-    // UMS courses may have spaces, so we need to match by normalized code
+    // 3. Find UMS students enrolled in this course (using normalized code)
     const normalizedCode = course.code.replace(/\s+/g, '').toUpperCase();
     
-    const allUmsCourses = await prisma.umsCourse.findMany({
+    const allUmsEnrollments = await prisma.umsCourse.findMany({
       where: {
         ...(excludeUserId && { userId: { not: excludeUserId } })
       },
@@ -167,10 +166,9 @@ const sendToCourseEnrollees = async (courseId, notification, excludeUserId = nul
       }
     });
 
-    const umsEnrollments = allUmsCourses.filter(uc => {
-      const normalizedUmsCode = uc.courseCode.replace(/\s+/g, '').toUpperCase();
-      return normalizedUmsCode === normalizedCode;
-    });
+    const umsEnrollments = allUmsEnrollments.filter(e => 
+      e.courseCode && e.courseCode.replace(/\s+/g, '').toUpperCase() === normalizedCode
+    );
 
     // 4. Combine and unique tokens
     const allUsers = [...enrollments.map(e => e.user), ...umsEnrollments.map(e => e.user)];
@@ -323,20 +321,18 @@ const notifyCourseStudents = async ({
       select: { userId: true }
     });
 
-    // 3. Find UMS students enrolled in this course
-    // UMS courses may have spaces, so we need to match by normalized code
-    // We'll query all UMS courses and filter in code
-    const allUmsCourses = await prisma.umsCourse.findMany({
+    // 3. Find UMS students enrolled in this course (using normalized code)
+    // We fetch all potential matches and filter in JS to handle space discrepancies
+    const allUmsEnrollments = await prisma.umsCourse.findMany({
       where: {
         ...(excludeUserId && { userId: { not: excludeUserId } })
       },
       select: { userId: true, courseCode: true }
     });
 
-    const umsEnrollments = allUmsCourses.filter(uc => {
-      const normalizedUmsCode = uc.courseCode.replace(/\s+/g, '').toUpperCase();
-      return normalizedUmsCode === normalizedCode;
-    });
+    const umsEnrollments = allUmsEnrollments.filter(e => 
+      e.courseCode && e.courseCode.replace(/\s+/g, '').toUpperCase() === normalizedCode
+    );
 
     // 4. Combine and unique user IDs
     const allUserIds = [
@@ -344,6 +340,11 @@ const notifyCourseStudents = async ({
       ...umsEnrollments.map(e => e.userId)
     ];
     const uniqueUserIds = [...new Set(allUserIds)];
+
+    logger.info(`[Notifications] Found ${uniqueUserIds.length} target students for course ${course.code} (Internal ID: ${courseId})`);
+    if (uniqueUserIds.length > 0) {
+      logger.debug(`[Notifications] Target User IDs: ${uniqueUserIds.join(', ')}`);
+    }
 
     if (uniqueUserIds.length === 0) {
       return { notified: 0 };

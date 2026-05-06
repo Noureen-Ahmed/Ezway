@@ -81,12 +81,14 @@ class TaskStateNotifier extends StateNotifier<TaskState> {
     
     try {
       final tasks = await DataService.getTasks();
+      if (!mounted) return;
       state = state.copyWith(
         tasks: tasks,
         isLoading: false,
         lastFetched: DateTime.now(),
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -116,6 +118,7 @@ class TaskStateNotifier extends StateNotifier<TaskState> {
       await DataService.toggleTaskComplete(id);
       // Success - no need to do anything, UI already updated
     } catch (e) {
+      if (!mounted) return;
       // ROLLBACK on failure
       final rollbackTasks = List<Task>.from(state.tasks);
       rollbackTasks[taskIndex] = oldTask;

@@ -20,7 +20,7 @@ router.post('/',
   [
     body('courseId').notEmpty().withMessage('Course ID is required'),
     body('title').trim().notEmpty().withMessage('Title is required'),
-    body('contentType').isIn(['LECTURE', 'MATERIAL', 'VIDEO', 'DOCUMENT', 'LINK']),
+    body('contentType').isIn(['LECTURE', 'MATERIAL', 'VIDEO', 'DOCUMENT', 'LINK', 'GRADES']),
     body('description').optional().isString(),
     body('fileUrl').optional().isString(),
     body('attachments').optional().isArray(),
@@ -302,6 +302,103 @@ router.post('/exam',
         }
       });
     } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============ CREATE GRADES ============
+
+router.post('/grades',
+  authenticate,
+  requireProfessor,
+  [
+    body('courseId').notEmpty(),
+    body('title').trim().notEmpty(),
+    body('description').optional().isString(),
+    body('attachments').optional().isArray(),
+    validate
+  ],
+  async (req, res, next) => {
+    try {
+      const { courseId, title, description, attachments } = req.body;
+
+      logger.info(`Creating grades: courseId=${courseId}, title=${title}, attachments=${attachments?.length || 0}`);
+
+      // Verify instructor
+      const isInstructor = await prisma.courseInstructor.findFirst({
+        where: { courseId, userId: req.user.id }
+      });
+
+      if (!isInstructor && req.user.role !== 'ADMIN') {
+        logger.warn(`User ${req.user.id} not authorized to create grades for course ${courseId}`);
+        throw new ApiError(403, 'You do not teach this course');
+      }
+
+      // Get course
+      const course = await prisma.course.findUnique({
+        where: { id: courseId },
+        select: { name: true, code: true }
+      });
+
+      if (!course) {
+        logger.warn(`Course not found: ${courseId}`);
+        throw new ApiError(404, 'Course not found');
+      }
+
+      // Create task
+      const task = await prisma.task.create({
+        data: {
+          title,
+          description,
+          taskType: 'GRADES',
+          priority: 'MEDIUM',
+          maxPoints: 0,
+          attachments,
+          courseId,
+          createdById: req.user.id,
+          published: true
+        }
+      });
+
+      logger.info(`✅ Grades task created: ${task.id} for ${course.code}`);
+
+      // Notify students (non-fatal)
+      try {
+        await notifyCourseStudents({
+          courseId,
+          title: `Grades Posted: ${title}`,
+          message: `${course.code}: ${description || 'New grades available'}`,
+          type: 'GRADE',
+          referenceType: 'TASK',
+          referenceId: task.id,
+          excludeUserId: req.user.id
+        });
+
+        await prisma.announcement.create({
+          data: {
+            courseId,
+            title: `Grades Posted: ${title}`,
+            message: description || 'New grades are now available.',
+            type: 'GRADES',
+            createdById: req.user.id
+          }
+        });
+      } catch (notifError) {
+        logger.error(`Notification/announcement failed for grades "${title}" (non-fatal):`, notifError.message);
+      }
+
+      logger.info(`✅ Grades created: ${title} for ${course.code}`);
+
+      res.status(201).json({
+        success: true,
+        task: {
+          id: task.id,
+          title: task.title
+        }
+      });
+    } catch (error) {
+      logger.error('Error creating grades:', error);
       next(error);
     }
   }

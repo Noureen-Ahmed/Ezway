@@ -679,6 +679,7 @@ class _TaskItem extends StatelessWidget {
     } else if (task.taskType == TaskType.exam) {
       // Check if already submitted
       if (task.status == TaskStatus.completed ||
+          task.status == TaskStatus.submitted ||
           task.status == TaskStatus.graded) {
         String submittedMessage = 'You have already submitted this exam.';
         if (task.grade != null && task.grade != 'graded') {
@@ -686,6 +687,14 @@ class _TaskItem extends StatelessWidget {
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(submittedMessage)),
+        );
+        return;
+      }
+
+      // Check deadline
+      if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This exam has expired and is no longer accessible.')),
         );
         return;
       }

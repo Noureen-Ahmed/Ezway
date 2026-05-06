@@ -263,8 +263,18 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
       if (result != null) {
         setState(() => _isUploading = true);
 
+        // Determine upload type based on content type
+        String uploadType = 'content';
+        if (_selectedType == ContentType.assignment) {
+          uploadType = 'attachment';
+        } else if (_selectedType == ContentType.grades) {
+          uploadType = 'content';
+        } else if (_selectedType == ContentType.lectureMaterial) {
+          uploadType = 'lecture';
+        }
+
         var request = http.MultipartRequest(
-            'POST', Uri.parse('${ApiConfig.baseUrl}/upload'));
+            'POST', Uri.parse('${ApiConfig.baseUrl}/upload?type=$uploadType'));
 
         final authHeader = ApiConfig.authHeaders['Authorization'];
         if (authHeader != null) {
@@ -374,13 +384,14 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
           );
           break;
         case ContentType.grades:
-          success = await DataService.createContent(
+          debugPrint('Creating grades with ${_uploadedFiles.length} attachments');
+          success = await DataService.createGrades(
             courseId: _selectedCourseId!,
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
-            contentType: 'GRADES',
             attachments: _uploadedFiles,
           );
+          debugPrint('Grades creation result: $success');
           break;
       }
     } catch (e) {

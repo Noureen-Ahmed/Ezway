@@ -44,10 +44,21 @@ const formatCourse = (course, studentId = null) => {
       date: t.dueDate || t.startDate,
       format: t.taskType === 'QUIZ' ? 'Quiz' : 'Exam',
       gradingBreakdown: `${t.maxPoints} points`,
+      maxPoints: t.maxPoints || 100,
       attachments: t.attachments || [],
       // Add status info
       isSubmitted: !!submission && submission.status !== 'PENDING',
       status: submission ? submission.status : 'PENDING'
+    };
+  });
+
+  const grades = tasks.filter(t => t.taskType === 'GRADES').map(t => {
+    return {
+      id: t.id,
+      title: t.title,
+      description: t.description || '',
+      attachments: t.attachments || [],
+      createdAt: t.createdAt
     };
   });
 
@@ -80,10 +91,103 @@ const formatCourse = (course, studentId = null) => {
     })),
     assignments: assignments,
     exams: exams,
+    grades: grades,
     enrollmentCount: course._count?.enrollments || 0
   };
 };
 
+
+// ============ CREATE COURSE ============
+router.post('/',
+  authenticate,
+  [
+    body('code').trim().notEmpty().withMessage('Course code is required'),
+    body('name').trim().notEmpty().withMessage('Course name is required'),
+    body('category').optional().trim().toUpperCase(),
+    validate
+  ],
+  async (req, res, next) => {
+    try {
+      const { code, name, category = 'GENERAL' } = req.body;
+      const normalizedCode = code.replace(/\s+/g, '').toUpperCase();
+
+      // Find existing or create
+      let course = await prisma.course.findUnique({
+        where: { code: normalizedCode }
+      });
+
+      if (course) {
+        return res.status(200).json({
+          success: true,
+          message: 'Course already exists',
+          courseId: course.id
+        });
+      }
+
+      course = await prisma.course.create({
+        data: {
+          code: normalizedCode,
+          name,
+          category,
+          isActive: true
+        }
+      });
+
+      logger.info(`✅ Course created: ${normalizedCode} by ${req.user.email}`);
+
+      res.status(201).json({
+        success: true,
+        message: 'Course created successfully',
+        courseId: course.id
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============ ASSIGN DOCTOR TO COURSE ============
+router.post('/assign-doctor',
+  authenticate,
+  [
+    body('courseId').notEmpty().withMessage('Course ID is required'),
+    body('doctorEmail').isEmail().withMessage('Valid doctor email is required'),
+    body('isPrimary').optional().isBoolean(),
+    validate
+  ],
+  async (req, res, next) => {
+    try {
+      const { courseId, doctorEmail, isPrimary = false } = req.body;
+
+      // Find doctor
+      const doctor = await prisma.user.findUnique({
+        where: { email: doctorEmail }
+      });
+
+      if (!doctor || doctor.role !== 'PROFESSOR') {
+        throw new ApiError(404, 'Professor not found with this email');
+      }
+
+      // Assign
+      await prisma.courseInstructor.upsert({
+        where: {
+          userId_courseId: { userId: doctor.id, courseId }
+        },
+        update: { isPrimary },
+        create: { userId: doctor.id, courseId, isPrimary }
+      });
+
+      logger.info(`✅ Assigned ${doctorEmail} to course ${courseId}`);
+
+      res.json({
+        success: true,
+        message: 'Doctor assigned to course successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // ============ GET ALL COURSES ============
 

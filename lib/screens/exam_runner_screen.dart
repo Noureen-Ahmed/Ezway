@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/task.dart';
 import '../services/data_service.dart';
 import '../providers/course_provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/task_provider.dart';
 
 class ExamRunnerScreen extends ConsumerStatefulWidget {
@@ -86,6 +87,24 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
         }
       }
       
+      // BLOCKED: Already submitted check
+      if (task.status == TaskStatus.submitted || task.status == TaskStatus.graded) {
+        setState(() {
+          _error = 'You have already submitted this exam.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // BLOCKED: Deadline check
+      if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
+        setState(() {
+          _error = 'This exam has expired. The deadline was ${DateFormat('MMM d, h:mm a').format(task.dueDate!)}.';
+          _isLoading = false;
+        });
+        return;
+      }
+
       setState(() {
         _task = task;
         _isLoading = false;
@@ -150,7 +169,45 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_error != null) return Scaffold(body: Center(child: Text('Error: $_error')));
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Exam Access'),
+          backgroundColor: const Color(0xFF002147),
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  _error!,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF002147),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     if (_task == null) return const Scaffold(body: Center(child: Text('Exam not found')));
 
     // START SCREEN
@@ -161,66 +218,84 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
           : 60;
           
       return Scaffold(
-        appBar: AppBar(title: Text(_task!.title), automaticallyImplyLeading: true),
-        body: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Stack(
             children: [
-              const Icon(Icons.timer_outlined, size: 80, color: Color(0xFF2E6AFF)),
-              const SizedBox(height: 24),
-              Text(
-                _task!.title,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Are you ready to start the exam? Once you begin, the timer will start and cannot be paused.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue[100]!),
+              // Header / Back Button
+              Positioned(
+                top: 0,
+                left: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+                  onPressed: () => Navigator.pop(context),
                 ),
+              ),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Duration:', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('$durationMins minutes'),
-                      ],
+                    const Icon(Icons.assignment_outlined, size: 80, color: Color(0xFF2E6AFF)),
+                    const SizedBox(height: 24),
+                    Text(
+                      _task!.title,
+                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
+                      textAlign: TextAlign.center,
                     ),
-                    const Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Questions:', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('${questions.length}'),
-                      ],
+                    const SizedBox(height: 12),
+                    if (_task!.description != null && _task!.description!.isNotEmpty)
+                      Text(
+                        _task!.description!,
+                        style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
+                      ),
+                    const SizedBox(height: 32),
+                    
+                    // Info Grid
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F7FF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF2E6AFF).withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildIntroStat('Duration', '$durationMins minutes', Icons.timer_outlined),
+                          const Divider(height: 24),
+                          _buildIntroStat('Questions', '${questions.length}', Icons.quiz_outlined),
+                          const Divider(height: 24),
+                          _buildIntroStat('Total Grade', '${_task!.maxPoints} Points', Icons.grade_outlined),
+                        ],
+                      ),
                     ),
+                    const Spacer(),
+                    
+                    const Text(
+                      'Important: Once started, the timer will begin and you cannot pause the exam.',
+                      style: TextStyle(fontSize: 13, color: Colors.redAccent, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    ElevatedButton(
+                      onPressed: _beginExam,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E6AFF),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('Begin Exam', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: _beginExam,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E6AFF),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Start Exam', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -231,42 +306,62 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
     if (questions.isEmpty) return const Scaffold(body: Center(child: Text('No questions in this exam')));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_task!.title),
-        automaticallyImplyLeading: false, // Prevent accidental back
-        actions: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: _timeLeft.inMinutes < 5 ? Colors.red[50] : Colors.blue[50],
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: _timeLeft.inMinutes < 5 ? Colors.red : Colors.blue,
-              )
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.timer, 
-                  color: _timeLeft.inMinutes < 5 ? Colors.red : Colors.blue, 
-                  size: 20
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _formatDuration(_timeLeft),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: _timeLeft.inMinutes < 5 ? Colors.red : Colors.blue,
-                    fontSize: 16
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom Immersive Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _task!.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _timeLeft.inMinutes < 5 ? Colors.red[50] : Colors.blue[50],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _timeLeft.inMinutes < 5 ? Colors.red : Colors.blue,
+                      )
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.timer, 
+                          color: _timeLeft.inMinutes < 5 ? Colors.red : Colors.blue, 
+                          size: 18
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatDuration(_timeLeft),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: _timeLeft.inMinutes < 5 ? Colors.red : Colors.blue,
+                            fontSize: 15
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
           // Progress Bar
           LinearProgressIndicator(
             value: (_currentQuestionIndex + 1) / questions.length,
@@ -335,73 +430,67 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
                   
                   // Answers Input
                   _buildAnswerInput(questions[_currentQuestionIndex]),
-                  
-                  const SizedBox(height: 80), // Extra padding
-                  
-                  // Attachments removed per user request
-                ],
-              ),
-            ),
-          ),
-          
-          // Navigation Bar
-          SafeArea(
-            top: false,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    offset: const Offset(0, -2),
-                    blurRadius: 10,
-                  )
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                   // Previous Button
-                   if (_currentQuestionIndex > 0)
-                    OutlinedButton.icon(
-                      onPressed: () => setState(() => _currentQuestionIndex--),
-                      icon: const Icon(Icons.arrow_back),
-                      label: const Text('Previous'),
-                    )
-                   else
-                    const SizedBox(width: 100), // Spacer for alignment
-
-                   // Next / Submit Button
-                   if (_currentQuestionIndex < questions.length - 1)
-                    ElevatedButton.icon(
-                      onPressed: () => setState(() => _currentQuestionIndex++),
-                      icon: const Icon(Icons.arrow_forward),
-                      label: const Text('Next'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E6AFF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                    )
-                   else
-                    ElevatedButton.icon(
-                      onPressed: _isSubmitting ? null : _submitExam,
-                      icon: _isSubmitting 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.check_circle),
-                      label: const Text('Submit Exam'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                    ),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    ),
+    bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                offset: const Offset(0, -2),
+                blurRadius: 10,
+              )
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+               // Previous Button
+               if (_currentQuestionIndex > 0)
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _currentQuestionIndex--),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Previous'),
+                )
+               else
+                const SizedBox(width: 100), // Spacer for alignment
+
+               // Next / Submit Button
+               if (_currentQuestionIndex < questions.length - 1)
+                ElevatedButton.icon(
+                  onPressed: () => setState(() => _currentQuestionIndex++),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E6AFF),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                )
+               else
+                ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _submitExam,
+                  icon: _isSubmitting 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.check_circle),
+                  label: const Text('Submit Exam'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -567,5 +656,23 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to submit exam. Please try again.')));
       }
     }
+  }
+  Widget _buildIntroStat(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E6AFF).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 20, color: const Color(0xFF2E6AFF)),
+        ),
+        const SizedBox(width: 12),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 15)),
+        const Spacer(),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1F2937))),
+      ],
+    );
   }
 }

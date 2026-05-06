@@ -1119,7 +1119,43 @@ class DataService {
       return false;
     }
   }
-  
+
+  /// Create grades
+  static Future<bool> createGrades({
+    required String courseId,
+    required String title,
+    String? description,
+    List<String>? attachments,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        'courseId': courseId,
+        'title': title,
+        'description': description,
+        if (attachments != null) 'attachments': attachments,
+      };
+
+      body.removeWhere((key, value) => value == null);
+
+      print('[DataService] Creating grades: ${ApiConfig.baseUrl}/content/grades');
+      print('[DataService] Body: ${jsonEncode(body)}');
+
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/content/grades'),
+        headers: ApiConfig.authHeaders,
+        body: jsonEncode(body),
+      );
+
+      print('[DataService] Response status: ${response.statusCode}');
+      print('[DataService] Response body: ${response.body}');
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('[DataService] Create grades error: $e');
+      return false;
+    }
+  }
+
   /// Create exam
   static Future<bool> createExam({
     required String courseId,
@@ -1261,7 +1297,8 @@ class DataService {
         final data = jsonDecode(response.body);
         final List courses = data['courses'] ?? [];
         return courses.map((c) {
-          final code = (c['course_code'] ?? c['courseCode'] ?? '') as String;
+          final rawCode = (c['course_code'] ?? c['courseCode'] ?? '') as String;
+          final code = rawCode.replaceAll(' ', '').toUpperCase();
           // Embed the code directly in the ID: 'ums-COMP404'
           // This way getCourse('ums-COMP404') works even without a cache
           final umsId = code.isNotEmpty ? 'ums-$code' : 'ums-${c['id']}';
@@ -1271,13 +1308,14 @@ class DataService {
             name: c['course_name'] ?? c['courseName'] ?? '',
             category: CourseCategory.comp,
             creditHours: c['credit_hours'] ?? c['creditHours'] ?? 3,
-            professors: c['instructor_name'] != null ? [c['instructor_name']] 
+            professors: c['instructor_name'] != null ? [c['instructor_name']]
                        : c['instructorName'] != null ? [c['instructorName']] : [],
             description: 'Synced from UMS Portal',
             schedule: [],
             content: [],
             assignments: [],
             exams: [],
+            grades: [],
             enrollmentStatus: EnrollmentStatus.enrolled,
           );
         }).toList();

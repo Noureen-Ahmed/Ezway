@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../storage_services.dart';
 // import 'email_service.dart'; // Removed client-side email service
+import '../../core/api_config.dart';
 
 class VerificationPage extends StatefulWidget {
   final String email;
@@ -25,7 +26,7 @@ class _VerificationPageState extends State<VerificationPage> {
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
   bool _isLoading = false;
 
-  static const String _baseUrl = 'https://ezway-production.up.railway.app/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {

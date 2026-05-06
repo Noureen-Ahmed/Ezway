@@ -41,6 +41,72 @@ const formatUserResponse = (user) => ({
   mode: user.role === 'PROFESSOR' ? 'professor' : 'student'
 });
 
+// ============ ASSIGN COURSE TO DOCTOR ============
+
+router.post('/assign-course',
+  authenticate,
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('courseId').notEmpty(),
+    body('isPrimary').optional().isBoolean(),
+    validate
+  ],
+  async (req, res, next) => {
+    try {
+      const { email, courseId, isPrimary } = req.body;
+
+      // Only admins or the professor themselves can assign courses
+      if (req.user.email !== email && req.user.role !== 'ADMIN') {
+        throw new ApiError(403, 'Access denied');
+      }
+
+      const professor = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, role: true }
+      });
+
+      if (!professor || professor.role !== 'PROFESSOR') {
+        throw new ApiError(404, 'Professor not found');
+      }
+
+      const course = await prisma.course.findUnique({
+        where: { id: courseId }
+      });
+
+      if (!course) {
+        throw new ApiError(404, 'Course not found');
+      }
+
+      // Create or update assignment
+      await prisma.courseInstructor.upsert({
+        where: {
+          userId_courseId: {
+            userId: professor.id,
+            courseId: courseId
+          }
+        },
+        update: {
+          isPrimary: isPrimary !== undefined ? isPrimary : true
+        },
+        create: {
+          userId: professor.id,
+          courseId: courseId,
+          isPrimary: isPrimary !== undefined ? isPrimary : true
+        }
+      });
+
+      logger.info(`✅ Course ${course.code} assigned to doctor: ${email}`);
+
+      res.status(201).json({
+        success: true,
+        message: 'Course assigned successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ GET DEPARTMENTS (METADATA) ============
 
 router.get('/metadata/departments',

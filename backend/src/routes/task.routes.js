@@ -10,6 +10,7 @@ const { validate } = require('../middleware/validate');
 const { authenticate } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 const { createNotification } = require('../services/notification.service');
+const logger = require('../utils/logger');
 
 // ============ GET PROFESSOR EXAM OVERVIEW ============
 // Returns exams/assignments created by professor with enrolled student counts
@@ -115,25 +116,45 @@ router.get('/',
     try {
       const { status, type, courseId, upcoming } = req.query;
 
+      // Get student's UMS course codes for fail-safe matching
+      const umsCourses = await prisma.umsCourse.findMany({
+        where: { userId: req.user.id },
+        select: { courseCode: true }
+      });
+      const umsCodes = umsCourses.map(uc => uc.courseCode.replace(/\s+/g, '').toUpperCase());
+
       // Build where clause
       const where = {
-        OR: [
-          // Tasks from enrolled courses (for students)
+        AND: [
           {
-            course: {
-              enrollments: {
-                some: { userId: req.user.id, status: 'ENROLLED' }
+            OR: [
+              // Tasks from enrolled courses (for students)
+              {
+                course: {
+                  enrollments: {
+                    some: { userId: req.user.id, status: 'ENROLLED' }
+                  }
+                }
+              },
+              // Fail-safe: Tasks from UMS courses (matching by code)
+              {
+                course: {
+                  code: { in: umsCodes }
+                }
+              },
+              // Personal tasks created by user
+              {
+                createdById: req.user.id,
+                taskType: 'PERSONAL'
               }
-            }
+            ]
           },
-          // Personal tasks created by user (exclude course exams/assignments - those are for students, not for the professor who created them)
+          // Exclude GRADES from general lists unless specifically requested
           {
-            createdById: req.user.id,
-            taskType: 'PERSONAL'  // Only personal tasks, not course-related ones
+            taskType: type ? type : { not: 'GRADES' }
           }
         ],
         ...(status && { status }),
-        ...(type && { taskType: type }),
         ...(courseId && { courseId }),
         ...(upcoming === 'true' && {
           dueDate: { gte: new Date() },
@@ -211,6 +232,7 @@ router.get('/pending',
       const tasks = await prisma.task.findMany({
         where: {
           status: { in: ['PENDING', 'IN_PROGRESS'] },
+          taskType: { not: 'GRADES' }, // Exclude grades from pending tasks
           OR: [
             // Tasks from enrolled courses
             {
