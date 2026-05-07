@@ -13,7 +13,7 @@ import 'screens/academic_advising_screen.dart';
 import 'screens/advising_chat_screen.dart';
 import 'screens/courses_list_screen.dart';
 import 'screens/notifications_screen.dart';
-import 'features/admin/schedule_import_page.dart';
+import 'features/admin/admin_panel_page.dart';
 import 'screens/doctor/doctor_dashboard_screen.dart';
 import 'models/user.dart';
 import 'screens/auth/login_screen.dart';
@@ -162,7 +162,7 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
 
         GoRoute(
           path: '/admin',
-          builder: (context, state) => const ScheduleImportPage(),
+          builder: (context, state) => const AdminPanelPage(),
         ),
         GoRoute(
           path: '/doctor',

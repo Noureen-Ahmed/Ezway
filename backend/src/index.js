@@ -122,6 +122,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/ums', umsRoutes);
 app.use('/api/admin/schedule', scheduleImportRoutes);
+app.use('/api/admin/schedule-import', scheduleImportRoutes); // Flutter admin panel alias
 app.use('/api/notes', noteRoutes);
 
 // ============ ERROR HANDLING ============

@@ -41,6 +41,28 @@ const VALID_DAYS = new Set([
   'THURSDAY', 'FRIDAY', 'SATURDAY',
 ]);
 
+// ─── Course-code prefix → DB program name (fallback when page label misses) ──
+// Covers the Biology group pages where BOTA/MICR/ZOOL/ENTM courses are mixed.
+const CODE_PREFIX_PROGRAM = {
+  MATH: 'Pure Mathematics',
+  STAT: 'Statistics',
+  COMP: 'Computer Science',
+  INCO: 'Computer Science',
+  PHYS: 'Physics',
+  BIPH: 'Biophysics',
+  GEOP: 'Geophysics',
+  CHEM: 'Chemistry',
+  BICM: 'Biochemistry',
+  APCH: 'Applied Chemistry',
+  BOTA: 'Botany',
+  ZOOL: 'Zoology',
+  MICR: 'Microbiology',
+  ENTM: 'Entomology',
+  ENTO: 'Entomology',
+  GEOL: 'Geology',
+  ENGL: null,   // university requirement — no specific program
+};
+
 // ─── Run the Python scraper ──────────────────────────────────────────────────
 function runScraper(pdfPath, semester, academicYear) {
   return new Promise((resolve, reject) => {
@@ -84,25 +106,30 @@ function runScraper(pdfPath, semester, academicYear) {
 }
 
 // ─── Upsert a Course record ──────────────────────────────────────────────────
-async function upsertCourse(entry) {
+// programCache: Map<name, {id, departmentId}> — loaded once per import run
+async function upsertCourse(entry, programCache) {
   const { courseCode, courseName, creditHours, semester, academicYear, program } = entry;
 
   if (!courseCode) return null;
 
-  // Normalize course code (remove spaces and convert to uppercase)
   const normalizedCode = courseCode.replace(/\s+/g, '').toUpperCase();
 
-  const programRecord = await prisma.program.findFirst({
-    where: { name: program },
-    select: { id: true, departmentId: true },
-  });
+  // 1. Try the page-level program name directly from cache
+  let programRecord = programCache.get(program) || null;
+
+  // 2. Fallback: look up by course-code prefix so BOTA102 → Botany even when
+  //    the page label says "Biology" (which has no DB entry).
+  if (!programRecord) {
+    const prefix = normalizedCode.match(/^([A-Z]+)/)?.[1] || '';
+    const fallbackName = CODE_PREFIX_PROGRAM[prefix];
+    if (fallbackName) programRecord = programCache.get(fallbackName) || null;
+  }
 
   const upserted = await prisma.course.upsert({
     where: { code: normalizedCode },
     update: {
       semester,
       academicYear,
-      ...(courseName && { name: courseName }),
     },
     create: {
       code:        normalizedCode,
@@ -179,6 +206,12 @@ function validateEntry(entry) {
 async function importScheduleFromPdf({ pdfPath, semester, academicYear, dryRun = false }) {
   const startTime = Date.now();
 
+  // Load all DB programs once — avoids a DB query per schedule entry
+  const allPrograms = await prisma.program.findMany({
+    select: { name: true, id: true, departmentId: true },
+  });
+  const programCache = new Map(allPrograms.map(p => [p.name, { id: p.id, departmentId: p.departmentId }]));
+
   const scraped = await runScraper(pdfPath, semester, academicYear);
 
   const report = {
@@ -197,15 +230,18 @@ async function importScheduleFromPdf({ pdfPath, semester, academicYear, dryRun =
     return report;
   }
 
-  // Collect unique course codes in this import
+  // Collect unique course codes in this import — normalized the same way upsertCourse does
   const importedCodes = new Set(
-    scraped.schedules.map((e) => e.courseCode).filter(Boolean)
+    scraped.schedules
+      .map((e) => e.courseCode)
+      .filter(Boolean)
+      .map((c) => c.replace(/\s+/g, '').toUpperCase())
   );
 
-  // Delete existing schedule slots only for the courses being re-imported
+  // Delete existing schedule slots for all courses with these codes (replace, not append)
   if (importedCodes.size > 0) {
     const affectedCourses = await prisma.course.findMany({
-      where: { code: { in: [...importedCodes] }, semester, academicYear },
+      where: { code: { in: [...importedCodes] } },
       select: { id: true },
     });
     const affectedIds = affectedCourses.map((c) => c.id);
@@ -239,7 +275,7 @@ async function importScheduleFromPdf({ pdfPath, semester, academicYear, dryRun =
           let courseId = null;
           if (entry.courseCode) {
             try {
-              courseId = await upsertCourse(entry);
+              courseId = await upsertCourse(entry, programCache);
               report.coursesUpdated++;
             } catch (e) {
               report.errors.push({

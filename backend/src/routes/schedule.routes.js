@@ -212,6 +212,65 @@ router.get('/my-schedule',
   }
 );
 
+// ============ GET PROFESSOR WEEKLY SCHEDULE ============
+// Returns courses where the user is an instructor, grouped by day of week.
+
+router.get('/professor-schedule',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const teaching = await prisma.courseInstructor.findMany({
+        where: { userId: req.user.id },
+        include: {
+          course: {
+            select: {
+              id:   true,
+              code: true,
+              name: true,
+              scheduleSlots: {
+                select: {
+                  id:         true,
+                  dayOfWeek:  true,
+                  startTime:  true,
+                  endTime:    true,
+                  location:   true,
+                  room:       true,
+                  lessonType: true,
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const grouped = {};
+      for (const ci of teaching) {
+        const course = ci.course;
+        for (const slot of course.scheduleSlots) {
+          if (!grouped[slot.dayOfWeek]) grouped[slot.dayOfWeek] = [];
+          grouped[slot.dayOfWeek].push({
+            courseCode: course.code,
+            courseName: course.name,
+            dayOfWeek:  slot.dayOfWeek,
+            startTime:  slot.startTime,
+            endTime:    slot.endTime,
+            location:   slot.location || slot.room || null,
+            lessonType: slot.lessonType || 'LECTURE',
+          });
+        }
+      }
+
+      for (const day of Object.keys(grouped)) {
+        grouped[day].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      }
+
+      res.json({ success: true, schedule: grouped });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ GET SCHEDULE EVENTS ============
 
 router.get('/',

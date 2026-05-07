@@ -43,8 +43,13 @@ async function main() {
     { code: 'MATH', name: 'Mathematics Department', nameAr: 'قسم الرياضيات' },
     { code: 'PHYS', name: 'Physics Department', nameAr: 'قسم الفيزياء' },
     { code: 'CHEM', name: 'Chemistry Department', nameAr: 'قسم الكيمياء' },
-    { code: 'BIO', name: 'Biology Department', nameAr: 'قسم الأحياء' },
+    { code: 'BOTA', name: 'Botany Department', nameAr: 'قسم النبات' },
+    { code: 'ZOOL', name: 'Zoology Department', nameAr: 'قسم الحيوان' },
+    { code: 'MICR', name: 'Microbiology Department', nameAr: 'قسم الميكروبيولوجي' },
+    { code: 'ENTO', name: 'Entomology Department', nameAr: 'قسم الحشرات' },
+    { code: 'BIPH', name: 'Biophysics Department', nameAr: 'قسم الفيزياء الحيوية' },
     { code: 'GEOL', name: 'Geology Department', nameAr: 'قسم الجيولوجيا' },
+    { code: 'GEOP', name: 'Geophysics Department', nameAr: 'قسم الجيوفيزياء' },
     { code: 'UNIV', name: 'University Requirements', nameAr: 'متطلبات الجامعة' }
   ];
 
@@ -67,14 +72,30 @@ async function main() {
   console.log('📚 Creating programs...');
 
   const progData = [
+    // Mathematics Department programs
     { code: 'CS', name: 'Computer Science', nameAr: 'علوم الحاسب', creditHours: 136, deptCode: 'MATH' },
     { code: 'STAT', name: 'Statistics', nameAr: 'الإحصاء', creditHours: 132, deptCode: 'MATH' },
     { code: 'PMATH', name: 'Pure Mathematics', nameAr: 'الرياضيات البحتة', creditHours: 132, deptCode: 'MATH' },
+    // Physics Department programs
     { code: 'PHYS', name: 'Physics', nameAr: 'الفيزياء', creditHours: 136, deptCode: 'PHYS' },
+    { code: 'BIPH', name: 'Biophysics', nameAr: 'فيزياء حيوية', creditHours: 132, deptCode: 'PHYS' },
+    // Geophysics Department programs
+    { code: 'GEOP', name: 'Geophysics', nameAr: 'الجيوفيزياء', creditHours: 132, deptCode: 'GEOP' },
+    { code: 'PGPH', name: 'Petroleum Geophysics', nameAr: 'الجيوفيزياء البترولية', creditHours: 132, deptCode: 'GEOP' },
+    // Chemistry Department programs
     { code: 'CHEM', name: 'Chemistry', nameAr: 'الكيمياء', creditHours: 132, deptCode: 'CHEM' },
-    { code: 'BOTA', name: 'Botany', nameAr: 'النبات', creditHours: 128, deptCode: 'BIO' },
-    { code: 'ZOOL', name: 'Zoology', nameAr: 'الحيوان', creditHours: 128, deptCode: 'BIO' },
-    { code: 'MICR', name: 'Microbiology', nameAr: 'الميكروبيولوجي', creditHours: 128, deptCode: 'BIO' },
+    { code: 'BICM', name: 'Biochemistry', nameAr: 'الكيمياء الحيوية', creditHours: 132, deptCode: 'CHEM' },
+    { code: 'APCH', name: 'Applied Chemistry', nameAr: 'الكيمياء التطبيقية', creditHours: 132, deptCode: 'CHEM' },
+    // Botany Department programs
+    { code: 'BOTA', name: 'Botany', nameAr: 'النبات', creditHours: 128, deptCode: 'BOTA' },
+    // Zoology Department programs
+    { code: 'ZOOL', name: 'Zoology', nameAr: 'الحيوان', creditHours: 128, deptCode: 'ZOOL' },
+    // Microbiology Department programs
+    { code: 'MICR', name: 'Microbiology', nameAr: 'الميكروبيولوجي', creditHours: 128, deptCode: 'MICR' },
+    // Entomology Department programs
+    { code: 'ENTO', name: 'Entomology', nameAr: 'الحشرات', creditHours: 128, deptCode: 'ENTO' },
+    { code: 'MENT', name: 'Medical Entomology', nameAr: 'حشرات طبية', creditHours: 132, deptCode: 'ENTO' },
+    // Geology Department programs
     { code: 'GEOL', name: 'Geology', nameAr: 'الجيولوجيا', creditHours: 132, deptCode: 'GEOL' }
   ];
 
@@ -117,14 +138,14 @@ async function main() {
     }
   });
 
-  // Professors
+  // Professors - updated with new department codes
   const profData = [
     { email: 'doctor@college.edu', name: 'Dr. Smith', deptCode: 'MATH' },
     { email: 'dr.ahmed@college.edu', name: 'Dr. Ahmed Hassan', nameAr: 'د. أحمد حسن', deptCode: 'MATH' },
     { email: 'dr.mohamed@college.edu', name: 'Dr. Mohamed Ali', nameAr: 'د. محمد علي', deptCode: 'MATH' },
     { email: 'dr.fatma@college.edu', name: 'Dr. Fatma Salem', nameAr: 'د. فاطمة سالم', deptCode: 'PHYS' },
     { email: 'dr.khaled@college.edu', name: 'Dr. Khaled Mostafa', nameAr: 'د. خالد مصطفى', deptCode: 'CHEM' },
-    { email: 'dr.rania@college.edu', name: 'Dr. Rania Hassan', nameAr: 'د. رانيا حسن', deptCode: 'BIO' },
+    { email: 'dr.rania@college.edu', name: 'Dr. Rania Hassan', nameAr: 'د. رانيا حسن', deptCode: 'MICR' },
     { email: 'dr.sami@college.edu', name: 'Dr. Sami Osman', nameAr: 'د. سامي عثمان', deptCode: 'GEOL' }
   ];
 
@@ -188,19 +209,23 @@ async function main() {
     if (deptName === 'Mathematics') return deptMap['MATH'].id;
     if (deptName === 'Physics') return deptMap['PHYS'].id;
     if (deptName === 'Chemistry') return deptMap['CHEM'].id;
-    if (deptName === 'Botany' || deptName === 'Zoology' || deptName === 'Microbiology') return deptMap['BIO'].id;
+    if (deptName === 'Botany') return deptMap['BOTA'].id;
+    if (deptName === 'Zoology') return deptMap['ZOOL'].id;
+    if (deptName === 'Microbiology') return deptMap['MICR'].id;
+    if (deptName === 'Entomology' || deptName === 'Medical Entomology') return deptMap['ENTO'].id;
+    if (deptName === 'Biophysics') return deptMap['BIPH'].id;
     if (deptName === 'Geology') return deptMap['GEOL'].id;
+    if (deptName === 'Geophysics' || deptName === 'Petroleum Geophysics') return deptMap['GEOP'].id;
     return deptMap['UNIV'].id;
   }
 
   function mapCategory(code) {
-    if (code.startsWith('COMP')) return 'COMP';
-    if (code.startsWith('MATH')) return 'MATH';
-    if (code.startsWith('STAT')) return 'MATH';
-    if (code.startsWith('PHYS')) return 'PHYS';
-    if (code.startsWith('CHEM')) return 'CHEM';
-    if (code.startsWith('BIO') || code.startsWith('ZOOL') || code.startsWith('BOTA') || code.startsWith('MICR')) return 'BIO';
-    if (code.startsWith('GEOL')) return 'GENERAL';
+    if (code.startsWith('COMP') || code.startsWith('CS')) return 'COMP';
+    if (code.startsWith('MATH') || code.startsWith('STAT') || code.startsWith('PMATH')) return 'MATH';
+    if (code.startsWith('PHYS') || code.startsWith('BIPH') || code.startsWith('GEOP')) return 'PHYS';
+    if (code.startsWith('CHEM') || code.startsWith('BICM') || code.startsWith('APCH')) return 'CHEM';
+    if (code.startsWith('BOTA') || code.startsWith('ZOOL') || code.startsWith('MICR') || code.startsWith('ENTO') || code.startsWith('MENT')) return 'BIO';
+    if (code.startsWith('GEOL') || code.startsWith('PGPH')) return 'GENERAL';
     return 'GENERAL';
   }
 
@@ -212,8 +237,6 @@ async function main() {
     const chunk = coursesData.slice(i, i + CHUNK_SIZE);
     console.log(`Processing courses ${i + 1} to ${Math.min(i + CHUNK_SIZE, coursesData.length)} of ${coursesData.length}...`);
     
-    // Process chunk sequentially but internally each item uses upsert
-    // We use a simple loop since bulk upsert is not natively supported in prisma
     for (const c of chunk) {
       const courseCode = c.course_code.replace(/\s+/g, '').toUpperCase();
       try {
@@ -281,7 +304,7 @@ async function main() {
     await safeAssignInstructor(professors[3].id, course.id);
   }
 
-  // Assign BIO courses to Dr. Rania
+  // Assign BIO courses to Dr. Rania (MICR department)
   const bioCourses = createdCourses.filter(c => c.category === 'BIO');
   for (const course of bioCourses) {
     await safeAssignInstructor(professors[4].id, course.id);
@@ -524,7 +547,6 @@ async function main() {
   console.log('   • dr.ahmed@college.edu (Math/CS)');
   console.log('   • dr.mohamed@college.edu (Math/Stats)');
   console.log('   • dr.fatma@college.edu (Physics)');
-  console.log('   • dr.khaled@college.edu (Chemistry)');
   console.log('   Admin:');
   console.log('   • admin@college.edu');
   console.log('========================================\n');

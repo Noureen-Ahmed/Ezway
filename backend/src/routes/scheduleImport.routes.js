@@ -114,7 +114,15 @@ router.post('/preview', upload.single('file'), async (req, res, next) => {
         group:         null,
       }));
 
-    res.json({ success: true, slots, total: slots.length, programs: scraped.programs });
+    // Return both naming conventions: Flutter expects totalEntries/schedules
+    res.json({
+      success:      true,
+      totalEntries: slots.length,
+      total:        slots.length,
+      programs:     scraped.programs,
+      schedules:    slots,
+      slots,
+    });
   } catch (err) {
     next(err);
   } finally {

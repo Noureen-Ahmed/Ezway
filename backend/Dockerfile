@@ -22,6 +22,7 @@ COPY python ./python/
 
 ENV CHROMIUM_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
+ENV PYTHON_BIN=python3
 
 EXPOSE 3000
 

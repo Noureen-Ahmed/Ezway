@@ -65,6 +65,26 @@ const formatUserResponse = (user) => ({
   mode: user.role === 'PROFESSOR' ? 'professor' : 'student'
 });
 
+// Check user role (public — no auth required, used to route login)
+router.get('/user-role', async (req, res, next) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: 'Email parameter is required' });
+    }
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { role: true }
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ role: user.role });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ============ REGISTER ============
 
 router.post('/register',

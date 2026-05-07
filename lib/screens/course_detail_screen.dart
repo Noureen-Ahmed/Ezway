@@ -174,6 +174,29 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                                     ],
                                   ),
                                 ),
+                                if (widget.isDoctorView)
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          'Students',
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.85),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '${(course.stats?['students'] ?? 0)}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,

@@ -115,14 +115,14 @@ router.get('/users', async (req, res, next) => {
           isActive: true,
           isOnboardingComplete: true,
           createdAt: true,
-          lastLoginAt: true,
-          _count: {
-            select: {
-              enrollments: true,
-              teachingCourses: true
-            }
-          }
-        },
+           lastLoginAt: true,
+           _count: {
+             select: {
+               enrollments: true,
+               teachingCourses: true
+             }
+           }
+         },
         orderBy: { [sortBy]: sortOrder },
         skip,
         take: parseInt(limit)
@@ -1225,7 +1225,7 @@ router.get('/departments', async (req, res, next) => {
           select: { id: true, code: true, name: true }
         },
         _count: {
-          select: { users: true, courses: true, programs: true }
+          select: { professors: true, courses: true, programs: true }
         }
       },
       orderBy: { name: 'asc' }
@@ -1240,11 +1240,11 @@ router.get('/departments', async (req, res, next) => {
         description: d.description,
         faculty: d.faculty,
         programs: d.programs,
-        stats: {
-          users: d._count.users,
-          courses: d._count.courses,
-          programs: d._count.programs
-        }
+         stats: {
+           professors: d._count.professors,
+           courses: d._count.courses,
+           programs: d._count.programs
+         }
       }))
     });
   } catch (error) {
@@ -1350,6 +1350,76 @@ router.delete('/programs/:id', async (req, res, next) => {
     await prisma.program.delete({ where: { id } });
     res.json({ success: true, message: 'Program deleted' });
   } catch (error) {
+    next(error);
+  }
+});
+
+// Create professor account (admin only)
+router.post('/professors', async (req, res, next) => {
+  try {
+    const { name, email, password, departmentId, studentId, faculty, major } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+    if (existing) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        name,
+        password: hashedPassword,
+        role: 'PROFESSOR',
+        departmentId: departmentId || null,
+        studentId: studentId || null,
+        faculty: faculty || null,
+        major: major || null,
+      }
+    });
+
+    res.status(201).json({
+      message: 'Professor account created successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        departmentId: user.departmentId,
+        studentId: user.studentId,
+        faculty: user.faculty,
+        major: user.major,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Reset user password (admin only)
+router.put('/:id/password', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'User not found' });
+    }
     next(error);
   }
 });

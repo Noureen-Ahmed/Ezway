@@ -27,7 +27,14 @@ const _kDayFull = {
 };
 
 class MySchedulePage extends StatefulWidget {
-  const MySchedulePage({super.key});
+  final String endpoint;
+  final bool standalone;
+
+  const MySchedulePage({
+    super.key,
+    this.endpoint = '/schedule/my-schedule',
+    this.standalone = true,
+  });
 
   @override
   State<MySchedulePage> createState() => _MySchedulePageState();
@@ -75,7 +82,7 @@ class _MySchedulePageState extends State<MySchedulePage>
     try {
       final response = await http
           .get(
-            Uri.parse('${ApiConfig.baseUrl}/schedule/my-schedule'),
+            Uri.parse('${ApiConfig.baseUrl}${widget.endpoint}'),
             headers: ApiConfig.authHeaders,
           )
           .timeout(const Duration(seconds: 20));
@@ -119,7 +126,7 @@ class _MySchedulePageState extends State<MySchedulePage>
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context),
+            if (widget.standalone) _buildHeader(context),
             _buildTabBar(),
             Expanded(child: _buildBody()),
           ],

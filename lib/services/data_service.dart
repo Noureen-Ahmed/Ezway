@@ -14,39 +14,68 @@ import '../models/user.dart';
 import '../models/note.dart';
 
 class DataService {
-  static Future<User?> login(String email, String password) async {
-    final input = email.trim();
-    final inputLower = input.toLowerCase();
+   static Future<User?> login(String email, String password) async {
+     final input = email.trim();
+     String? endpoint;
+     Map<String, String>? body;
+     bool usedLocalFallback = false;
 
-    // Admin and professor accounts use /auth/login (email + password, no UMS scrape).
-    // Everything else (SSN, passport IDs, student @asu emails) goes to /ums/login.
-    final isDirectAuth = inputLower.contains('doctor') ||
-        inputLower.contains('professor') ||
-        inputLower.contains('dr.') ||
-        inputLower.contains('admin');
-    final isStudent = !isDirectAuth;
-    final endpoint = isStudent ? '/ums/login' : '/auth/login';
-    final body = isStudent
-        ? {'loginName': input, 'password': password}
-        : {'email': input, 'password': password};
+    // 1️⃣ Quick check: query local user role to decide auth method
+    try {
+      final roleRes = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/auth/user-role?email=${Uri.encodeComponent(input)}'),
+        headers: ApiConfig.headers,
+      ).timeout(const Duration(seconds: 3));
+      if (roleRes.statusCode == 200) {
+        final data = jsonDecode(roleRes.body);
+        final role = data['role'];
+        if (role == 'PROFESSOR' || role == 'ADMIN') {
+          // Doctors & Admins → local auth only
+          endpoint = '/auth/login';
+          body = {'email': input, 'password': password};
+        } else {
+          // Students → UMS only
+          endpoint = '/ums/login';
+          body = {'loginName': input, 'password': password};
+        }
+      } else {
+        // User not found locally → assume student, go to UMS
+        endpoint = '/ums/login';
+        body = {'loginName': input, 'password': password};
+      }
+    } catch (e) {
+      // Role check failed (network/endpoint issue) → fallback to old pattern-based routing
+      print('[DataService] Role check failed ($e), using pattern-based routing');
+      final inputLower = input.toLowerCase();
+      final isDirectAuth = inputLower.contains('doctor') ||
+          inputLower.contains('professor') ||
+          inputLower.contains('dr.') ||
+          inputLower.contains('admin');
+      endpoint = isDirectAuth ? '/auth/login' : '/ums/login';
+      body = isDirectAuth
+          ? {'email': input, 'password': password}
+          : {'loginName': input, 'password': password};
+      usedLocalFallback = true;
+    }
 
-    print('[DataService] Routing login to $endpoint for input: $input (isStudent: $isStudent, isDirectAuth: $isDirectAuth)');
+    // 2️⃣ Send primary request
+    final timeout = endpoint == '/ums/login' ? const Duration(seconds: 120) : const Duration(seconds: 30);
+    http.Response? response;
+    try {
+      response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        headers: ApiConfig.headers,
+        body: jsonEncode(body),
+      ).timeout(timeout, onTimeout: () {
+        throw Exception('The university portal is taking too long to respond. Please try again.');
+      });
+    } catch (e) {
+      print('[DataService] Login primary request error: $e');
+      response = null;
+    }
 
-    // UMS login launches headless Chrome on the server — allow up to 2 minutes
-    final timeout = isStudent ? const Duration(seconds: 120) : const Duration(seconds: 30);
-
-    final response = await http
-        .post(
-          Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-          headers: ApiConfig.headers,
-          body: jsonEncode(body),
-        )
-        .timeout(timeout, onTimeout: () {
-      throw Exception(
-          'The university portal is taking too long to respond. Please try again.');
-    });
-
-    if (response.statusCode == 200) {
+    // 3️⃣ If primary succeeded, return user
+    if (response != null && response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['token'] != null) {
         ApiConfig.setAuthToken(data['token']);
@@ -54,28 +83,52 @@ class DataService {
       return _parseUser(data['user']);
     }
 
-    // Surface the real error from the backend
-    String errorMsg = 'Login failed. Please check your credentials and try again.';
-    try {
-      final errorData = jsonDecode(response.body);
-      final raw = errorData['error'];
-      if (raw is String && raw.isNotEmpty) {
-        errorMsg = raw;
-      } else if (raw is Map && raw['message'] != null) {
-        errorMsg = raw['message'].toString();
-      } else if (errorData['message'] != null) {
-        errorMsg = errorData['message'].toString();
+    // 4️⃣ If primary was UMS and failed with 401, try local auth as last resort
+    if (endpoint == '/ums/login' && (response == null || response.statusCode == 401)) {
+      print('[DataService] UMS login failed, trying local auth as last resort...');
+      try {
+        final localResponse = await http.post(
+          Uri.parse('${ApiConfig.baseUrl}/auth/login'),
+          headers: ApiConfig.headers,
+          body: jsonEncode({'email': input, 'password': password}),
+        ).timeout(const Duration(seconds: 30));
+        if (localResponse.statusCode == 200) {
+          final data = jsonDecode(localResponse.body);
+          if (data['token'] != null) {
+            ApiConfig.setAuthToken(data['token']);
+          }
+          return _parseUser(data['user']);
+        }
+        response = localResponse; // use for error message
+      } catch (e) {
+        print('[DataService] Local fallback error: $e');
       }
-    } catch (_) {}
-
-    if (response.statusCode == 401) {
-      throw Exception('Invalid UMS credentials. Please check your SSN/Passport and password.');
     }
-    if (response.statusCode == 502 || response.statusCode == 503) {
-      throw Exception('Cannot reach the university portal right now. Please try again later.');
+
+    // 5️⃣ Handle errors
+    String errorMsg = 'Login failed. Please check your credentials and try again.';
+    if (response != null) {
+      try {
+        final errorData = jsonDecode(response.body);
+        final raw = errorData['error'];
+        if (raw is String && raw.isNotEmpty) {
+          errorMsg = raw;
+        } else if (raw is Map && raw['message'] != null) {
+          errorMsg = raw['message'].toString();
+        } else if (errorData['message'] != null) {
+          errorMsg = errorData['message'].toString();
+        }
+      } catch (_) {}
+
+      if (response.statusCode == 401) {
+        throw Exception('Invalid email or password.');
+      } else if (response.statusCode == 502 || response.statusCode == 503) {
+        throw Exception('Cannot reach the university portal right now. Please try again later.');
+      }
     }
     throw Exception(errorMsg);
   }
+
   
   /// Register new user
   static Future<User?> register({
@@ -1422,5 +1475,45 @@ class DataService {
     description: json['description']?.toString(),
     type: json['eventType'] ?? json['type'] ?? 'lecture',
   );
+  }
+
+  static Future<User?> registerProfessor({
+    required String name,
+    required String email,
+    required String password,
+    String? departmentId,
+    String? studentId,
+    String? faculty,
+    String? major,
+  }) async {
+    final Map<String, dynamic> payload = {
+      'name': name,
+      'email': email,
+      'password': password,
+      if (departmentId != null) 'departmentId': departmentId,
+      if (studentId != null) 'studentId': studentId,
+      if (faculty != null) 'faculty': faculty,
+      if (major != null) 'major': major,
+    };
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/admin/professors'),
+        headers: ApiConfig.headers,
+        body: jsonEncode(payload),
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['user'] != null) {
+          return _parseUser(data['user']);
+        }
+        return null;
+      } else {
+        print('[DataService] Register professor failed: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('[DataService] Register professor error: $e');
+      return null;
+    }
   }
 }

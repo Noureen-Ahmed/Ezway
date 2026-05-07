@@ -13,6 +13,7 @@ import '../create_exam_screen.dart';
 
 import 'course_feed_screen.dart';
 import '../TaskPages/AddNote.dart';
+import '../../features/schedule/my_schedule_page.dart';
 
 class DoctorDashboardScreen extends ConsumerStatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -26,7 +27,7 @@ class _DoctorDashboardScreenState
     extends ConsumerState<DoctorDashboardScreen> {
   int _currentIndex = 0;
 
-  final List<String> _titles = ['Home', 'Courses', 'Notes'];
+  final List<String> _titles = ['Home', 'Courses', 'Notes', 'Schedule'];
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +57,10 @@ class _DoctorDashboardScreenState
           _HomeTab(user: user),
           _CoursesTab(user: user, onRefresh: () => ref.invalidate(professorCoursesProvider)),
           const _NotesTab(),
+          const MySchedulePage(
+            endpoint: '/schedule/professor-schedule',
+            standalone: false,
+          ),
         ],
       ),
       bottomNavigationBar: Container(
@@ -82,6 +87,7 @@ class _DoctorDashboardScreenState
              _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
              _buildNavItem(1, Icons.school_outlined, Icons.school, 'Courses'),
              _buildNavItem(2, Icons.note_outlined, Icons.note, 'Notes'),
+             _buildNavItem(3, Icons.calendar_month_outlined, Icons.calendar_month, 'Schedule'),
            ],
          ),
       ),
