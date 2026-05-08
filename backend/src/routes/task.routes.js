@@ -12,6 +12,40 @@ const { ApiError } = require('../middleware/errorHandler');
 const { createNotification } = require('../services/notification.service');
 const logger = require('../utils/logger');
 
+// ============ GET PROFESSOR UNGRADED COUNTS ============
+// Returns total ungraded submissions and a breakdown by courseId.
+
+router.get('/professor-ungraded-counts',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const submissions = await prisma.taskSubmission.findMany({
+        where: {
+          task: { createdById: req.user.id },
+          status: 'SUBMITTED',
+        },
+        select: {
+          task: { select: { courseId: true } },
+        },
+      });
+
+      const byCourse = {};
+      let total = 0;
+      for (const sub of submissions) {
+        const courseId = sub.task?.courseId;
+        if (courseId) {
+          byCourse[courseId] = (byCourse[courseId] || 0) + 1;
+          total++;
+        }
+      }
+
+      res.json({ success: true, total, byCourse });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ GET PROFESSOR EXAM OVERVIEW ============
 // Returns exams/assignments created by professor with enrolled student counts
 
@@ -723,9 +757,8 @@ router.delete('/:id',
         throw new ApiError(404, 'Task not found');
       }
 
-      // Only allow deleting own personal tasks or if admin
-      const canDelete = (task.createdById === req.user.id && task.taskType === 'PERSONAL') ||
-        req.user.role === 'ADMIN';
+      // Professors can delete tasks they created; admins can delete anything
+      const canDelete = task.createdById === req.user.id || req.user.role === 'ADMIN';
 
       if (!canDelete) {
         throw new ApiError(403, 'Cannot delete this task');

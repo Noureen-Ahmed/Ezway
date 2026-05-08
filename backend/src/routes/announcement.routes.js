@@ -18,11 +18,14 @@ router.get('/',
   authenticate,
   async (req, res, next) => {
     try {
-      const { courseId, limit = 50 } = req.query;
+      const { courseId, limit = 50, mine } = req.query;
 
       let where = {};
 
-      if (courseId) {
+      if (mine === 'true') {
+        // Professor fetching their own posted announcements
+        where = { createdById: req.user.id };
+      } else if (courseId) {
         // Get announcements for specific course
         where.courseId = courseId;
       } else {

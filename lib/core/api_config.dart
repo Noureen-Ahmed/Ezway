@@ -1,11 +1,11 @@
 /// API Configuration
 /// Centralized configuration for API endpoints and headers
 class ApiConfig {
-  // Production URL used by default — works on web, real devices, any network.
+  // Production Railway URL used by default.
   // Override for local dev: flutter run --dart-define=API_BASE_URL=http://localhost:3000/api
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000/api', // Use local backend for development
+    defaultValue: 'https://ezway-production.up.railway.app/api',
   );
 
   // Auth token (set after login)

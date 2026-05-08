@@ -12,6 +12,38 @@ const { ApiError } = require('../middleware/errorHandler');
 const { notifyCourseStudents } = require('../services/notification.service');
 const logger = require('../utils/logger');
 
+// ============ GET PROFESSOR'S OWN CONTENT ============
+
+router.get('/professor',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const content = await prisma.courseContent.findMany({
+        where: { createdById: req.user.id },
+        include: {
+          course: { select: { code: true, name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      res.json({
+        success: true,
+        content: content.map(c => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          contentType: c.contentType,
+          weekNumber: c.weekNumber,
+          createdAt: c.createdAt,
+          course: c.course,
+        })),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ CREATE LECTURE/CONTENT ============
 
 router.post('/',

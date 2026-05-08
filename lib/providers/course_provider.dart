@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import '../models/course.dart';
 import '../models/user.dart';
 import '../services/data_service.dart';
+import '../core/api_config.dart';
 import 'app_session_provider.dart';
 
 /// Current user's enrolled courses provider
@@ -98,6 +101,33 @@ final coursesProvider = FutureProvider<List<Course>>((ref) async {
 /// Course by ID provider
 final courseByIdProvider = FutureProvider.family<Course?, String>((ref, courseId) async {
   return DataService.getCourse(courseId);
+});
+
+/// Professor ungraded submission counts — { total, byCourse: {courseId: count} }
+final professorUngradedProvider = FutureProvider<({int total, Map<String, int> byCourse})>((ref) async {
+  final user = ref.watch(currentUserProvider).valueOrNull;
+  if (user == null || user.mode != AppMode.doctor) return (total: 0, byCourse: <String, int>{});
+
+  final response = await http.get(
+    Uri.parse('${ApiConfig.baseUrl}/tasks/professor-ungraded-counts'),
+    headers: ApiConfig.authHeaders,
+  ).timeout(const Duration(seconds: 15));
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (data['success'] == true) {
+      final raw = (data['byCourse'] as Map<String, dynamic>?) ?? {};
+      final byCourse = <String, int>{};
+      for (final e in raw.entries) {
+        byCourse[e.key] = (e.value as num).toInt();
+      }
+      return (
+        total: (data['total'] as num?)?.toInt() ?? 0,
+        byCourse: byCourse,
+      );
+    }
+  }
+  return (total: 0, byCourse: <String, int>{});
 });
 
 /// Course filter state
