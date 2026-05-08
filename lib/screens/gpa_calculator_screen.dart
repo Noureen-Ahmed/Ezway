@@ -215,7 +215,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: context.navyOrWhite,
+                  color: primaryColor,
                 ),
               ),
               const SizedBox(height: 8),
@@ -234,7 +234,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
+                    borderSide: const BorderSide(color: borderColor, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
@@ -284,7 +284,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
+                                    borderSide: const BorderSide(color: borderColor, width: 2),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                 ),
@@ -310,7 +310,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
+                                    borderSide: const BorderSide(color: borderColor, width: 2),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                 ),
@@ -343,7 +343,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
+                          borderSide: const BorderSide(color: borderColor, width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
@@ -369,7 +369,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
+                          borderSide: const BorderSide(color: borderColor, width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
@@ -398,10 +398,10 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
               const SizedBox(height: 24),
               if (_gpa != null)
                 Card(
-                  color: context.cardBg,
+                  color: cardBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: context.borderCol.withValues(alpha: 0.2)),
+                    side: BorderSide(color: borderColor.withOpacity(0.2)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
@@ -409,7 +409,7 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
                       children: [
                         Text(
                           'GPA: ${_gpa!.toStringAsFixed(3)}',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.navyOrWhite),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor),
                         ),
                         const SizedBox(height: 12),
                         Text(

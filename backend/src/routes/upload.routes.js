@@ -28,7 +28,8 @@ const s3 = R2_CONFIGURED
       credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
-      }
+      },
+      requestHandler: { requestTimeout: 15000 } // 15s timeout before falling back to local disk
     })
   : null;
 

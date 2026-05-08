@@ -44,6 +44,18 @@ class AppNotification {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'message': message,
+    'type': type,
+    'referenceType': referenceType,
+    'referenceId': referenceId,
+    'isRead': isRead,
+    'createdAt': createdAt.toIso8601String(),
+    'readAt': readAt?.toIso8601String(),
+  };
+
   AppNotification copyWith({bool? isRead, DateTime? readAt}) {
     return AppNotification(
       id: id,

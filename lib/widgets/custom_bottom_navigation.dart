@@ -37,12 +37,7 @@ class CustomBottomNavigation extends ConsumerWidget {
       'activeIcon': Icons.explore,
       'route': '/navigate',
     },
-    {
-      'label': 'GPA',
-      'icon': Icons.calculate_outlined,
-      'activeIcon': Icons.calculate,
-      'route': '/advising',
-    },
+
     {
       'label': 'Profile',
       'icon': Icons.person_outlined,

@@ -542,7 +542,7 @@ router.post('/:id/submit',
       let status = 'SUBMITTED';
       let gradedAt = undefined;
 
-      if (answers && task.questions && Array.isArray(task.questions)) {
+      if (answers && task.questions && Array.isArray(task.questions) && task.questions.length > 0) {
         let totalPoints = 0;
         let isFullyAutoGradable = true;
 
@@ -657,6 +657,8 @@ router.post('/:id/unsubmit',
 );
 
 // ============ GET TASK SUBMISSIONS (Professor) ============
+// Returns all enrolled students merged with their submissions.
+// Students who have not submitted get status: 'NOT_SUBMITTED' with points: 0.
 
 router.get('/:id/submissions',
   authenticate,
@@ -664,9 +666,29 @@ router.get('/:id/submissions',
     try {
       const { id } = req.params;
 
-      // Check access (only professor/admin or course instructor)
       if (req.user.role === 'STUDENT') {
         throw new ApiError(403, 'Access denied');
+      }
+
+      // Fetch task with enrolled students
+      const task = await prisma.task.findUnique({
+        where: { id },
+        include: {
+          course: {
+            include: {
+              enrollments: {
+                where: { status: 'ENROLLED' },
+                include: {
+                  user: { select: { id: true, name: true, email: true, avatar: true } }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!task) {
+        throw new ApiError(404, 'Task not found');
       }
 
       const submissions = await prisma.taskSubmission.findMany({
@@ -679,10 +701,44 @@ router.get('/:id/submissions',
         orderBy: { submittedAt: 'desc' }
       });
 
-      res.json({
-        success: true,
-        submissions
+      // Build a map of studentId -> submission
+      const submissionsMap = new Map(submissions.map(s => [s.studentId, s]));
+
+      // Merge enrolled students with their submissions
+      const enrolledStudents = task.course?.enrollments || [];
+      const allRecords = enrolledStudents.map(enrollment => {
+        const sub = submissionsMap.get(enrollment.userId);
+        if (sub) return sub;
+
+        // Placeholder for student who has not submitted
+        return {
+          id: null,
+          taskId: id,
+          studentId: enrollment.userId,
+          student: enrollment.user,
+          status: 'NOT_SUBMITTED',
+          submittedAt: null,
+          fileUrl: null,
+          answers: null,
+          notes: null,
+          points: 0,
+          grade: '0',
+          feedback: null,
+          gradedAt: null
+        };
       });
+
+      // Sort: submitted first (by date desc), then not submitted
+      allRecords.sort((a, b) => {
+        if (a.submittedAt && !b.submittedAt) return -1;
+        if (!a.submittedAt && b.submittedAt) return 1;
+        if (a.submittedAt && b.submittedAt) {
+          return new Date(b.submittedAt) - new Date(a.submittedAt);
+        }
+        return 0;
+      });
+
+      res.json({ success: true, submissions: allRecords });
     } catch (error) {
       next(error);
     }

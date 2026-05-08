@@ -61,6 +61,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png', 'zip'],
+        withData: true,
       );
 
       if (result != null) {
@@ -198,7 +199,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -206,12 +207,11 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
   Widget build(BuildContext context) {
     final isSubmitted = _task.status == TaskStatus.submitted || _task.status == TaskStatus.graded;
     
+    final isPastDeadline = _task.dueDate != null && DateTime.now().isAfter(_task.dueDate!);
+
     return Scaffold(
-      backgroundColor: context.pageBg,
       appBar: AppBar(
         title: const Text('Assignment Details'),
-        backgroundColor: context.pageBg,
-        foregroundColor: context.navyOrWhite,
         elevation: 0,
       ),
       body: RefreshIndicator(
@@ -415,7 +415,31 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (isSubmitted) _buildSubmittedView() else _buildSubmissionForm(),
+                if (isSubmitted)
+                  _buildSubmittedView()
+                else if (isPastDeadline)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.red.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_clock, color: Colors.red),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'The deadline has passed. Submissions are no longer accepted.',
+                            style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  _buildSubmissionForm(),
               ],
               
               const SizedBox(height: 120), // Extra padding for bottom nav

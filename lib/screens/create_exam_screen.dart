@@ -32,6 +32,12 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
   TimeOfDay _examTime = const TimeOfDay(hour: 10, minute: 0);
   int _durationMinutes = 60;
 
+  // Returns the full deadline DateTime combining date + time
+  DateTime get _deadlineDateTime => DateTime(
+    _examDate.year, _examDate.month, _examDate.day, _examTime.hour, _examTime.minute,
+  );
+
+
   // Questions
   final List<Map<String, dynamic>> _questions = [];
 
@@ -135,12 +141,14 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TableCalendar(
-                        firstDay:
-                            DateTime.now().subtract(const Duration(days: 365)),
+                        firstDay: DateTime.now(),
                         lastDay: DateTime.now().add(const Duration(days: 365)),
                         focusedDay: tempDate,
                         selectedDayPredicate: (day) => isSameDay(tempDate, day),
                         onDaySelected: (selectedDay, focusedDay) {
+                          if (selectedDay.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+                            return; // Block past dates
+                          }
                           setDialogState(() {
                             tempDate = selectedDay;
                           });
@@ -695,23 +703,26 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
   void _openQuestionEditor(
       {required String type,
       Map<String, dynamic>? initialData,
-      int? editIndex}) {
-    showDialog(
-      context: context,
-      builder: (context) => _QuestionEditorDialog(
-        type: type,
-        initialData: initialData,
-        onSave: (question) {
-          setState(() {
-            if (editIndex != null) {
-              _questions[editIndex] = question;
-            } else {
-              _questions.add(question);
-            }
-          });
-        },
+      int? editIndex}) async {
+    final question = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => _QuestionEditorPage(
+          type: type,
+          initialData: initialData,
+        ),
+        fullscreenDialog: true,
       ),
     );
+    if (question != null) {
+      setState(() {
+        if (editIndex != null) {
+          _questions[editIndex] = question;
+        } else {
+          _questions.add(question);
+        }
+      });
+    }
   }
 
   Future<void> _submitExam() async {
@@ -722,15 +733,35 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    final examDateTime = _deadlineDateTime;
 
-    final examDateTime = DateTime(
-      _examDate.year,
-      _examDate.month,
-      _examDate.day,
-      _examTime.hour,
-      _examTime.minute,
-    );
+    // Reject past deadlines
+    if (examDateTime.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Deadline cannot be in the past. Please choose a future date and time.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Reject if duration exceeds time until deadline
+    final minutesUntilDeadline = examDateTime.difference(DateTime.now()).inMinutes;
+    if (_durationMinutes > minutesUntilDeadline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Duration ($_durationMinutes min) exceeds time until deadline ($minutesUntilDeadline min). '
+            'Students would run out of time before the deadline.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     final success = await DataService.createExam(
       courseId: _selectedCourseId!,
@@ -777,19 +808,17 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
   }
 }
 
-class _QuestionEditorDialog extends StatefulWidget {
+class _QuestionEditorPage extends StatefulWidget {
   final String type;
   final Map<String, dynamic>? initialData;
-  final Function(Map<String, dynamic>) onSave;
 
-  const _QuestionEditorDialog(
-      {required this.type, this.initialData, required this.onSave});
+  const _QuestionEditorPage({required this.type, this.initialData});
 
   @override
-  State<_QuestionEditorDialog> createState() => _QuestionEditorDialogState();
+  State<_QuestionEditorPage> createState() => _QuestionEditorPageState();
 }
 
-class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
+class _QuestionEditorPageState extends State<_QuestionEditorPage> {
   late TextEditingController _textController;
   late TextEditingController _pointsController;
   List<TextEditingController> _optionControllers = [];
@@ -842,6 +871,7 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
+        withData: true,
       );
 
       if (result != null && result.files.single.bytes != null) {
@@ -867,68 +897,115 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.initialData == null
-          ? 'Add ${widget.type} Question'
-          : 'Edit Question'),
-      content: SingleChildScrollView(
+    final typeLabel = switch (widget.type) {
+      'MCQ' => 'Multiple Choice',
+      'TRUE_FALSE' => 'True / False',
+      _ => 'Written Answer',
+    };
+    final typeIcon = switch (widget.type) {
+      'MCQ' => Icons.list_alt,
+      'TRUE_FALSE' => Icons.check_circle_outline,
+      _ => Icons.edit_note,
+    };
+    final typeColor = switch (widget.type) {
+      'MCQ' => Colors.blue,
+      'TRUE_FALSE' => Colors.green,
+      _ => Colors.orange,
+    };
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.initialData == null ? 'New Question' : 'Edit Question'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: _save,
+            icon: const Icon(Icons.check),
+            label: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Question type badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: typeColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: typeColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(typeIcon, size: 16, color: typeColor),
+                  const SizedBox(width: 6),
+                  Text(typeLabel, style: TextStyle(color: typeColor, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Question text
+            const Text('Question', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
             TextField(
               controller: _textController,
+              maxLines: 3,
               decoration: const InputDecoration(
-                  labelText: 'Question Text', border: OutlineInputBorder()),
-              maxLines: 2,
+                hintText: 'Enter your question here...',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
-            // Image Upload Section
+            // Image
+            const Text('Image (optional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
             if (_imageUrl != null)
               Stack(
                 children: [
-                  Container(
-                    height: 150,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        _imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.blue.shade50,
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.check_circle_outline,
-                                    size: 48, color: Colors.blue),
-                                SizedBox(height: 8),
-                                Text('Image uploaded successfully',
-                                    style: TextStyle(color: Colors.blue)),
-                              ],
-                            ),
-                          );
-                        },
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      _imageUrl!,
+                      width: double.infinity,
+                      height: 180,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 180,
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, size: 40, color: Colors.blue),
+                              SizedBox(height: 8),
+                              Text('Image uploaded', style: TextStyle(color: Colors.blue)),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
                   Positioned(
-                    top: 4,
-                    right: 4,
+                    top: 8,
+                    right: 8,
                     child: GestureDetector(
                       onTap: () => setState(() => _imageUrl = null),
                       child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                            color: Colors.white, shape: BoxShape.circle),
-                        child: const Icon(Icons.close,
-                            size: 16, color: Colors.black),
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                        child: const Icon(Icons.close, size: 16, color: Colors.white),
                       ),
                     ),
                   ),
@@ -938,42 +1015,57 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
               OutlinedButton.icon(
                 onPressed: _isLoadingImage ? null : _pickImage,
                 icon: _isLoadingImage
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.image),
-                label: Text(_isLoadingImage ? 'Uploading...' : 'Add Image'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 44),
-                ),
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.image_outlined),
+                label: Text(_isLoadingImage ? 'Uploading...' : 'Attach Image'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
               ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
+            // Points
+            const Text('Points', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
             TextField(
               controller: _pointsController,
-              decoration: const InputDecoration(
-                  labelText: 'Points', border: OutlineInputBorder()),
               keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'e.g. 10',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.star_border),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 28),
+
+            // Type-specific controls
             if (widget.type == 'MCQ') ...[
-              const Text('Options',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text('Answer Options', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Text('(tap radio to mark correct)', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                ],
+              ),
+              const SizedBox(height: 12),
               ...List.generate(_optionControllers.length, (index) {
+                final isCorrect = _correctAnswer == index.toString();
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
+                  padding: const EdgeInsets.only(bottom: 12.0),
                   child: Row(
                     children: [
-                      Radio<String>(
-                        value: index
-                            .toString(), // Store index as correct answer for simplicity? Or the text?
-                        // Let's store the actual text or index. Index is safer if text changes.
-                        // But Data model plan said "text". Let's stick to text or index. 0-based index string "0", "1".
-                        groupValue: _correctAnswer,
-                        onChanged: (v) => setState(() => _correctAnswer = v),
+                      GestureDetector(
+                        onTap: () => setState(() => _correctAnswer = index.toString()),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: isCorrect ? Colors.green : Colors.grey, width: 2),
+                            color: isCorrect ? Colors.green : Colors.transparent,
+                          ),
+                          child: isCorrect ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                        ),
                       ),
                       Expanded(
                         child: TextField(
@@ -981,189 +1073,151 @@ class _QuestionEditorDialogState extends State<_QuestionEditorDialog> {
                           decoration: InputDecoration(
                             hintText: 'Option ${index + 1}',
                             isDense: true,
+                            suffixIcon: _optionControllers.length > 2
+                                ? IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    onPressed: () => setState(() {
+                                      _optionControllers.removeAt(index);
+                                      if (_correctAnswer == index.toString()) _correctAnswer = null;
+                                    }),
+                                  )
+                                : null,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline,
-                            color: Colors.grey),
-                        onPressed: () {
-                          if (_optionControllers.length > 1) {
-                            setState(() {
-                              _optionControllers.removeAt(index);
-                              // Reset correct answer if invalid
-                              if (_correctAnswer == index.toString()) {
-                                _correctAnswer = null;
-                              }
-                            });
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('At least one option is required')),
-                            );
-                          }
-                        },
                       ),
                     ],
                   ),
                 );
               }),
-              TextButton.icon(
-                onPressed: () => setState(
-                    () => _optionControllers.add(TextEditingController())),
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _optionControllers.add(TextEditingController())),
                 icon: const Icon(Icons.add),
                 label: const Text('Add Option'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 44)),
               ),
             ] else if (widget.type == 'TRUE_FALSE') ...[
-              const Text('Correct Answer:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Correct Answer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('True'),
-                      value: 'true',
-                      groupValue: _correctAnswer,
-                      onChanged: (v) => setState(() => _correctAnswer = v),
-                    ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('False'),
-                      value: 'false',
-                      groupValue: _correctAnswer,
-                      onChanged: (v) => setState(() => _correctAnswer = v),
-                    ),
-                  ),
+                  Expanded(child: _buildTFButton('true', 'True', Colors.green)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildTFButton('false', 'False', Colors.red)),
                 ],
               ),
-            ] else if (widget.type == 'TEXT') ...[
+            ] else ...[
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline,
-                        color: Colors.blue.shade600, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
+                    const Icon(Icons.info_outline, color: Colors.orange),
+                    const SizedBox(width: 12),
+                    const Expanded(
                       child: Text(
-                        'Written answers are free-form text responses. You will grade these manually after students submit.',
-                        style: TextStyle(
-                            color: Colors.blue.shade700, fontSize: 13),
+                        'Students write a free-text answer. You will need to grade these manually after submission.',
+                        style: TextStyle(color: Colors.orange),
                       ),
                     ),
                   ],
                 ),
               ),
             ],
+
+            const SizedBox(height: 40),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel')),
-        ElevatedButton(
-          onPressed: _save,
-          child: const Text('Save'),
+    );
+  }
+
+  Widget _buildTFButton(String value, String label, Color color) {
+    final isSelected = _correctAnswer == value;
+    return GestureDetector(
+      onTap: () => setState(() => _correctAnswer = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        height: 64,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+          border: Border.all(color: isSelected ? color : Colors.grey, width: isSelected ? 2 : 1),
         ),
-      ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? color : Colors.grey),
+            const SizedBox(width: 8),
+            Text(label, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isSelected ? color : Colors.grey)),
+          ],
+        ),
+      ),
     );
   }
 
   void _save() {
-    // Validate question text
-    if (_textController.text.isEmpty) {
+    if (_textController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please enter question text'),
-            backgroundColor: Colors.red),
+        const SnackBar(content: Text('Please enter question text'), backgroundColor: Colors.red),
       );
       return;
     }
 
-    // Validate points
-    final points = int.tryParse(_pointsController.text) ?? 0;
+    final points = int.tryParse(_pointsController.text.trim()) ?? 0;
     if (points <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Points must be greater than 0'),
-            backgroundColor: Colors.red),
+        const SnackBar(content: Text('Points must be greater than 0'), backgroundColor: Colors.red),
       );
       return;
     }
 
-    final question = {
-      'id': widget.initialData?['id'] ??
-          DateTime.now().millisecondsSinceEpoch.toString(),
+    final question = <String, dynamic>{
+      'id': widget.initialData?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
       'type': widget.type,
-      'text': _textController.text,
+      'text': _textController.text.trim(),
       'imageUrl': _imageUrl,
       'points': points,
     };
 
     if (widget.type == 'MCQ') {
-      final options = _optionControllers
-          .map((c) => c.text)
-          .where((t) => t.isNotEmpty)
-          .toList();
-
-      // Validate at least 2 options
+      final options = _optionControllers.map((c) => c.text.trim()).where((t) => t.isNotEmpty).toList();
       if (options.length < 2) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('MCQ requires at least 2 options'),
-              backgroundColor: Colors.red),
+          const SnackBar(content: Text('Please add at least 2 options'), backgroundColor: Colors.red),
         );
         return;
       }
-
-      // Validate correct answer is selected
       if (_correctAnswer == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Please select the correct answer'),
-              backgroundColor: Colors.red),
+          const SnackBar(content: Text('Please mark the correct answer (tap the circle)'), backgroundColor: Colors.red),
         );
         return;
       }
-
       final idx = int.tryParse(_correctAnswer!);
-      if (idx == null || idx >= options.length || options[idx].isEmpty) {
+      if (idx == null || idx >= options.length) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Please select a valid correct answer'),
-              backgroundColor: Colors.red),
+          const SnackBar(content: Text('Invalid correct answer selection'), backgroundColor: Colors.red),
         );
         return;
       }
-
       question['options'] = options;
       question['correctAnswer'] = options[idx];
-      question['correctAnswerIndex'] = idx; // Store index for editing
+      question['correctAnswerIndex'] = idx;
     } else if (widget.type == 'TRUE_FALSE') {
-      // Validate correct answer is selected
-      if (_correctAnswer == null ||
-          (_correctAnswer != 'true' && _correctAnswer != 'false')) {
+      if (_correctAnswer != 'true' && _correctAnswer != 'false') {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Please select True or False as the correct answer'),
-              backgroundColor: Colors.red),
+          const SnackBar(content: Text('Please select True or False as the correct answer'), backgroundColor: Colors.red),
         );
         return;
       }
       question['correctAnswer'] = _correctAnswer;
     }
-    // TEXT type doesn't need correctAnswer - it's manually graded
 
-    widget.onSave(question);
-    Navigator.pop(context);
+    Navigator.pop(context, question);
   }
 }

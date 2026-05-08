@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/data_service.dart';
 import '../widgets/user_avatar.dart';
+import '../core/theme_extensions.dart';
 
 class AssignmentGradingScreen extends StatefulWidget {
   final Map<String, dynamic> submission;
@@ -113,9 +114,13 @@ class _AssignmentGradingScreenState extends State<AssignmentGradingScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text('Grade Assignment'),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        foregroundColor: context.navyOrWhite,
         elevation: 0,
         actions: [
           Center(

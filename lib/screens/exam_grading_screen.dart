@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/data_service.dart';
 import '../models/task.dart';
 import '../widgets/user_avatar.dart';
+import '../core/theme_extensions.dart';
 
 class ExamGradingScreen extends StatefulWidget {
   final Map<String, dynamic> submission;
@@ -79,6 +80,10 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text('Grade Exam'),
         actions: [
           Center(
@@ -86,8 +91,7 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
               padding: const EdgeInsets.only(right: 16.0),
               child: Text(
                 'Total: ${_totalScore.toStringAsFixed(1)} / ${widget.task.maxPoints}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
           )
@@ -98,7 +102,7 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
           // Student Header
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            color: context.cardBg,
             child: Row(
               children: [
                 UserAvatar(
@@ -110,10 +114,9 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(student['name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: context.navyOrWhite)),
                     Text(student['email'],
-                        style:
-                            TextStyle(color: Colors.grey[600], fontSize: 12)),
+                        style: TextStyle(color: context.mutedText, fontSize: 12)),
                   ],
                 ),
               ],
@@ -137,13 +140,16 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
             top: false,
             child: Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                )
-              ]),
+              decoration: BoxDecoration(
+                color: context.cardBg,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  )
+                ],
+              ),
               child: Column(
                 children: [
                   TextField(
@@ -229,9 +235,9 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: context.inputFill,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(color: context.borderCol),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,12 +245,12 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(
+                      SizedBox(
                           width: 80,
                           child: Text('Student:',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey))),
+                                  color: context.mutedText))),
                       Expanded(
                         child: Text(
                           studentAnswer,
@@ -252,7 +258,7 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                               color: isCorrect
                                   ? Colors.green[700]
                                   : (type == 'TEXT'
-                                      ? Colors.black
+                                      ? context.navyOrWhite
                                       : Colors.red[700]),
                               fontWeight: FontWeight.w500),
                         ),
@@ -270,12 +276,12 @@ class _ExamGradingScreenState extends State<ExamGradingScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(
+                        SizedBox(
                             width: 80,
                             child: Text('Correct:',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.grey))),
+                                    color: context.mutedText))),
                         Expanded(
                             child: Text(correctAnswer ?? 'N/A',
                                 style: TextStyle(

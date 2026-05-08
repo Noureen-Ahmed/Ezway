@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/data_service.dart';
 import '../widgets/user_avatar.dart';
+import '../core/theme_extensions.dart';
 
 import '../models/task.dart';
 import 'exam_grading_screen.dart';
@@ -82,19 +82,15 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
     }
   }
 
-  Future<void> _openFile(String url) async {
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open file')),
-        );
-      }
-    }
-  }
-
   void _showGradingDialog(Map<String, dynamic> submission) async {
+    // Cannot grade "not submitted" entries
+    if (submission['status'] == 'NOT_SUBMITTED') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Student has not submitted yet')),
+      );
+      return;
+    }
+
     if (submission['answers'] != null) {
       if (_task == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -136,83 +132,96 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final gradedCount =
-        _submissions.where((s) => s['status'] == 'GRADED').length;
+    final submitted = _submissions.where((s) => s['status'] != 'NOT_SUBMITTED').toList();
+    final gradedCount = submitted.where((s) => s['status'] == 'GRADED').length;
+    final notSubmittedCount = _submissions.where((s) => s['status'] == 'NOT_SUBMITTED').length;
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Grading Dashboard', style: TextStyle(fontSize: 16)),
-            Text(widget.taskTitle,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.normal)),
+            Text(
+              widget.taskTitle,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+            ),
           ],
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
         elevation: 0,
       ),
-      backgroundColor: const Color(0xFFF9FAFB),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : _submissions.isEmpty
-                  ? _buildEmptyState()
-                  : Column(
-                      children: [
-                        // Stats Header
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          color: Colors.white,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildStat('Total',
-                                  _submissions.length.toString(), Colors.blue),
-                              _buildStat(
-                                  'Graded',
-                                  '$gradedCount/${_submissions.length}',
-                                  Colors.green),
-                              _buildStat(
-                                  'Pending',
-                                  (_submissions.length - gradedCount)
-                                      .toString(),
-                                  Colors.orange),
-                            ],
-                          ),
-                        ),
-
-                        // List
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _submissions.length,
-                            separatorBuilder: (c, i) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final sub = _submissions[index];
-                              return _buildSubmissionCard(sub);
-                            },
-                          ),
-                        ),
-                      ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(_errorMessage!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    // Stats Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      color: context.cardBg,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStat('Enrolled', _submissions.length.toString(), Colors.blue),
+                          _buildStat('Submitted', submitted.length.toString(), Colors.orange),
+                          _buildStat('Graded', '$gradedCount/${submitted.length}', Colors.green),
+                          if (notSubmittedCount > 0)
+                            _buildStat('No Submit', notSubmittedCount.toString(), Colors.red),
+                        ],
+                      ),
                     ),
+
+                    // List or Empty State
+                    Expanded(
+                      child: _submissions.isEmpty
+                          ? _buildEmptyState()
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _submissions.length,
+                              separatorBuilder: (c, i) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                return _buildSubmissionCard(_submissions[index]);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
     );
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment_turned_in_outlined,
-              size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text('No submissions yet',
-              style: TextStyle(fontSize: 18, color: Colors.grey)),
+          Icon(Icons.assignment_turned_in_outlined, size: 64, color: context.mutedText),
+          const SizedBox(height: 16),
+          Text(
+            'No students enrolled yet',
+            style: TextStyle(fontSize: 18, color: context.mutedText),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Students who enroll in this course will appear here',
+            style: TextStyle(fontSize: 13, color: context.mutedText),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -221,27 +230,41 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
   Widget _buildStat(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value,
-            style: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: const TextStyle(color: Colors.grey)),
+        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+        Text(label, style: TextStyle(color: context.mutedText, fontSize: 12)),
       ],
     );
   }
 
   Widget _buildSubmissionCard(Map<String, dynamic> submission) {
     final student = submission['student'];
+    final isNotSubmitted = submission['status'] == 'NOT_SUBMITTED';
     final isGraded = submission['status'] == 'GRADED';
-    final submittedDate = DateTime.parse(submission['submittedAt']);
+    final submittedDate = submission['submittedAt'] != null
+        ? DateTime.tryParse(submission['submittedAt'].toString())
+        : null;
+
+    Color badgeColor;
+    String badgeText;
+    if (isNotSubmitted) {
+      badgeColor = Colors.red;
+      badgeText = 'No Submit';
+    } else if (isGraded) {
+      badgeColor = Colors.green;
+      badgeText = '${submission['points']} / ${_task?.maxPoints ?? widget.maxPoints}';
+    } else {
+      badgeColor = Colors.orange;
+      badgeText = 'Pending';
+    }
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: isNotSubmitted ? Colors.red.withValues(alpha: 0.3) : context.borderCol),
       ),
       child: InkWell(
-        onTap: () => _showGradingDialog(submission),
+        onTap: isNotSubmitted ? null : () => _showGradingDialog(submission),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -259,43 +282,36 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
                   children: [
                     Text(
                       student['name'],
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: context.navyOrWhite),
                     ),
-                    Text(
-                      DateFormat('MMM d, h:mm a').format(submittedDate),
-                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
-                    ),
+                    if (submittedDate != null)
+                      Text(
+                        DateFormat('MMM d, h:mm a').format(submittedDate),
+                        style: TextStyle(color: context.mutedText, fontSize: 13),
+                      )
+                    else
+                      Text(
+                        'Not submitted',
+                        style: TextStyle(color: Colors.red.shade400, fontSize: 13),
+                      ),
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isGraded ? Colors.green[50] : Colors.orange[50],
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: isGraded
-                              ? Colors.green[100]!
-                              : Colors.orange[100]!),
-                    ),
-                    child: Text(
-                      isGraded
-                          ? '${submission['points']} / ${_task?.maxPoints ?? widget.maxPoints}'
-                          : 'Pending',
-                      style: TextStyle(
-                        color:
-                            isGraded ? Colors.green[700] : Colors.orange[700],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    color: badgeColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
                   ),
-                ],
+                ),
               ),
             ],
           ),

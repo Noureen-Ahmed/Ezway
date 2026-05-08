@@ -23,8 +23,7 @@ import 'storage_services.dart';
 import 'notification_service.dart';
 import 'screens/student_guide/explain_screen.dart';
 import 'screens/student_guide/explain_program.dart';
-import 'screens/gpa_calculator_screen.dart';
-import 'screens/gpa_calculator_screen.dart';
+
 import 'screens/guest/guest_dashboard_shell.dart';
 import 'screens/adaptive_dashboard.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -226,10 +225,7 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
               path: '/my-courses',
               builder: (context, state) => CoursesListScreen(),
             ),
-            GoRoute(
-              path: '/advising',
-              builder: (context, state) => const GpaCalculatorScreen(),
-            ),
+
             GoRoute(
               path: '/advising/chat/:email',
               builder: (context, state) {
