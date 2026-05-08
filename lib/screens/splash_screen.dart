@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF002147),
       body: Center(
         child: _controller.value.isInitialized
             ? AspectRatio(
@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: VideoPlayer(_controller),
               )
             : const CircularProgressIndicator(
-                color: Color(0xFF6366F1),
+                color: Color(0xFFFDC800),
               ),
       ),
     );

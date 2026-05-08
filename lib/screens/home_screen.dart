@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/theme_extensions.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_session_provider.dart';
@@ -28,7 +29,6 @@ class HomeScreen extends ConsumerWidget {
     final unreadCount = ref.watch(unreadNotificationCountProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(currentUserProvider);
@@ -109,12 +109,12 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Next Class',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -132,7 +132,7 @@ class HomeScreen extends ConsumerWidget {
                           ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
                         if (upcoming.isEmpty) {
-                          return _buildEmptyCard('No upcoming classes today');
+                          return _buildEmptyCard(context, 'No upcoming classes today');
                         }
 
                         final next = upcoming.first;
@@ -145,7 +145,7 @@ class HomeScreen extends ConsumerWidget {
                       },
                       loading: () => const LoadingShimmer(height: 80),
                       error: (_, __) =>
-                          _buildEmptyCard('Failed to load schedule'),
+                          _buildEmptyCard(context, 'Failed to load schedule'),
                     ),
                   ],
                 ),
@@ -159,12 +159,12 @@ class HomeScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'My Courses',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     TextButton(
@@ -227,12 +227,12 @@ class HomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Pending Tasks',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1F2937),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         TextButton(
@@ -246,7 +246,7 @@ class HomeScreen extends ConsumerWidget {
                       builder: (context) {
                         final tasks = taskState.pendingTasks;
                         if (tasks.isEmpty) {
-                          return _buildEmptyCard('No pending tasks');
+                          return _buildEmptyCard(context, 'No pending tasks');
                         }
 
                         return Column(
@@ -329,14 +329,14 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyCard(String message) {
+  Widget _buildEmptyCard(BuildContext context, String message) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.borderCol),
       ),
       child: Text(
         message,
@@ -421,9 +421,9 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: context.borderCol),
         ),
         child: Column(
           children: [
@@ -494,10 +494,10 @@ class _NextClassCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
-                      color: Color(0xFF1F2937),
+                      color: context.navyOrWhite,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -539,9 +539,9 @@ class _CourseChip extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: context.borderCol),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,10 +564,10 @@ class _CourseChip extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF1F2937),
+                color: context.navyOrWhite,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -603,11 +603,10 @@ class _TaskItem extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color:
-                isOverdue ? const Color(0xFFFECACA) : const Color(0xFFE5E7EB),
+            color: isOverdue ? const Color(0xFFFECACA) : context.borderCol,
           ),
         ),
         child: Row(
@@ -627,9 +626,9 @@ class _TaskItem extends StatelessWidget {
                 children: [
                   Text(
                     task.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF1F2937),
+                      color: context.navyOrWhite,
                     ),
                   ),
                   if (task.dueDate != null)

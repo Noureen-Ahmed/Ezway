@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/schedule_event.dart';
+import '../core/theme_extensions.dart';
 import 'package:intl/intl.dart';
 
 class ScheduleEventCard extends StatelessWidget {
@@ -20,9 +21,9 @@ class ScheduleEventCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.borderCol),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -66,10 +67,10 @@ class ScheduleEventCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               event.title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: _navyColor,
+                                color: context.navyOrWhite,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

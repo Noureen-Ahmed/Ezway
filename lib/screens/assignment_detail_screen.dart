@@ -12,6 +12,7 @@ import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../providers/app_session_provider.dart';
 import '../services/data_service.dart';
+import '../core/theme_extensions.dart';
 
 class AssignmentDetailScreen extends ConsumerStatefulWidget {
   final Task task;
@@ -206,11 +207,11 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
     final isSubmitted = _task.status == TaskStatus.submitted || _task.status == TaskStatus.graded;
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.pageBg,
       appBar: AppBar(
         title: const Text('Assignment Details'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: context.pageBg,
+        foregroundColor: context.navyOrWhite,
         elevation: 0,
       ),
       body: RefreshIndicator(
@@ -256,9 +257,10 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
               // Title
               Text(
                 _task.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: context.navyOrWhite,
                 ),
               ),
               
@@ -271,7 +273,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     child: Text(
                       _task.subject,
                       style: TextStyle(
-                        color: Colors.grey[700],
+                        color: context.mutedText,
                         fontSize: 16,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -287,7 +289,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                              _task.dueDate!.isBefore(DateTime.now()) && 
                              !isSubmitted)
                           ? Colors.red 
-                          : Colors.grey[700],
+                          : context.mutedText,
                       fontSize: 16,
                       fontWeight: FontWeight.w500
                     ),
@@ -298,11 +300,12 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
               const SizedBox(height: 24),
               
               // Description
-              const Text(
+              Text(
                 'Instructions',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: context.navyOrWhite,
                 ),
               ),
               const SizedBox(height: 8),
@@ -310,7 +313,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                 _task.description ?? 'No instructions provided.',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[800],
+                  color: context.navyOrWhite.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
               ),
@@ -319,11 +322,12 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
               
               // Attachments
               if (_task.attachments.isNotEmpty) ...[
-                const Text(
+                Text(
                   'Reference Materials',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: context.navyOrWhite,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -333,7 +337,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
+                    border: Border.all(color: context.borderCol),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -350,8 +354,9 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                         Expanded(
                           child: Text(
                             url.split('/').last,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w500,
+                              color: context.navyOrWhite,
                               decoration: TextDecoration.underline,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -369,11 +374,12 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
               
               // ROLE BASED VIEW
               if (ref.watch(currentUserProvider).value?.isProfessor ?? false) ...[
-                const Text(
+                Text(
                   'Student Submissions',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: context.navyOrWhite,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -400,11 +406,12 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                 ),
               ] else ...[
                  // SUBMISSION SECTION (STUDENT)
-                const Text(
+                Text(
                   'Your Work',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: context.navyOrWhite,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -469,7 +476,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
           const SizedBox(height: 16),
           const Text('Notes:', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text(notes),
+          Text(notes, style: TextStyle(color: context.navyOrWhite)),
         ],
         
         if (_task.submission != null && (_task.submission!['points'] != null || _task.submission!['grade'] != null)) ...[
@@ -491,7 +498,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                     Expanded(
                       child: Text(
                         'Grade: ${_task.submission!['grade'] ?? _task.submission!['points']}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.green
@@ -539,10 +546,10 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 32),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: context.inputFill,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.grey[300]!, 
+                color: context.borderCol, 
                 style: BorderStyle.solid
               ),
             ),
@@ -555,7 +562,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
                           const SizedBox(height: 8),
                           Text(
                             _uploadedFileName ?? _uploadedFileUrl!.split('/').last,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold, color: context.navyOrWhite),
                           ),
                           const SizedBox(height: 4),
                           const Text('Tap to change', style: TextStyle(color: Colors.grey)),
@@ -584,11 +591,23 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
         TextField(
           controller: _notesController,
           maxLines: 3,
+          style: TextStyle(color: context.navyOrWhite),
           decoration: InputDecoration(
             hintText: 'Add private comments...',
+            hintStyle: TextStyle(color: context.mutedText),
+            filled: true,
+            fillColor: context.inputFill,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.borderCol),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF2E6AFF), width: 2),
             ),
             contentPadding: const EdgeInsets.all(16),
           ),

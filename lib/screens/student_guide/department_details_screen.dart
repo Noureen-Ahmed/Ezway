@@ -130,7 +130,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
             // Programs Header
             Row(
               children: [
-                const Icon(Icons.school, color: Color(0xFF2563eb)),
+                const Icon(Icons.school, color: Color(0xFF002147)),
                 const SizedBox(width: 8),
                 Text(
                   isArabic ? 'البرامج المتاحة' : 'Available Programs',
@@ -329,7 +329,7 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF2563eb),
+                    foregroundColor: const Color(0xFF002147),
                     padding: const EdgeInsets.symmetric(
                         vertical: 20, horizontal: 24),
                     elevation: 2,
@@ -409,7 +409,7 @@ class _LanguageButton extends StatelessWidget {
           text,
           style: TextStyle(
             color:
-                isSelected ? const Color(0xFF2563eb) : const Color(0xFF6B7280),
+                isSelected ? const Color(0xFF002147) : const Color(0xFF6B7280),
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),

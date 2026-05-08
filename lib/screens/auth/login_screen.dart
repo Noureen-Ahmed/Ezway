@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../storage_services.dart';
 import '../../providers/app_session_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../core/theme_extensions.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -107,15 +109,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: const Color(0xFF002147),
+      body: SafeArea(
           child: Column(
             children: [
               const Padding(
@@ -143,10 +138,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(32)),
+                        const BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: SingleChildScrollView(
                     child: Form(
@@ -158,9 +153,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               padding: const EdgeInsets.all(12),
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                color: Colors.red.shade50,
+                                color: Colors.red.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.red.shade200),
+                                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 children: [
@@ -208,35 +203,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap: () => context.go('/forgot-password'),
-                              child: const Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  color: Color(0xFF2563eb),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: isLoading ? null : login,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563eb),
+                                backgroundColor: const Color(0xFF002147),
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 disabledBackgroundColor:
-                                    const Color(0xFF93c5fd),
+                                    const Color(0xFF4D7BAF),
                               ),
                               child: isLoading
                                   ? const SizedBox(
@@ -268,17 +248,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: () => context.go('/register'),
-                            child: const Text(
-                              "Don't have an account? Sign Up",
-                              style: TextStyle(
-                                color: Color(0xFF2563eb),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          const SizedBox(height: 24),
+                          _buildThemeToggle(context, ref),
                         ],
                       ),
                     ),
@@ -288,6 +259,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ],
           ),
         ),
+    );
+  }
+
+  Widget _buildThemeToggle(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    return InkWell(
+      onTap: () => ref.read(themeModeProvider.notifier).toggle(),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isDark ? Icons.light_mode : Icons.dark_mode,
+              size: 20,
+              color: context.mutedText,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              style: TextStyle(
+                color: context.mutedText,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -295,8 +295,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   InputDecoration _buildInputDecoration(String label, [Widget? suffix]) {
     return InputDecoration(
       labelText: label,
+      labelStyle: TextStyle(color: context.mutedText),
       filled: true,
-      fillColor: const Color(0xFFf9fafb),
+      fillColor: context.inputFill,
       suffixIcon: suffix,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -304,11 +305,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFe5e7eb)),
+        borderSide: BorderSide(color: context.borderCol),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

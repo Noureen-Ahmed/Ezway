@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme_extensions.dart';
 
 class QuickAction extends StatelessWidget {
   final String title;
@@ -21,8 +22,8 @@ class QuickAction extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          color: context.cardBg,
+          border: Border.all(color: context.borderCol),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -48,10 +49,10 @@ class QuickAction extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: context.navyOrWhite,
               ),
             ),
           ],

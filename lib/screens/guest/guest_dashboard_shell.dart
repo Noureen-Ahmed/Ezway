@@ -21,25 +21,17 @@ class _GuestBottomNavBar extends StatelessWidget {
     final String currentLocation = GoRouterState.of(context).uri.path;
     
     int getSelectedIndex() {
-      if (currentLocation.startsWith('/guest/home')) return 0;
-      if (currentLocation.startsWith('/guest/ar')) return 1;
-      if (currentLocation.startsWith('/guest/credit')) return 2;
-      if (currentLocation.startsWith('/guest/departments')) return 3;
+      if (currentLocation.startsWith('/guest/ar')) return 0;
+      if (currentLocation.startsWith('/guest/departments')) return 1;
       return 0;
     }
 
     void onItemTapped(int index) {
       switch (index) {
         case 0:
-          context.go('/guest/home');
-          break;
-        case 1:
           context.go('/guest/ar');
           break;
-        case 2:
-          context.go('/guest/credit');
-          break;
-        case 3:
+        case 1:
           context.go('/guest/departments');
           break;
       }
@@ -58,33 +50,21 @@ class _GuestBottomNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavBarItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
+                icon: Icons.view_in_ar_rounded,
+                label: 'AR',
                 isSelected: getSelectedIndex() == 0,
                 onTap: () => onItemTapped(0),
               ),
               _NavBarItem(
-                icon: Icons.view_in_ar_rounded,
-                label: 'AR',
+                icon: Icons.account_balance_rounded,
+                label: 'Departments',
                 isSelected: getSelectedIndex() == 1,
                 onTap: () => onItemTapped(1),
-              ),
-              _NavBarItem(
-                icon: Icons.timer_rounded,
-                label: 'Credit',
-                isSelected: getSelectedIndex() == 2,
-                onTap: () => onItemTapped(2),
-              ),
-              _NavBarItem(
-                icon: Icons.account_balance_rounded,
-                label: 'Depts',
-                isSelected: getSelectedIndex() == 3,
-                onTap: () => onItemTapped(3),
               ),
             ],
           ),
@@ -115,7 +95,7 @@ class _NavBarItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2563eb).withValues(alpha: 0.1) : Colors.transparent,
+          color: isSelected ? const Color(0xFF002147).withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -123,14 +103,14 @@ class _NavBarItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF2563eb) : Colors.grey[400],
+              color: isSelected ? const Color(0xFF002147) : Colors.grey[400],
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF2563eb) : Colors.grey[400],
+                color: isSelected ? const Color(0xFF002147) : Colors.grey[400],
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

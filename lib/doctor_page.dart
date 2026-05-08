@@ -209,19 +209,6 @@ class _DoctorPageState extends State<DoctorPage> {
     );
   }
 }
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'storage_services.dart';
-
-class DoctorPage extends StatefulWidget {
-  const DoctorPage({super.key});
-
-  @override
-  State<DoctorPage> createState() => _DoctorPageState();
-}
-
-class _DoctorPageState extends State<DoctorPage> {
-  String userName = '';
   String userEmail = '';
   List<String> selectedCourses = [];
 

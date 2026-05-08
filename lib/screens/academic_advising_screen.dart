@@ -87,8 +87,8 @@ class _AcademicAdvisingScreenState extends ConsumerState<AcademicAdvisingScreen>
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-            child: const Icon(Icons.person, size: 50, color: Color(0xFF6366F1)),
+            backgroundColor: const Color(0xFF002147).withOpacity(0.1),
+            child: const Icon(Icons.person, size: 50, color: Color(0xFF002147)),
           ),
           const SizedBox(height: 16),
           Text(
@@ -125,7 +125,7 @@ class _AcademicAdvisingScreenState extends ConsumerState<AcademicAdvisingScreen>
             icon: const Icon(Icons.email),
             label: const Text('Email Advisor'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
+              backgroundColor: const Color(0xFF002147),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -193,8 +193,8 @@ class _AcademicAdvisingScreenState extends ConsumerState<AcademicAdvisingScreen>
                       elevation: 0,
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-                          child: const Icon(Icons.person, color: Color(0xFF6366F1)),
+                          backgroundColor: const Color(0xFF002147).withOpacity(0.1),
+                          child: const Icon(Icons.person, color: Color(0xFF002147)),
                         ),
                         title: Text(student.name),
                         subtitle: Text(student.email),

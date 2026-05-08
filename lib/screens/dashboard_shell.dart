@@ -29,7 +29,6 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
     final currentRoute = _getCurrentRoute();
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         fit: StackFit.expand,
         children: [

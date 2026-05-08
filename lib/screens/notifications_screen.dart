@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../models/notification.dart';
 import '../providers/notification_provider.dart';
+import '../core/theme_extensions.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -20,13 +21,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9FAFB),
         body: SafeArea(
           child: Column(
             children: [
               // Header
               Container(
-                color: Colors.white,
+                color: context.cardBg,
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
@@ -46,13 +46,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             padding: EdgeInsets.zero,
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Notifications',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black,
+                              color: context.navyOrWhite,
                             ),
                           ),
                         ),
@@ -79,7 +79,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 12, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF2563EB),
+                                      color: const Color(0xFF002147),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
@@ -241,7 +241,7 @@ class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = _getColors();
+    final colors = _getColors(context);
     final icon = _getIcon();
     final timeAgo = _formatTimeAgo(notification.createdAt);
 
@@ -251,10 +251,10 @@ class NotificationCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: notification.isRead ? Colors.white : colors['bg'],
+          color: notification.isRead ? context.cardBg : colors['bg'],
           border: Border.all(
             color: notification.isRead
-                ? const Color(0xFFE5E7EB)
+                ? context.borderCol
                 : colors['border']!,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -268,7 +268,7 @@ class NotificationCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardBg,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: const [
                       BoxShadow(
@@ -292,16 +292,16 @@ class NotificationCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                          color: context.cardBg,
+                          border: Border.all(color: context.borderCol),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           _typeLabel(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF6B7280),
+                            color: context.mutedText,
                           ),
                         ),
                       ),
@@ -310,10 +310,10 @@ class NotificationCard extends StatelessWidget {
                       // Title
                       Text(
                         notification.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          color: context.navyOrWhite,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -321,9 +321,9 @@ class NotificationCard extends StatelessWidget {
                       // Message
                       Text(
                         notification.message,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF6B7280),
+                          color: context.mutedText,
                           height: 1.5,
                         ),
                         maxLines: 2,
@@ -366,10 +366,10 @@ class NotificationCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withOpacity(0.1),
+                      color: const Color(0xFF002147).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                          color: const Color(0xFF2563EB).withOpacity(0.3)),
+                          color: const Color(0xFF002147).withOpacity(0.3)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -413,33 +413,34 @@ class NotificationCard extends StatelessWidget {
     }
   }
 
-  Map<String, Color> _getColors() {
+  Map<String, Color> _getColors(BuildContext context) {
+    final isDark = context.isDark;
     final ref = notification.referenceType ?? notification.type;
     switch (ref) {
       case 'ASSIGNMENT':
         return {
-          'bg': const Color(0xFFEFF6FF),
-          'border': const Color(0xFFBFDBFE),
+          'bg': isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+          'border': isDark ? const Color(0xFF334155) : const Color(0xFFBFDBFE),
         };
       case 'EXAM':
         return {
-          'bg': const Color(0xFFFEF2F2),
-          'border': const Color(0xFFFECACA),
+          'bg': isDark ? const Color(0xFF451A1A) : const Color(0xFFFEF2F2),
+          'border': isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA),
         };
       case 'LECTURE':
         return {
-          'bg': const Color(0xFFF0FDF4),
-          'border': const Color(0xFFBBF7D0),
+          'bg': isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
+          'border': isDark ? const Color(0xFF065F46) : const Color(0xFFBBF7D0),
         };
       case 'ANNOUNCEMENT':
         return {
-          'bg': const Color(0xFFFFFBEF),
-          'border': const Color(0xFFFDE68A),
+          'bg': isDark ? const Color(0xFF451A03) : const Color(0xFFFFFBEF),
+          'border': isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A),
         };
       default:
         return {
-          'bg': const Color(0xFFF3F4F6),
-          'border': const Color(0xFFD1D5DB),
+          'bg': isDark ? const Color(0xFF1F2937) : const Color(0xFFF3F4F6),
+          'border': isDark ? const Color(0xFF374151) : const Color(0xFFD1D5DB),
         };
     }
   }

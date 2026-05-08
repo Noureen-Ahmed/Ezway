@@ -98,6 +98,19 @@ class StorageService {
     return prefs.getStringList(keySelectedCourses) ?? [];
   }
 
+  /// CGPA storage
+  static const String keyCGPA = 'cgpa';
+
+  static Future<void> setCGPA(String cgpa) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(keyCGPA, cgpa);
+  }
+
+  static Future<String?> getCGPA() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(keyCGPA);
+  }
+
   /// Check if user has account
   static Future<bool> hasAccount() async {
     final email = await getEmail();

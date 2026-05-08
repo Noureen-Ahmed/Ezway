@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../core/theme_extensions.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/task_provider.dart';
 import '../models/schedule_event.dart';
@@ -198,7 +199,6 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     final eventsForDayAsync = ref.watch(eventsForDateProvider(_selectedWeekDay));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -207,12 +207,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               children: [
                 // Custom header
                 Container(
-                  color: const Color(0xFFF8F9FA),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF002147)),
+                        icon: Icon(Icons.arrow_back, color: context.navyOrWhite),
                         onPressed: () {
                           if (context.canPop()) {
                             context.pop();
@@ -221,12 +221,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                           }
                         },
                       ),
-                      const Text(
+                      Text(
                         'Schedule',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF002147),
+                          color: context.navyOrWhite,
                         ),
                       ),
                       const Spacer(),
@@ -695,14 +695,14 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 3),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF002147) : Colors.white,
+                color: isSelected ? const Color(0xFF002147) : context.cardBg,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isSelected 
-                      ? const Color(0xFF002147) 
-                      : isToday 
+                  color: isSelected
+                      ? const Color(0xFF002147)
+                      : isToday
                           ? const Color(0xFFFDC800)
-                          : const Color(0xFFE5E7EB),
+                          : context.borderCol,
                   width: isToday && !isSelected ? 2 : 1,
                 ),
                 boxShadow: isSelected
@@ -726,7 +726,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: isSelected ? Colors.white : const Color(0xFF002147),
+                      color: isSelected ? Colors.white : context.navyOrWhite,
                     ),
                   ),
                 ],

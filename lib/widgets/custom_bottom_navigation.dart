@@ -38,9 +38,9 @@ class CustomBottomNavigation extends ConsumerWidget {
       'route': '/navigate',
     },
     {
-      'label': 'Advising',
-      'icon': Icons.chat_bubble_outline,
-      'activeIcon': Icons.chat_bubble,
+      'label': 'GPA',
+      'icon': Icons.calculate_outlined,
+      'activeIcon': Icons.calculate,
       'route': '/advising',
     },
     {
@@ -60,17 +60,19 @@ class CustomBottomNavigation extends ConsumerWidget {
       isDoctor = StorageService.isDoctorEmail(sessionState.user.email);
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final navBg = isDark ? const Color(0xFF0D1B2A) : Colors.white;
+    final activeColor = isDark ? const Color(0xFFFDC800) : const Color(0xFF002147);
+    final borderColor = isDark ? const Color(0xFF1F2937) : const Color(0xFFE5E7EB);
+
     return Container(
       height: 80,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: navBg,
         border: Border(
-          top: BorderSide(
-            color: Color(0xFFE5E7EB),
-            width: 1,
-          ),
+          top: BorderSide(color: borderColor, width: 1),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Color(0x0A000000),
             blurRadius: 10,
@@ -86,10 +88,10 @@ class CustomBottomNavigation extends ConsumerWidget {
           return true;
         }).map((tab) {
           final isHomeTab = tab['route'] == '/home';
-          final isActive = isHomeTab 
-              ? currentRoute.startsWith('/home') 
+          final isActive = isHomeTab
+              ? currentRoute.startsWith('/home')
               : currentRoute == tab['route'];
-          
+
           // Determine label for Tasks tab based on user type
           String label = tab['label'];
           if (tab['route'] == '/tasks' && isDoctor) {
@@ -108,7 +110,7 @@ class CustomBottomNavigation extends ConsumerWidget {
                   Icon(
                     isActive ? tab['activeIcon'] : tab['icon'],
                     size: 24,
-                    color: isActive ? const Color(0xFF4338CA) : const Color(0xFF9CA3AF),
+                    color: isActive ? activeColor : const Color(0xFF9CA3AF),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -116,7 +118,7 @@ class CustomBottomNavigation extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                      color: isActive ? const Color(0xFF4338CA) : const Color(0xFF9CA3AF),
+                      color: isActive ? activeColor : const Color(0xFF9CA3AF),
                     ),
                   ),
                 ],

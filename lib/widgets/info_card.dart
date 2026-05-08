@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme_extensions.dart';
 
 class InfoCard extends StatelessWidget {
   final String title;
@@ -30,8 +31,8 @@ class InfoCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         constraints: height != null ? BoxConstraints(minHeight: height!) : const BoxConstraints(),
           decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          color: context.cardBg,
+          border: Border.all(color: context.borderCol),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -61,10 +62,10 @@ class InfoCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: context.navyOrWhite,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

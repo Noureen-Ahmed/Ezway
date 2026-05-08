@@ -191,7 +191,7 @@ class _VerificationPageState extends State<VerificationPage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
           ),
         ),
         onChanged: (value) {
@@ -215,15 +215,8 @@ class _VerificationPageState extends State<VerificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: const Color(0xFF002147),
+      body: SafeArea(
           child: Column(
             children: [
               Padding(
@@ -255,10 +248,10 @@ class _VerificationPageState extends State<VerificationPage> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(32)),
+                        const BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
@@ -276,7 +269,7 @@ class _VerificationPageState extends State<VerificationPage> {
                               child: ElevatedButton(
                                 onPressed: _verifyCode,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2563eb),
+                                  backgroundColor: const Color(0xFF002147),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
@@ -300,7 +293,7 @@ class _VerificationPageState extends State<VerificationPage> {
                               child: const Text(
                                 'Resend Code',
                                 style: TextStyle(
-                                  color: Color(0xFF2563eb),
+                                  color: Color(0xFF002147),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -312,7 +305,6 @@ class _VerificationPageState extends State<VerificationPage> {
             ],
           ),
         ),
-      ),
     );
   }
 }

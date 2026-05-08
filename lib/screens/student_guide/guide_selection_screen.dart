@@ -30,7 +30,7 @@ class GuideSelectionScreen extends StatelessWidget {
               title: 'Credit Hour System',
               subtitle: 'Understanding the academic system',
               icon: Icons.timer,
-              color: const Color(0xFF2563eb), // Blue
+              color: const Color(0xFF002147), // Blue
               onTap: () => context.push('/explain-credit'),
             ),
             const SizedBox(height: 24),

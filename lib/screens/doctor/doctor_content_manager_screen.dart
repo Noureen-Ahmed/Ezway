@@ -183,7 +183,7 @@ class _AnnouncementsTabState extends State<_AnnouncementsTab>
             subtitle: course != null ? '${course['code']}: ${course['name']}' : 'General',
             timeAgo: _timeAgo(item['createdAt'] as String),
             typeLabel: item['type'] as String? ?? 'GENERAL',
-            typeColor: const Color(0xFF2563eb),
+            typeColor: const Color(0xFF002147),
             onDelete: () => _delete(item),
           );
         },

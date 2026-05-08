@@ -7,15 +7,8 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: const Color(0xFF002147),
+      body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
@@ -65,9 +58,9 @@ class WelcomeScreen extends StatelessWidget {
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(24),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -78,7 +71,7 @@ class WelcomeScreen extends StatelessWidget {
                                 child: ElevatedButton(
                                   onPressed: () => context.go('/login'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF2563eb),
+                                    backgroundColor: const Color(0xFF002147),
                                     padding: const EdgeInsets.symmetric(vertical: 18),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -107,14 +100,14 @@ class WelcomeScreen extends StatelessWidget {
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton(
-                                  onPressed: () => context.go('/guest/home'),
+                                  onPressed: () => context.go('/guest/ar'),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(vertical: 18),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     side: const BorderSide(
-                                      color: Color(0xFF2563eb),
+                                      color: Color(0xFF002147),
                                       width: 2,
                                     ),
                                   ),
@@ -123,7 +116,7 @@ class WelcomeScreen extends StatelessWidget {
                                     children: [
                                       Icon(
                                         Icons.person_outline,
-                                        color: Color(0xFF2563eb),
+                                        color: Color(0xFF002147),
                                         size: 24,
                                       ),
                                       SizedBox(width: 12),
@@ -132,7 +125,7 @@ class WelcomeScreen extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
-                                          color: Color(0xFF2563eb),
+                                          color: Color(0xFF002147),
                                         ),
                                       ),
                                     ],
@@ -150,7 +143,6 @@ class WelcomeScreen extends StatelessWidget {
             },
           ),
         ),
-      ),
     );
   }
 

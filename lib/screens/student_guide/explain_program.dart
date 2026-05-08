@@ -71,56 +71,67 @@ class _ExplainProgramState extends State<ExplainProgram> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                     DropdownButtonFormField<String>(
-                       initialValue: selectedTrack,
-                       decoration: InputDecoration(
-                         filled: true,
-                         fillColor: const Color(0xFFF9FAFB),
-                         border: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12),
-                           borderSide: BorderSide.none,
-                         ),
-                         enabledBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12),
-                           borderSide: BorderSide(color: Colors.grey.shade300),
-                         ),
-                         focusedBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12),
-                           borderSide:
-                               const BorderSide(color: Color(0xFF2563eb)),
-                         ),
-                         contentPadding: const EdgeInsets.symmetric(
-                             horizontal: 12, vertical: 14),
-                       ),
-                       hint: const Text('Choose your track'),
-                       items: const [
-                         DropdownMenuItem(
-                           value: 'math',
-                           child: Row(
-                             children: [
-                               Icon(Icons.calculate,
-                                   color: Color(0xFF2563eb), size: 18),
-                               SizedBox(width: 8),
-                               Flexible(
-                                 child: Text('Scientific Math (علمي رياضة)'),
-                               ),
-                             ],
+DropdownButtonFormField<String>(
+                        initialValue: selectedTrack,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xFFF9FAFB),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF002147)),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 14),
+                        ),
+                        hint: const Text('Choose your track'),
+items: const [
+                           DropdownMenuItem(
+                             value: 'math',
+                             child: Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Icon(Icons.calculate,
+                                     color: Color(0xFF002147), size: 18),
+                                 SizedBox(width: 8),
+                                 Flexible(
+                                   child: Text(
+                                     'Scientific Math (علمي رياضة)',
+                                     maxLines: 1,
+                                     overflow: TextOverflow.ellipsis,
+                                   ),
+                                 ),
+                               ],
+                             ),
                            ),
-                         ),
-                         DropdownMenuItem(
-                           value: 'science',
-                           child: Row(
-                             children: [
-                               Icon(Icons.science,
-                                   color: Color(0xFF7c3aed), size: 18),
-                               SizedBox(width: 8),
-                               Flexible(
-                                 child: Text('Scientific Science (علمي علوم)'),
-                               ),
-                             ],
-                           ),
-                         ),
-                       ],
+                           DropdownMenuItem(
+                             value: 'science',
+                             child: Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Icon(Icons.science,
+                                     color: Color(0xFF7c3aed), size: 18),
+                                 SizedBox(width: 8),
+                                 Flexible(
+                                   child: Text(
+                                     'Scientific Science (علمي علوم)',
+                                     maxLines: 1,
+                                     overflow: TextOverflow.ellipsis,
+                                   ),
+                                 ),
+                               ],
+                            ),
+                          ),
+                        ],
                        onChanged: (value) {
                          setState(() {
                            selectedTrack = value;

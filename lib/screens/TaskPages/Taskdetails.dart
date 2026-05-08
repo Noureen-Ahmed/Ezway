@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/task.dart';
+import '../../core/theme_extensions.dart';
 
 class TaskDetailsPage extends StatefulWidget {
   final Task task;
@@ -23,8 +24,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     titleController = TextEditingController(text: widget.task.title);
     descController = TextEditingController(text: widget.task.description ?? '');
     selectedDate = widget.task.dueDate;
-    selectedTime = widget.task.dueDate != null 
-        ? TimeOfDay.fromDateTime(widget.task.dueDate!) 
+    selectedTime = widget.task.dueDate != null
+        ? TimeOfDay.fromDateTime(widget.task.dueDate!)
         : null;
     importance = widget.task.priority;
   }
@@ -43,20 +44,21 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Task Name", style: labelStyle),
+              Text("Task Name", style: _labelStyle(context)),
               const SizedBox(height: 6),
-              inputBox(titleController, hint: "Enter task name"),
+              _inputBox(context, titleController, hint: "Enter task name"),
               const SizedBox(height: 16),
-              const Text("Description", style: labelStyle),
+              Text("Description", style: _labelStyle(context)),
               const SizedBox(height: 6),
-              descriptionBox(descController),
+              _descriptionBox(context, descController),
               const SizedBox(height: 16),
-              const Text("Deadline", style: labelStyle),
+              Text("Deadline", style: _labelStyle(context)),
               const SizedBox(height: 6),
               Row(
                 children: [
                   Expanded(
-                    child: dateBox(
+                    child: _dateBox(
+                      context,
                       title: selectedDate == null
                           ? "Pick a date"
                           : DateFormat('MMMM dd, yyyy').format(selectedDate!),
@@ -66,7 +68,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   const SizedBox(width: 12),
                   const SizedBox(height: 6),
                   Expanded(
-                    child: dateBox(
+                    child: _dateBox(
+                      context,
                       title: selectedTime == null
                           ? "Pick time"
                           : selectedTime!.format(context),
@@ -76,15 +79,15 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 ],
               ),
               const SizedBox(height: 22),
-              const Text("Importance", style: labelStyle),
+              Text("Importance", style: _labelStyle(context)),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  priorityButton(TaskPriority.low, "Low", Colors.green),
+                  _priorityButton(context, TaskPriority.low, "Low", Colors.green),
                   const SizedBox(width: 10),
-                  priorityButton(TaskPriority.medium, "Medium", Colors.orange),
+                  _priorityButton(context, TaskPriority.medium, "Medium", Colors.orange),
                   const SizedBox(width: 10),
-                  priorityButton(TaskPriority.high, "High", Colors.red),
+                  _priorityButton(context, TaskPriority.high, "High", Colors.red),
                 ],
               ),
               const SizedBox(height: 30),
@@ -106,7 +109,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 120), // Extra padding for bottom nav
+              const SizedBox(height: 120),
             ],
           ),
         ),
@@ -160,7 +163,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     if (time != null) setState(() => selectedTime = time);
   }
 
-  Widget priorityButton(TaskPriority p, String text, Color color) {
+  Widget _priorityButton(BuildContext context, TaskPriority p, String text, Color color) {
     bool isSelected = importance == p;
     return Expanded(
       child: GestureDetector(
@@ -171,14 +174,14 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected ? color : const Color(0xFFE5E7EB),
+              color: isSelected ? color : context.borderCol,
             ),
             color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
           ),
           child: Text(
             text,
             style: TextStyle(
-              color: isSelected ? color : const Color(0xFF1F2C5C),
+              color: isSelected ? color : context.navyOrWhite,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -188,52 +191,59 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   }
 }
 
-const labelStyle = TextStyle(
-  color: Color(0xFF1F2937),
+TextStyle _labelStyle(BuildContext context) => TextStyle(
+  color: context.navyOrWhite,
   fontSize: 14,
   fontWeight: FontWeight.w600,
 );
 
-Widget inputBox(TextEditingController controller, {required String hint}) {
+BoxDecoration _inputDecoration(BuildContext context) => BoxDecoration(
+  borderRadius: const BorderRadius.all(Radius.circular(10)),
+  border: Border.fromBorderSide(BorderSide(color: context.borderCol, width: 1.0)),
+  color: context.inputFill,
+);
+
+Widget _inputBox(BuildContext context, TextEditingController controller, {required String hint}) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 12),
-    decoration: boxDecoration,
+    decoration: _inputDecoration(context),
     child: TextField(
       controller: controller,
-      decoration: InputDecoration(border: InputBorder.none, hintText: hint),
+      style: TextStyle(color: context.navyOrWhite),
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        hintText: hint,
+        hintStyle: TextStyle(color: context.mutedText),
+      ),
     ),
   );
 }
 
-Widget descriptionBox(TextEditingController controller) {
+Widget _descriptionBox(BuildContext context, TextEditingController controller) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: boxDecoration,
+    decoration: _inputDecoration(context),
     child: TextField(
       controller: controller,
       maxLines: 5,
-      decoration: const InputDecoration(border: InputBorder.none),
+      style: TextStyle(color: context.navyOrWhite),
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        hintStyle: TextStyle(color: context.mutedText),
+      ),
     ),
   );
 }
 
-Widget dateBox({required String title, required VoidCallback onTap}) {
+Widget _dateBox(BuildContext context, {required String title, required VoidCallback onTap}) {
   return GestureDetector(
     onTap: onTap,
     child: Container(
       height: 50,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: boxDecoration,
-      child: Text(title, style: const TextStyle(color: Color(0xFF1F2C5C))),
+      decoration: _inputDecoration(context),
+      child: Text(title, style: TextStyle(color: context.navyOrWhite)),
     ),
   );
 }
-
-const boxDecoration = BoxDecoration(
-  borderRadius: BorderRadius.all(Radius.circular(10)),
-  border: Border.fromBorderSide(
-    BorderSide(color: Color(0xFFE5E7EB), width: 1.0),
-  ),
-  color: Color(0xFFF9FAFB), // light gray bg for inputs
-);

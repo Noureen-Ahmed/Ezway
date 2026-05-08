@@ -100,15 +100,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: const Color(0xFF002147),
+      body: SafeArea(
           child: Column(
             children: [
               const Padding(
@@ -136,10 +129,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(32)),
+                        const BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: SingleChildScrollView(
                     child: Form(
@@ -252,14 +245,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             child: ElevatedButton(
                               onPressed: isLoading ? null : register,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563eb),
+                                backgroundColor: const Color(0xFF002147),
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 disabledBackgroundColor:
-                                    const Color(0xFF93c5fd),
+                                    const Color(0xFF4D7BAF),
                               ),
                               child: isLoading
                                   ? const SizedBox(
@@ -294,7 +287,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 child: const Text(
                                   'Log In',
                                   style: TextStyle(
-                                    color: Color(0xFF2563eb),
+                                    color: Color(0xFF002147),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -310,7 +303,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -332,7 +324,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

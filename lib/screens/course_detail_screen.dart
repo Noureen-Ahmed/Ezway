@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../core/theme_extensions.dart';
 import '../providers/course_provider.dart';
 import '../models/course.dart';
 import '../models/task.dart';
@@ -35,7 +36,6 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     final courseAsync = ref.watch(courseByIdProvider(widget.courseId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
       body: courseAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text(e.toString())),
@@ -237,7 +237,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                           Text(
                             'Class Schedule',
                             style: TextStyle(
-                              color: Colors.grey.shade800,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
@@ -256,9 +256,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: context.cardBg,
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.grey.shade200),
+                              border: Border.all(color: context.borderCol),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.02),
@@ -340,7 +340,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
+                              color: context.inputFill,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Row(
@@ -389,7 +389,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
+          color: selected ? context.cardBg : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
           boxShadow: selected
               ? [
@@ -404,7 +404,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.black87 : Colors.grey.shade700,
+            color: selected ? context.navyOrWhite : context.mutedText,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             fontSize: 13,
           ),
@@ -418,7 +418,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 28),
-          child: Text('No content yet', style: TextStyle(color: Colors.grey.shade600)),
+          child: Text('No content yet', style: TextStyle(color: context.mutedText)),
         ),
       );
     }
@@ -436,9 +436,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
               builder: (context) => FractionallySizedBox(
                 heightFactor: 0.9,
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  decoration: BoxDecoration(
+                    color: context.cardBg,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -524,9 +524,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: context.borderCol),
             ),
             child: Row(
               children: [
@@ -534,7 +534,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF4FF),
+                    color: const Color(0xFF2E6AFF).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(child: Text('W${c.week}', style: const TextStyle(fontWeight: FontWeight.w700))),
@@ -546,7 +546,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                     children: [
                       Text(c.topic, style: const TextStyle(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 6),
-                      Text(c.description, style: TextStyle(color: Colors.grey.shade600)),
+                      Text(c.description, style: TextStyle(color: context.mutedText)),
                     ],
                   ),
                 ),
@@ -572,10 +572,10 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 2,
-          color: isGraded ? Colors.green[50] : Colors.white,
+          color: isGraded ? Colors.green[50] : context.cardBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-            side: isGraded ? BorderSide(color: Colors.green[200]!) : BorderSide.none,
+            side: isGraded ? BorderSide(color: Colors.green[200]!) : BorderSide(color: context.borderCol),
           ),
           child: InkWell(
             onTap: () {
@@ -628,13 +628,13 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(a.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.grey.shade700)),
+                  Text(a.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.mutedText)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.calendar_month_outlined, size: 16),
                       const SizedBox(width: 8),
-                      Text('Due: ${_formatDate(a.dueDate)}', style: TextStyle(color: Colors.grey.shade600)),
+                      Text('Due: ${_formatDate(a.dueDate)}', style: TextStyle(color: context.mutedText)),
                       const Spacer(),
                       Icon(Icons.chevron_right, color: Colors.grey[400]),
                     ],
@@ -702,7 +702,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
             child: Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: isSubmitted ? Colors.green[50] : Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: isSubmitted ? Colors.green[200]! : Colors.grey.shade200)),
+              decoration: BoxDecoration(color: isSubmitted ? Colors.green[50] : context.cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: isSubmitted ? Colors.green[200]! : context.borderCol)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -714,11 +714,11 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Date: ${_formatDate(e.date)}', style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Date: ${_formatDate(e.date)}', style: TextStyle(color: context.mutedText)),
                   const SizedBox(height: 6),
-                  Text('Format: ${e.format}', style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Format: ${e.format}', style: TextStyle(color: context.mutedText)),
                   const SizedBox(height: 6),
-                  Text('Grading: ${e.gradingBreakdown}', style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Grading: ${e.gradingBreakdown}', style: TextStyle(color: context.mutedText)),
                 ],
               ),
             ),
@@ -751,7 +751,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+            decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: context.borderCol)),
             child: Row(
               children: [
                 Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFFFEB3B).withOpacity(0.2), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.grade, color: Color(0xFFFF9800), size: 28)),

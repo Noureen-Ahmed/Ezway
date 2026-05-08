@@ -98,7 +98,7 @@ class _DoctorDashboardScreenState
     Widget iconWidget = Icon(
       isActive ? activeIcon : icon,
       size: 24,
-      color: isActive ? const Color(0xFF4338CA) : const Color(0xFF9CA3AF),
+      color: isActive ? const Color(0xFF002147) : const Color(0xFF9CA3AF),
     );
     if (badge > 0) {
       iconWidget = Badge(
@@ -121,7 +121,7 @@ class _DoctorDashboardScreenState
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive ? const Color(0xFF4338CA) : const Color(0xFF9CA3AF),
+                color: isActive ? const Color(0xFF002147) : const Color(0xFF9CA3AF),
               ),
             ),
           ],
@@ -744,7 +744,7 @@ class _CoursesTab extends ConsumerWidget {
                   icon: const Icon(Icons.add_circle_outline, size: 16),
                   label: const Text('Add another course'),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF2563eb),
+                    foregroundColor: const Color(0xFF002147),
                   ),
                 ),
               ],
@@ -788,7 +788,7 @@ class _CoursesTab extends ConsumerWidget {
             icon: const Icon(Icons.add),
             label: const Text('Add Course'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563eb),
+              backgroundColor: const Color(0xFF002147),
               foregroundColor: Colors.white,
             ),
           ),
@@ -887,7 +887,7 @@ class _CoursesTab extends ConsumerWidget {
                                           color: const Color(0xFFeff6ff),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
-                                        child: const Icon(Icons.school, color: Color(0xFF2563eb), size: 20),
+                                        child: const Icon(Icons.school, color: Color(0xFF002147), size: 20),
                                       ),
                                       title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                                       subtitle: Text(
@@ -895,7 +895,7 @@ class _CoursesTab extends ConsumerWidget {
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                       isThreeLine: true,
-                                      trailing: const Icon(Icons.add_circle, color: Color(0xFF2563eb)),
+                                      trailing: const Icon(Icons.add_circle, color: Color(0xFF002147)),
                                       onTap: () async {
                                         Navigator.pop(ctx);
                                         await _claimCourse(context, user, code, name, c['course_id'] as String?, ref);
@@ -984,7 +984,7 @@ class _CourseCard extends StatelessWidget {
                 color: const Color(0xFFeff6ff),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.school, color: Color(0xFF2563eb)),
+              child: const Icon(Icons.school, color: Color(0xFF002147)),
             ),
             const SizedBox(width: 12),
             Expanded(

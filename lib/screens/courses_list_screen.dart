@@ -5,6 +5,7 @@ import '../providers/course_provider.dart';
 import '../providers/app_mode_provider.dart';
 import '../models/course.dart';
 import '../models/user.dart';
+import '../core/theme_extensions.dart';
 
 /// Simple, clean courses list screen for both students and professors
 class CoursesListScreen extends ConsumerWidget {
@@ -20,7 +21,6 @@ class CoursesListScreen extends ConsumerWidget {
         : ref.watch(enrolledCoursesProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: Text(isProfessor ? 'My Courses' : 'Enrolled Courses'),
         backgroundColor: const Color(0xFF002147),
@@ -41,7 +41,7 @@ class CoursesListScreen extends ConsumerWidget {
         },
         child: coursesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => _buildError(error.toString(), () {
+          error: (error, stack) => _buildError(context, error.toString(), () {
             if (isProfessor) {
               ref.invalidate(professorCoursesProvider);
             } else {
@@ -50,7 +50,7 @@ class CoursesListScreen extends ConsumerWidget {
           }),
           data: (courses) {
             if (courses.isEmpty) {
-              return _buildEmpty(isProfessor);
+              return _buildEmpty(context, isProfessor);
             }
 
             return ListView.builder(
@@ -70,7 +70,7 @@ class CoursesListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmpty(bool isProfessor) {
+  Widget _buildEmpty(BuildContext context, bool isProfessor) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -85,10 +85,10 @@ class CoursesListScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               isProfessor ? 'No courses assigned' : 'No courses enrolled',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
+                color: context.navyOrWhite,
               ),
             ),
             const SizedBox(height: 8),
@@ -97,7 +97,7 @@ class CoursesListScreen extends ConsumerWidget {
                   ? 'Contact admin to assign courses.'
                   : 'Select courses during onboarding.',
               style: TextStyle(
-                color: Colors.grey.shade500,
+                color: context.mutedText,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -108,7 +108,7 @@ class CoursesListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildError(String message, VoidCallback onRetry) {
+  Widget _buildError(BuildContext context, String message, VoidCallback onRetry) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -120,7 +120,7 @@ class CoursesListScreen extends ConsumerWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF6B7280)),
+              style: TextStyle(color: context.mutedText),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -166,11 +166,12 @@ class _CourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: context.cardBg,
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
+        side: BorderSide(color: context.borderCol),
       ),
       child: InkWell(
         onTap: onTap,
@@ -215,10 +216,10 @@ class _CourseCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       course.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
+                        color: context.navyOrWhite,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -227,9 +228,9 @@ class _CourseCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         course.professors.join(', '),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF6B7280),
+                          color: context.mutedText,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -242,15 +243,15 @@ class _CourseCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
+                  color: context.inputFill,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   '${course.creditHours}cr',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF6B7280),
+                    color: context.mutedText,
                   ),
                 ),
               ),

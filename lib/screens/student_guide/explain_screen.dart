@@ -74,7 +74,7 @@ class _ExplainScreenState extends State<ExplainScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
                     color: _currentPage == index 
-                        ? const Color(0xFF2563eb) 
+                        ? const Color(0xFF002147) 
                         : Colors.grey[300],
                   ),
                 ),
@@ -143,7 +143,7 @@ class _ExplainScreenState extends State<ExplainScreen> {
                                         'العربية',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF2563eb),
+                                          color: Color(0xFF002147),
                                         ),
                                       ),
                                       SizedBox(width: 8),
@@ -226,8 +226,8 @@ class _ExplainScreenState extends State<ExplainScreen> {
                       label: const Text('Previous'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        foregroundColor: const Color(0xFF2563eb),
-                        side: const BorderSide(color: Color(0xFF2563eb)),
+                        foregroundColor: const Color(0xFF002147),
+                        side: const BorderSide(color: Color(0xFF002147)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -247,7 +247,7 @@ class _ExplainScreenState extends State<ExplainScreen> {
                       label: const Text('Next'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: const Color(0xFF2563eb),
+                        backgroundColor: const Color(0xFF002147),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(

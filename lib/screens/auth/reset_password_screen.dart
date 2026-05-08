@@ -83,15 +83,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: const Color(0xFF002147),
+      body: SafeArea(
           child: Column(
             children: [
               Padding(
@@ -119,9 +112,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: SingleChildScrollView(
                     child: Form(
@@ -150,7 +144,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
+                                borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
                               ),
                             ),
                             validator: (value) {
@@ -185,7 +179,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
+                                borderSide: const BorderSide(color: Color(0xFF002147), width: 2),
                               ),
                             ),
                             validator: (value) {
@@ -204,12 +198,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _resetPassword,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563eb),
+                                backgroundColor: const Color(0xFF002147),
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                disabledBackgroundColor: const Color(0xFF93c5fd),
+                                disabledBackgroundColor: const Color(0xFF4D7BAF),
                               ),
                               child: _isLoading
                                   ? const SizedBox(
@@ -239,7 +233,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             ],
           ),
         ),
-      ),
     );
   }
 }

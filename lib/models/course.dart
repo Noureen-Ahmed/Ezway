@@ -133,7 +133,10 @@ class Course {
               ?.map((e) => Grades.fromJson(e))
               .toList() ?? [],
       enrollmentStatus: json['enrollmentStatus'] == 'enrolled' ? EnrollmentStatus.enrolled : EnrollmentStatus.available,
-      stats: json['stats'] as Map<String, dynamic>?,
+      stats: json['stats'] as Map<String, dynamic>? ??
+          (json['enrollmentCount'] != null
+              ? {'students': (json['enrollmentCount'] as num).toInt()}
+              : null),
       isPrimary: json['isPrimary'] == true,
     );
   }

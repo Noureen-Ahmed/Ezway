@@ -236,13 +236,7 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF050816), Color(0xFF1a1f3a)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: const Color(0xFF002147),
         child: SafeArea(
           child: Column(
             children: [
@@ -300,7 +294,7 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1a1f3a),
+                                  color: Color(0xFF002147),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -384,7 +378,7 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1a1f3a),
+                                      color: Color(0xFF002147),
                                     ),
                                   ),
                                   // Category Filter
@@ -456,7 +450,7 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
                                   onPressed:
                                       _isSaving ? null : _finishSelection,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF2563eb),
+                                    backgroundColor: const Color(0xFF002147),
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 16),
                                     shape: RoundedRectangleBorder(
@@ -535,7 +529,7 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color:
-                isSelected ? const Color(0xFF2563eb) : const Color(0xFFe5e7eb),
+                isSelected ? const Color(0xFF002147) : const Color(0xFFe5e7eb),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -547,10 +541,10 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color:
-                    isSelected ? const Color(0xFF2563eb) : Colors.transparent,
+                    isSelected ? const Color(0xFF002147) : Colors.transparent,
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFF2563eb)
+                      ? const Color(0xFF002147)
                       : const Color(0xFFd1d5db),
                   width: 2,
                 ),

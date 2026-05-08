@@ -249,6 +249,7 @@ router.put('/users/:id',
   [
     param('id').notEmpty(),
     body('name').optional().trim().notEmpty(),
+    body('email').optional().isEmail().normalizeEmail(),
     body('role').optional().isIn(['STUDENT', 'PROFESSOR', 'ADMIN']),
     body('isActive').optional().isBoolean(),
     body('isVerified').optional().isBoolean(),
@@ -257,12 +258,13 @@ router.put('/users/:id',
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { name, role, isActive, isVerified, departmentId, programId, level, gpa } = req.body;
+      const { name, email, role, isActive, isVerified, departmentId, programId, level, gpa } = req.body;
 
       const user = await prisma.user.update({
         where: { id },
         data: {
           ...(name && { name }),
+          ...(email && { email }),
           ...(role && { role }),
           ...(isActive !== undefined && { isActive }),
           ...(isVerified !== undefined && { isVerified }),

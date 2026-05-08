@@ -75,7 +75,7 @@ class GuestHomeScreen extends StatelessWidget {
                   width: 60,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2563eb),
+                    color: const Color(0xFF002147),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

@@ -80,7 +80,7 @@ class _AdvisingChatScreenState extends ConsumerState<AdvisingChatScreen> {
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isMe ? const Color(0xFF6366F1) : Colors.grey[200],
+                      color: isMe ? const Color(0xFF002147) : Colors.grey[200],
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
@@ -139,7 +139,7 @@ class _AdvisingChatScreenState extends ConsumerState<AdvisingChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.send, color: Color(0xFF6366F1)),
+                  icon: const Icon(Icons.send, color: Color(0xFF002147)),
                   onPressed: _sendMessage,
                 ),
               ],

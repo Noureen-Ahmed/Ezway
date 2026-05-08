@@ -9,6 +9,9 @@ import 'professor/professor_profile_screen.dart';
 import '../providers/task_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/schedule_provider.dart';
+import '../providers/cgpa_provider.dart';
+import '../providers/theme_provider.dart';
+import '../core/theme_extensions.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -38,7 +41,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final userAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
       body: userAsync.when(
         data: (user) {
           if (user == null) return const Center(child: Text('User not found'));
@@ -55,7 +57,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 delegate: _TabBarDelegate(
                   tabBar: TabBar(
                     controller: _tabController,
-                    labelColor: const Color(0xFF002147),
+                    labelColor: context.navyOrWhite,
                     unselectedLabelColor: const Color(0xFF9CA3AF),
                     indicatorColor: const Color(0xFFFDC800),
                     indicatorWeight: 3,
@@ -325,6 +327,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   // ============ SETTINGS TAB ============
 
   Widget _buildSettingsTab(BuildContext context, User user, WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -342,6 +345,42 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 context,
                 MaterialPageRoute(
                     builder: (context) => const EditProfileScreen()),
+              ),
+            ),
+            const Divider(height: 1, indent: 20, endIndent: 20),
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF002147).withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: const Color(0xFF002147),
+                  size: 24,
+                ),
+              ),
+              title: Text(
+                'Dark Mode',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: context.navyOrWhite),
+              ),
+              subtitle: Text(
+                isDark ? 'On' : 'Off',
+                style:
+                    const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+              ),
+              trailing: Switch(
+                value: isDark,
+                activeColor: const Color(0xFF002147),
+                activeTrackColor: const Color(0xFFFDC800),
+                onChanged: (_) =>
+                    ref.read(themeModeProvider.notifier).toggle(),
               ),
             ),
           ]),
@@ -364,7 +403,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -401,8 +440,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(
-                    color: Color(0xFF002147),
+                  style: TextStyle(
+                    color: context.navyOrWhite,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -419,11 +458,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final coursesAsync = ref.watch(enrolledCoursesProvider);
     final courseCount =
         coursesAsync.whenOrNull(data: (courses) => courses.length) ?? 0;
+    final cgpaAsync = ref.watch(storedCGPAProvider);
+    String displayedGPA = cgpaAsync.whenOrNull(data: (cgpa) => cgpa) ?? user.gpa?.toString() ?? 'N/A';
     return Row(
       children: [
         Expanded(
             child: _buildStatItem(
-                'GPA', user.gpa?.toString() ?? 'N/A', Colors.amber)),
+                'GPA', displayedGPA, Colors.amber)),
         const SizedBox(width: 12),
         Expanded(
             child: _buildStatItem(
@@ -440,7 +481,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -477,10 +518,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF002147),
+        color: context.navyOrWhite,
         letterSpacing: 1.2,
       ),
     );
@@ -489,7 +530,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _buildListCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -522,10 +563,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
-            color: Color(0xFF002147)),
+            color: context.navyOrWhite),
       ),
       subtitle: Text(
         subtitle,
@@ -565,6 +606,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: context.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -581,15 +623,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     color: Color(0xFF002147), size: 40),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Student Dash 2.0',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: context.navyOrWhite),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Your ultimate academic companion. Designed to help you track your schedule, assignments, and exams with ease.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, height: 1.6),
+                style: TextStyle(color: context.mutedText, height: 1.6),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -620,22 +662,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Change Password',
+        backgroundColor: context.cardBg,
+        title: Text('Change Password',
             style: TextStyle(
-                color: Color(0xFF002147), fontWeight: FontWeight.bold)),
+                color: context.navyOrWhite, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: oldController,
-              decoration: const InputDecoration(labelText: 'Current Password'),
+              decoration: InputDecoration(
+                labelText: 'Current Password',
+                labelStyle: TextStyle(color: context.mutedText),
+              ),
+              style: TextStyle(color: context.navyOrWhite),
               obscureText: true,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: newController,
-              decoration: const InputDecoration(labelText: 'New Password'),
+              decoration: InputDecoration(
+                labelText: 'New Password',
+                labelStyle: TextStyle(color: context.mutedText),
+              ),
+              style: TextStyle(color: context.navyOrWhite),
               obscureText: true,
             ),
           ],
@@ -643,8 +693,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
+            child: Text('Cancel',
+                style: TextStyle(color: context.mutedText)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -678,16 +728,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Logout',
+        backgroundColor: context.cardBg,
+        title: Text('Logout',
             style: TextStyle(
-                color: Color(0xFF002147), fontWeight: FontWeight.bold)),
-        content: const Text('Ready to sign out of your student dashboard?'),
+                color: context.navyOrWhite, fontWeight: FontWeight.bold)),
+        content: Text('Ready to sign out of your student dashboard?',
+            style: TextStyle(color: context.navyOrWhite.withValues(alpha: 0.8))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child:
-                const Text('Stay', style: TextStyle(color: Color(0xFF6B7280))),
+                Text('Stay', style: TextStyle(color: context.mutedText)),
           ),
           TextButton(
             onPressed: () async {
@@ -702,9 +753,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
               if (context.mounted) context.go('/login');
             },
-            child: const Text('Logout',
+            child: Text('Logout',
                 style: TextStyle(
-                    color: Color(0xFF002147), fontWeight: FontWeight.bold)),
+                    color: context.navyOrWhite, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -723,7 +774,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: tabBar,
     );
   }
@@ -735,5 +786,5 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => tabBar.preferredSize.height;
 
   @override
-  bool shouldRebuild(covariant _TabBarDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant _TabBarDelegate oldDelegate) => true;
 }

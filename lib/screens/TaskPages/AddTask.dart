@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../notification_service.dart';
+import '../../core/theme_extensions.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -20,19 +21,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2C5C)),
+          icon: Icon(Icons.arrow_back, color: context.navyOrWhite),
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           "Add Task",
           style: TextStyle(
-            color: Color(0xFF1F2C5C),
+            color: context.navyOrWhite,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -177,8 +176,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Color(0xFF1F2C5C),
+      style: TextStyle(
+        color: context.navyOrWhite,
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),
@@ -186,37 +185,53 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   Widget _buildInputBox(TextEditingController controller, {required String hint}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+    return TextField(
+      controller: controller,
+      style: TextStyle(color: context.navyOrWhite),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        filled: true,
+        fillColor: context.inputFill,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: context.borderCol, width: 1.5),
         ),
       ),
     );
   }
 
   Widget _buildLargeInputBox(TextEditingController controller, {required String hint}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        maxLines: 4,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+    return TextField(
+      controller: controller,
+      maxLines: 4,
+      style: TextStyle(color: context.navyOrWhite),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        filled: true,
+        fillColor: context.inputFill,
+        contentPadding: const EdgeInsets.all(16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: context.borderCol, width: 1.5),
         ),
       ),
     );
@@ -229,16 +244,16 @@ class _AddTaskPageState extends State<AddTaskPage> {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
+          color: context.inputFill,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: const Color(0xFF1F2C5C)),
+            Icon(icon, size: 18, color: context.navyOrWhite),
             const SizedBox(width: 8),
             Text(
               title,
-              style: const TextStyle(color: Color(0xFF1F2C5C), fontSize: 14),
+              style: TextStyle(color: context.navyOrWhite, fontSize: 14),
             ),
           ],
         ),
@@ -260,7 +275,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               color: isSelected ? color : Colors.transparent,
               width: 2,
             ),
-            color: isSelected ? color.withValues(alpha: 0.1) : const Color(0xFFF3F4F6),
+            color: isSelected ? color.withValues(alpha: 0.1) : context.inputFill,
           ),
           child: Text(
             text,

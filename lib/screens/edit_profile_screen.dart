@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/theme_extensions.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/app_session_provider.dart';
 import '../widgets/user_avatar.dart';
@@ -72,8 +73,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         if (uploadedUrl != null) {
-          final uniqueUrl = '$uploadedUrl?t=${DateTime.now().millisecondsSinceEpoch}';
-          setState(() => _avatarUrl = uniqueUrl);
+          setState(() => _avatarUrl = uploadedUrl);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Profile picture uploaded!'), backgroundColor: Colors.green),
@@ -128,22 +128,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     const navyColor = Color(0xFF002147);
     const goldColor = Color(0xFFFDC800);
-    const bgColor = Color(0xFFF8F9FA);
 
     return Scaffold(
-      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Edit Profile', style: TextStyle(color: navyColor, fontWeight: FontWeight.bold)),
-        backgroundColor: bgColor,
+        title: Text('Edit Profile', style: TextStyle(color: context.navyOrWhite, fontWeight: FontWeight.bold)),
+        backgroundColor: context.pageBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: navyColor),
+          icon: Icon(Icons.close, color: context.navyOrWhite),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           TextButton(
             onPressed: _saveProfile,
-            child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: navyColor)),
+            child: Text('Save', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: context.navyOrWhite)),
           ),
         ],
       ),
@@ -198,9 +196,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F7FF),
+                  color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                  border: Border.all(color: context.borderCol),
                 ),
                 child: Row(
                   children: [
@@ -209,7 +207,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Expanded(
                       child: Text(
                         'Name, faculty, department, and level are synced from UMS and cannot be edited here.',
-                        style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                        style: TextStyle(color: context.mutedText, fontSize: 13),
                       ),
                     ),
                   ],
@@ -221,7 +219,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               TextFormField(
                 controller: _gpaController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(color: navyColor),
+                style: TextStyle(color: context.navyOrWhite),
                 decoration: InputDecoration(
                   labelText: 'GPA',
                   labelStyle: TextStyle(color: navyColor.withValues(alpha: 0.6)),
@@ -239,7 +237,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     borderSide: const BorderSide(color: navyColor, width: 2),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.inputFill,
                   helperText: 'Enter your cumulative GPA (e.g. 3.5)',
                 ),
                 validator: (v) {

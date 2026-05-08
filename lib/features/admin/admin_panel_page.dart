@@ -586,14 +586,6 @@ class _DoctorsSectionState extends State<_DoctorsSection> {
     }
   }
 
-  Future<void> _viewProfile(Map<String, dynamic> doctor) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => _DoctorProfilePage(doctor: doctor),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF002147)));
@@ -647,7 +639,7 @@ class _DoctorsSectionState extends State<_DoctorsSection> {
               onAssign: (courseId) => _assign(_doctors[index]['id'] as String, courseId),
               onAssignBatch: (courseIds) => _assignBatch(_doctors[index]['id'] as String, courseIds),
               onRemove: (courseId) => _remove(_doctors[index]['id'] as String, courseId),
-              onProfile: () => _viewProfile(_doctors[index]),
+              onDeleted: _loadData,
             ),
           ),
         ),
@@ -656,13 +648,13 @@ class _DoctorsSectionState extends State<_DoctorsSection> {
   }
 }
 
-class _DoctorCard extends StatefulWidget {
+class _DoctorCard extends StatelessWidget {
   final Map<String, dynamic> doctor;
   final List<Map<String, dynamic>> courses;
   final Future<void> Function(String courseId) onAssign;
   final Future<void> Function(List<String> courseIds) onAssignBatch;
   final Future<void> Function(String courseId) onRemove;
-  final VoidCallback onProfile;
+  final Future<void> Function() onDeleted;
 
   const _DoctorCard({
     super.key,
@@ -671,203 +663,83 @@ class _DoctorCard extends StatefulWidget {
     required this.onAssign,
     required this.onAssignBatch,
     required this.onRemove,
-    required this.onProfile,
+    required this.onDeleted,
   });
 
   @override
-  State<_DoctorCard> createState() => _DoctorCardState();
-}
-
-class _DoctorCardState extends State<_DoctorCard> {
-  bool _expanded = false;
-  String _searchQuery = '';
-  final Set<String> _selectedCourseIds = {};
-
-  @override
   Widget build(BuildContext context) {
-    final assigned = List<Map<String, dynamic>>.from(widget.doctor['assignedCourses'] ?? []);
-    final assignedIds = assigned.map((c) => c['id'] as String).toSet();
-    final unassigned = widget.courses.where((c) => !assignedIds.contains(c['id'])).toList();
-    final filteredUnassigned = unassigned.where((c) {
-      final query = _searchQuery.toLowerCase();
-      return (c['code'] as String).toLowerCase().contains(query) ||
-          (c['name'] as String? ?? '').toLowerCase().contains(query);
-    }).toList();
-
+    final assigned = List<Map<String, dynamic>>.from(doctor['assignedCourses'] ?? []);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xFFE5E7EB))),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () {
-              setState(() {
-                _expanded = !_expanded;
-                if (!_expanded) {
-                  _selectedCourseIds.clear();
-                  _searchQuery = '';
-                }
-              });
-            },
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: const Color(0xFF002147),
-                    child: Text(
-                      (widget.doctor['name'] as String? ?? 'D')[0].toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.doctor['name'] as String? ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          widget.doctor['email'] as String? ?? '',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: assigned.isEmpty ? Colors.red[50] : Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${assigned.length} course${assigned.length != 1 ? 's' : ''}',
-                      style: TextStyle(fontSize: 11, color: assigned.isEmpty ? Colors.red : Colors.green[700], fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(Icons.info_outline, size: 20, color: Color(0xFF002147)),
-                    onPressed: widget.onProfile,
-                    tooltip: 'View Profile',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(_expanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey),
-                ],
-              ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      child: InkWell(
+        onTap: () async {
+          await Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => _DoctorManagementPage(
+              doctor: doctor,
+              courses: courses,
+              onAssign: onAssign,
+              onAssignBatch: onAssignBatch,
+              onRemove: onRemove,
+              onDeleted: onDeleted,
             ),
+          ));
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: const Color(0xFF002147),
+                child: Text(
+                  (doctor['name'] as String? ?? 'D')[0].toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doctor['name'] as String? ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      doctor['email'] as String? ?? '',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: assigned.isEmpty ? Colors.red[50] : Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${assigned.length} course${assigned.length != 1 ? 's' : ''}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: assigned.isEmpty ? Colors.red : Colors.green[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+            ],
           ),
-          if (_expanded) ...[
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (assigned.isNotEmpty) ...[
-                    const Text('Assigned Courses:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey)),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: assigned
-                          .map((c) => Chip(
-                                label: Text('${c['code']}', style: const TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis, maxLines: 1),
-                                deleteIcon: const Icon(Icons.close, size: 14),
-                                onDeleted: () => widget.onRemove(c['id'] as String),
-                                backgroundColor: const Color(0xFFEFF6FF),
-                                padding: EdgeInsets.zero,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (unassigned.isNotEmpty) ...[
-                    const Text('Add Courses:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search courses...',
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.search, size: 18),
-                      ),
-                      onChanged: (value) => setState(() => _searchQuery = value),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 200),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: filteredUnassigned.length,
-                        itemBuilder: (context, index) {
-                          final course = filteredUnassigned[index];
-                          final courseId = course['id'] as String;
-                          final isSelected = _selectedCourseIds.contains(courseId);
-                          return CheckboxListTile(
-                            value: isSelected,
-                            onChanged: (checked) {
-                              setState(() {
-                                if (checked == true) {
-                                  _selectedCourseIds.add(courseId);
-                                } else {
-                                  _selectedCourseIds.remove(courseId);
-                                }
-                              });
-                            },
-                            title: Text(
-                              '${course['code']} - ${course['name']}',
-                              style: const TextStyle(fontSize: 12),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            dense: true,
-                            controlAffinity: ListTileControlAffinity.leading,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: _selectedCourseIds.isNotEmpty
-                        ? () async {
-                            await widget.onAssignBatch(_selectedCourseIds.toList());
-                            if (mounted) {
-                              setState(() {
-                                _selectedCourseIds.clear();
-                                _searchQuery = '';
-                              });
-                            }
-                          }
-                        : null,
-                    icon: const Icon(Icons.add, size: 16),
-                    label: Text('Add Selected (${_selectedCourseIds.length})'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF002147),
-                      minimumSize: const Size.fromHeight(40),
-                    ),
-                  ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -891,7 +763,6 @@ class _RegisterSectionState extends ConsumerState<_RegisterSection> {
   String? _error;
   String? _success;
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
   List<Map<String, dynamic>> _departments = [];
 
@@ -1168,232 +1039,572 @@ class _ImportReport {
       );
 }
 
-class _DoctorProfilePage extends StatefulWidget {
-  final Map<String, dynamic> doctor;
+// ==================== DOCTOR MANAGEMENT PAGE ====================
 
-  const _DoctorProfilePage({required this.doctor});
+class _DoctorManagementPage extends StatefulWidget {
+  final Map<String, dynamic> doctor;
+  final List<Map<String, dynamic>> courses;
+  final Future<void> Function(String courseId) onAssign;
+  final Future<void> Function(List<String> courseIds) onAssignBatch;
+  final Future<void> Function(String courseId) onRemove;
+  final Future<void> Function() onDeleted;
+
+  const _DoctorManagementPage({
+    required this.doctor,
+    required this.courses,
+    required this.onAssign,
+    required this.onAssignBatch,
+    required this.onRemove,
+    required this.onDeleted,
+  });
 
   @override
-  State<_DoctorProfilePage> createState() => _DoctorProfilePageState();
+  State<_DoctorManagementPage> createState() => _DoctorManagementPageState();
 }
 
-class _DoctorProfilePageState extends State<_DoctorProfilePage> {
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscureNewPassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _loading = false;
-  String? _error;
-  String? _success;
+class _DoctorManagementPageState extends State<_DoctorManagementPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late Map<String, dynamic> _doctor;
+
+  @override
+  void initState() {
+    super.initState();
+    _doctor = Map<String, dynamic>.from(widget.doctor);
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  Future<void> _changePassword() async {
-    if (_newPasswordController.text != _confirmPasswordController.text) {
-      setState(() => _error = 'Passwords do not match');
-      return;
-    }
-    if (_newPasswordController.text.length < 6) {
-      setState(() => _error = 'Password must be at least 6 characters');
-      return;
-    }
-    setState(() {
-      _loading = true;
-      _error = null;
-      _success = null;
-    });
-    try {
-      final response = await http.put(
-        Uri.parse('${ApiConfig.baseUrl}/admin/users/${widget.doctor['id']}/password'),
-        headers: {...ApiConfig.authHeaders, 'Content-Type': 'application/json'},
-        body: jsonEncode({'password': _newPasswordController.text}),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          _success = 'Password updated successfully';
-          _newPasswordController.clear();
-          _confirmPasswordController.clear();
-        });
-      } else {
-        final data = jsonDecode(response.body);
-        setState(() => _error = data['error'] ?? 'Failed to update password');
-      }
-    } catch (e) {
-      setState(() => _error = 'Network error: $e');
-    } finally {
-      setState(() => _loading = false);
-    }
+  void _refreshDoctor(Map<String, dynamic> updated) {
+    setState(() => _doctor = updated);
   }
 
   @override
   Widget build(BuildContext context) {
-    final doctor = widget.doctor;
-    final name = doctor['name'] as String? ?? '';
-    final email = doctor['email'] as String? ?? '';
-    final department = doctor['department']?['name'] as String? ?? 'Not assigned';
-    final assignedCourses = (doctor['assignedCourses'] as List?) ?? [];
-    final courseCount = assignedCourses.length;
+    final name = _doctor['name'] as String? ?? '';
+    final email = _doctor['email'] as String? ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Doctor Profile'),
-        backgroundColor: const Color(0xFF002147),
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFE5E7EB))),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: const Color(0xFF002147),
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : 'D',
-                            style: const TextStyle(color: Colors.white, fontSize: 24),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF002147)),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                email,
-                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 12),
-                    _infoRow(Icons.business, 'Department', department),
-                    const SizedBox(height: 8),
-                    _infoRow(Icons.book, 'Enrolled Courses', '$courseCount'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Change Password',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF002147)),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFE5E7EB))),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _newPasswordController,
-                      obscureText: _obscureNewPassword,
-                      decoration: InputDecoration(
-                        labelText: 'New Password',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.lock, size: 20),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscureNewPassword ? Icons.visibility_off : Icons.visibility),
-                          onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      decoration: InputDecoration(
-                        labelText: 'Confirm Password',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                        ),
-                      ),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12))),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (_success != null) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_success!, style: const TextStyle(color: Colors.green, fontSize: 12))),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: _loading ? null : _changePassword,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF002147),
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      child: _loading
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Update Password'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(email, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF002147),
+        foregroundColor: Colors.white,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: const Color(0xFFFDC800),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
+          tabs: const [
+            Tab(text: 'Courses'),
+            Tab(text: 'Account'),
           ],
         ),
       ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _CoursesTab(
+            doctor: _doctor,
+            courses: widget.courses,
+            onAssign: widget.onAssign,
+            onAssignBatch: widget.onAssignBatch,
+            onRemove: (courseId) async {
+              await widget.onRemove(courseId);
+              // Refresh the local doctor data
+              await widget.onDeleted(); // triggers parent reload
+              if (mounted) Navigator.pop(context);
+            },
+          ),
+          _AccountTab(
+            doctor: _doctor,
+            onUpdated: _refreshDoctor,
+            onDeleted: () async {
+              await widget.onDeleted();
+              if (mounted) Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Text('$label: ', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-        Expanded(child: Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-      ],
+// ── Courses Tab ──────────────────────────────────────────────────────────────
+
+class _CoursesTab extends StatefulWidget {
+  final Map<String, dynamic> doctor;
+  final List<Map<String, dynamic>> courses;
+  final Future<void> Function(String) onAssign;
+  final Future<void> Function(List<String>) onAssignBatch;
+  final Future<void> Function(String) onRemove;
+
+  const _CoursesTab({
+    required this.doctor,
+    required this.courses,
+    required this.onAssign,
+    required this.onAssignBatch,
+    required this.onRemove,
+  });
+
+  @override
+  State<_CoursesTab> createState() => _CoursesTabState();
+}
+
+class _CoursesTabState extends State<_CoursesTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  String _searchQuery = '';
+  final Set<String> _selectedCourseIds = {};
+  bool _saving = false;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final assigned = List<Map<String, dynamic>>.from(widget.doctor['assignedCourses'] ?? []);
+    final assignedIds = assigned.map((c) => c['id'] as String).toSet();
+    final unassigned = widget.courses.where((c) => !assignedIds.contains(c['id'])).toList();
+    final filteredUnassigned = unassigned.where((c) {
+      final q = _searchQuery.toLowerCase();
+      return (c['code'] as String).toLowerCase().contains(q) ||
+          (c['name'] as String? ?? '').toLowerCase().contains(q);
+    }).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (assigned.isNotEmpty) ...[
+            const Text('Assigned Courses', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: assigned.map((c) => Chip(
+                label: Text(c['code'] as String, style: const TextStyle(fontSize: 11)),
+                deleteIcon: const Icon(Icons.close, size: 14),
+                onDeleted: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Remove Course'),
+                      content: Text('Remove "${c['code']}" from this doctor?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: TextButton.styleFrom(foregroundColor: Colors.red),
+                          child: const Text('Remove'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) widget.onRemove(c['id'] as String);
+                },
+                backgroundColor: const Color(0xFFEFF6FF),
+                padding: EdgeInsets.zero,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              )).toList(),
+            ),
+            const SizedBox(height: 20),
+          ],
+          if (unassigned.isNotEmpty) ...[
+            const Text('Add Courses', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+            const SizedBox(height: 8),
+            TextField(
+              decoration: const InputDecoration(
+                hintText: 'Search courses…',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search, size: 18),
+              ),
+              onChanged: (v) => setState(() => _searchQuery = v),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 280),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: filteredUnassigned.length,
+                itemBuilder: (_, i) {
+                  final course = filteredUnassigned[i];
+                  final courseId = course['id'] as String;
+                  final selected = _selectedCourseIds.contains(courseId);
+                  return CheckboxListTile(
+                    value: selected,
+                    onChanged: (v) => setState(() {
+                      if (v == true) _selectedCourseIds.add(courseId);
+                      else _selectedCourseIds.remove(courseId);
+                    }),
+                    title: Text(
+                      '${course['code']} — ${course['name']}',
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    dense: true,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: (_selectedCourseIds.isNotEmpty && !_saving)
+                  ? () async {
+                      setState(() => _saving = true);
+                      await widget.onAssignBatch(_selectedCourseIds.toList());
+                      if (mounted) setState(() { _selectedCourseIds.clear(); _searchQuery = ''; _saving = false; });
+                    }
+                  : null,
+              icon: _saving
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.add, size: 16),
+              label: Text('Add Selected (${_selectedCourseIds.length})'),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF002147),
+                minimumSize: const Size.fromHeight(44),
+              ),
+            ),
+          ],
+          if (assigned.isEmpty && unassigned.isEmpty)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text('No courses available', style: TextStyle(color: Color(0xFF6B7280))),
+            )),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Account Tab ──────────────────────────────────────────────────────────────
+
+class _AccountTab extends StatefulWidget {
+  final Map<String, dynamic> doctor;
+  final void Function(Map<String, dynamic>) onUpdated;
+  final Future<void> Function() onDeleted;
+
+  const _AccountTab({
+    required this.doctor,
+    required this.onUpdated,
+    required this.onDeleted,
+  });
+
+  @override
+  State<_AccountTab> createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<_AccountTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  late TextEditingController _nameCtrl;
+  late TextEditingController _emailCtrl;
+  final _pwCtrl = TextEditingController();
+  final _pwConfirmCtrl = TextEditingController();
+  bool _obscurePw = true;
+  bool _obscureConfirm = true;
+  bool _savingInfo = false;
+  bool _savingPw = false;
+  bool _deleting = false;
+  String? _infoMsg;
+  bool _infoIsError = false;
+  String? _pwMsg;
+  bool _pwIsError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.doctor['name'] as String? ?? '');
+    _emailCtrl = TextEditingController(text: widget.doctor['email'] as String? ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _pwCtrl.dispose();
+    _pwConfirmCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveInfo() async {
+    final name = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    if (name.isEmpty || email.isEmpty) {
+      setState(() { _infoMsg = 'Name and email cannot be empty'; _infoIsError = true; });
+      return;
+    }
+    setState(() { _savingInfo = true; _infoMsg = null; });
+    try {
+      final r = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/admin/users/${widget.doctor['id']}'),
+        headers: {...ApiConfig.authHeaders, 'Content-Type': 'application/json'},
+        body: jsonEncode({'name': name, 'email': email}),
+      );
+      if (r.statusCode == 200) {
+        final updated = Map<String, dynamic>.from(widget.doctor)
+          ..['name'] = name
+          ..['email'] = email;
+        widget.onUpdated(updated);
+        setState(() { _infoMsg = 'Account info updated'; _infoIsError = false; });
+      } else {
+        final data = jsonDecode(r.body);
+        setState(() { _infoMsg = data['error']?.toString() ?? 'Update failed'; _infoIsError = true; });
+      }
+    } catch (e) {
+      setState(() { _infoMsg = 'Network error: $e'; _infoIsError = true; });
+    } finally {
+      setState(() => _savingInfo = false);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final pw = _pwCtrl.text;
+    if (pw != _pwConfirmCtrl.text) {
+      setState(() { _pwMsg = 'Passwords do not match'; _pwIsError = true; });
+      return;
+    }
+    if (pw.length < 6) {
+      setState(() { _pwMsg = 'Minimum 6 characters'; _pwIsError = true; });
+      return;
+    }
+    setState(() { _savingPw = true; _pwMsg = null; });
+    try {
+      final r = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/admin/users/${widget.doctor['id']}/reset-password'),
+        headers: {...ApiConfig.authHeaders, 'Content-Type': 'application/json'},
+        body: jsonEncode({'newPassword': pw}),
+      );
+      if (r.statusCode == 200) {
+        _pwCtrl.clear();
+        _pwConfirmCtrl.clear();
+        setState(() { _pwMsg = 'Password reset successfully'; _pwIsError = false; });
+      } else {
+        final data = jsonDecode(r.body);
+        setState(() { _pwMsg = data['error']?.toString() ?? 'Reset failed'; _pwIsError = true; });
+      }
+    } catch (e) {
+      setState(() { _pwMsg = 'Network error: $e'; _pwIsError = true; });
+    } finally {
+      setState(() => _savingPw = false);
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: Text(
+          'Permanently delete Dr. ${widget.doctor['name']}\'s account?\n\nThis cannot be undone.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() => _deleting = true);
+    try {
+      final r = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/admin/users/${widget.doctor['id']}'),
+        headers: ApiConfig.authHeaders,
+      );
+      if (r.statusCode == 200) {
+        await widget.onDeleted();
+      } else {
+        final data = jsonDecode(r.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(data['error']?.toString() ?? 'Delete failed'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
+  Widget _msgBanner(String msg, bool isError) => Container(
+    margin: const EdgeInsets.only(top: 8),
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: isError ? Colors.red[50] : Colors.green[50],
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(children: [
+      Icon(isError ? Icons.error_outline : Icons.check_circle, color: isError ? Colors.red : Colors.green, size: 16),
+      const SizedBox(width: 8),
+      Expanded(child: Text(msg, style: TextStyle(color: isError ? Colors.red : Colors.green[700], fontSize: 12))),
+    ]),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // ── Account info ──
+        const Text('Account Info', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+        const SizedBox(height: 10),
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xFFE5E7EB))),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(children: [
+              TextField(
+                controller: _nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person, size: 20),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email, size: 20),
+                  isDense: true,
+                ),
+              ),
+              if (_infoMsg != null) _msgBanner(_infoMsg!, _infoIsError),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: _savingInfo ? null : _saveInfo,
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF002147), minimumSize: const Size.fromHeight(44)),
+                child: _savingInfo
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Save Changes'),
+              ),
+            ]),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // ── Reset password ──
+        const Text('Reset Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+        const SizedBox(height: 10),
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xFFE5E7EB))),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(children: [
+              TextField(
+                controller: _pwCtrl,
+                obscureText: _obscurePw,
+                decoration: InputDecoration(
+                  labelText: 'New Password',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock, size: 20),
+                  isDense: true,
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePw ? Icons.visibility_off : Icons.visibility, size: 18),
+                    onPressed: () => setState(() => _obscurePw = !_obscurePw),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _pwConfirmCtrl,
+                obscureText: _obscureConfirm,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                  isDense: true,
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 18),
+                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                ),
+              ),
+              if (_pwMsg != null) _msgBanner(_pwMsg!, _pwIsError),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: _savingPw ? null : _resetPassword,
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF002147), minimumSize: const Size.fromHeight(44)),
+                child: _savingPw
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Reset Password'),
+              ),
+            ]),
+          ),
+        ),
+
+        const SizedBox(height: 28),
+
+        // ── Danger zone ──
+        const Text('Danger Zone', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red)),
+        const SizedBox(height: 10),
+        Card(
+          elevation: 0,
+          color: Colors.red[50],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: Colors.red.shade200)),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Permanently deletes this doctor account and all associated data.',
+                  style: TextStyle(fontSize: 12, color: Colors.red),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: _deleting ? null : _deleteAccount,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                ),
+                child: _deleting
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.red, strokeWidth: 2))
+                    : const Text('Delete'),
+              ),
+            ]),
+          ),
+        ),
+        const SizedBox(height: 40),
+      ]),
     );
   }
 }

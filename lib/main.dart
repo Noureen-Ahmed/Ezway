@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'providers/app_session_provider.dart';
+import 'providers/theme_provider.dart';
+import 'core/app_theme.dart';
 import 'screens/dashboard_shell.dart';
 import 'screens/TaskPages/Task.dart';
 import 'screens/assignments_screen.dart';
@@ -9,16 +11,9 @@ import 'screens/schedule_screen.dart';
 import 'screens/navigate_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/course_detail_screen.dart';
-import 'screens/academic_advising_screen.dart';
-import 'screens/advising_chat_screen.dart';
-import 'screens/courses_list_screen.dart';
-import 'screens/notifications_screen.dart';
-import 'features/admin/admin_panel_page.dart';
-import 'screens/doctor/doctor_dashboard_screen.dart';
-import 'models/user.dart';
 import 'screens/auth/login_screen.dart';
+
 import 'screens/auth/register_screen.dart';
-import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/course_selection_screen.dart';
 import 'screens/auth/verification_page.dart';
 import 'screens/auth/reset_password_screen.dart';
@@ -28,12 +23,19 @@ import 'storage_services.dart';
 import 'notification_service.dart';
 import 'screens/student_guide/explain_screen.dart';
 import 'screens/student_guide/explain_program.dart';
+import 'screens/gpa_calculator_screen.dart';
+import 'screens/gpa_calculator_screen.dart';
 import 'screens/guest/guest_dashboard_shell.dart';
-import 'screens/guest/guest_home_screen.dart';
 import 'screens/adaptive_dashboard.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'services/data_service.dart';
+import 'models/user.dart';
+import 'features/admin/admin_panel_page.dart';
+import 'screens/doctor/doctor_dashboard_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/courses_list_screen.dart';
+import 'screens/advising_chat_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -139,10 +141,6 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           },
         ),
         GoRoute(
-          path: '/forgot-password',
-          builder: (context, state) => const ForgotPasswordScreen(),
-        ),
-        GoRoute(
           path: '/reset-password',
           builder: (context, state) {
             final extra = state.extra as Map<String, String>?;
@@ -160,14 +158,14 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           },
         ),
 
-        GoRoute(
-          path: '/admin',
-          builder: (context, state) => const AdminPanelPage(),
-        ),
-        GoRoute(
-          path: '/doctor',
-          builder: (context, state) => const DoctorDashboardScreen(),
-        ),
+            GoRoute(
+              path: '/admin',
+              builder: (context, state) => AdminPanelPage(),
+            ),
+            GoRoute(
+              path: '/doctor',
+              builder: (context, state) => DoctorDashboardScreen(),
+            ),
 
         ShellRoute(
           builder: (context, state, child) {
@@ -175,16 +173,8 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           },
           routes: [
             GoRoute(
-              path: '/guest/home',
-              builder: (context, state) => const GuestHomeScreen(),
-            ),
-            GoRoute(
               path: '/guest/ar',
               builder: (context, state) => const NavigateScreen(isGuest: true),
-            ),
-            GoRoute(
-              path: '/guest/credit',
-              builder: (context, state) => const ExplainScreen(),
             ),
             GoRoute(
               path: '/guest/departments',
@@ -230,15 +220,15 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
             ),
             GoRoute(
               path: '/notifications',
-              builder: (context, state) => const NotificationsScreen(),
+              builder: (context, state) => NotificationsScreen(),
             ),
             GoRoute(
               path: '/my-courses',
-              builder: (context, state) => const CoursesListScreen(),
+              builder: (context, state) => CoursesListScreen(),
             ),
             GoRoute(
               path: '/advising',
-              builder: (context, state) => const AcademicAdvisingScreen(),
+              builder: (context, state) => const GpaCalculatorScreen(),
             ),
             GoRoute(
               path: '/advising/chat/:email',
@@ -264,12 +254,14 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
       final currentLocation = _router.routerDelegate.currentConfiguration.uri.path;
       final isAuthRoute = currentLocation == '/login' ||
           currentLocation == '/register' ||
-          currentLocation == '/forgot-password' ||
           currentLocation == '/splash' ||
           currentLocation == '/welcome' ||
           currentLocation.startsWith('/guest/'); 
       final isVerificationRoute = currentLocation == '/verification';
       final isOnboardingRoute = currentLocation == '/course-selection';
+
+      // Skip redirects while session is initializing from SharedPreferences
+      if (authState is AuthLoading) return;
 
       // Handle navigation based on auth state
       if (authState is AuthUnauthenticated) {
@@ -331,26 +323,14 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
     // Initial check on first build
     WidgetsBinding.instance.addPostFrameCallback((_) => handleRedirection());
 
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp.router(
       title: 'Student Dashboard',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF6366F1),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFF6366F1),
-          unselectedItemColor: Colors.grey,
-        ),
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       routerConfig: _router,
     );
   }

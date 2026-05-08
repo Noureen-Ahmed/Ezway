@@ -57,6 +57,10 @@ class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(this.user);
 }
 
+class AuthLoading extends AuthState {
+  const AuthLoading();
+}
+
 // ============ PROVIDERS ============
 
 final appSessionControllerProvider = StateNotifierProvider<AppSessionController, AppSessionState>((ref) {
@@ -65,7 +69,7 @@ final appSessionControllerProvider = StateNotifierProvider<AppSessionController,
 
 final authStateProvider = Provider<AuthState>((ref) {
   final sessionState = ref.watch(appSessionControllerProvider);
-  
+
   if (sessionState is AppSessionAuthenticated) {
     final user = sessionState.user;
     if (user.isOnboardingComplete) {
@@ -74,7 +78,11 @@ final authStateProvider = Provider<AuthState>((ref) {
       return AuthOnboardingRequired(user);
     }
   }
-  
+
+  if (sessionState is AppSessionInitial || sessionState is AppSessionLoading) {
+    return const AuthLoading();
+  }
+
   return const AuthUnauthenticated();
 });
 
@@ -207,15 +215,16 @@ class AppSessionController extends StateNotifier<AppSessionState> {
          // (like faculty, nameAr, semester, etc.) since they aren't explicitly 
          // stored in the native DB schema (except as relations or not at all).
          // So, we merge any missing fields from the optimistic user copy.
-         final mergedUser = updatedUser.copyWith(
-           faculty: updatedUser.faculty ?? user.faculty,
-           nameAr: updatedUser.nameAr ?? user.nameAr,
-           phone: updatedUser.phone ?? user.phone,
-           semester: updatedUser.semester ?? user.semester,
-           academicYear: updatedUser.academicYear ?? user.academicYear,
-           advisorName: updatedUser.advisorName ?? user.advisorName,
-           advisorEmail: updatedUser.advisorEmail ?? user.advisorEmail,
-         );
+final mergedUser = updatedUser.copyWith(
+            faculty: updatedUser.faculty ?? user.faculty,
+            nameAr: updatedUser.nameAr ?? user.nameAr,
+            phone: updatedUser.phone ?? user.phone,
+            semester: updatedUser.semester ?? user.semester,
+            academicYear: updatedUser.academicYear ?? user.academicYear,
+            advisorName: updatedUser.advisorName ?? user.advisorName,
+            advisorEmail: updatedUser.advisorEmail ?? user.advisorEmail,
+            gpa: updatedUser.gpa ?? user.gpa,
+          );
 
          // Update with merged response
          state = AppSessionAuthenticated(mergedUser);

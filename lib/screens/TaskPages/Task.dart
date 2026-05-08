@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme_extensions.dart';
 import 'package:go_router/go_router.dart';
 import 'AddTask.dart';
 import 'Taskdetails.dart';
@@ -76,7 +77,6 @@ class TasksPage extends ConsumerWidget {
     final isNotesLoading = noteState.isLoading;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: Text(pageTitle),
         backgroundColor: const Color(0xFF002147),
@@ -204,16 +204,16 @@ class TasksPage extends ConsumerWidget {
               // ── Pending Section ────────────────────────────────────────
               Text(
                 isProfessor ? 'Notes' : 'Pending Tasks',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937)),
+                    color: Theme.of(context).colorScheme.onSurface),
               ),
               const SizedBox(height: 12),
 
               if (isProfessor) ...[
                  if (notes.isEmpty)
-                   _buildEmptyState('No notes found')
+                   _buildEmptyState(context, 'No notes found')
                  else
                    ...notes.map((note) => _NoteCard(
                      key: ValueKey(note.id),
@@ -222,7 +222,7 @@ class TasksPage extends ConsumerWidget {
                    )),
               ] else ...[
                 if (pendingPersonal.isEmpty && pendingCourse.isEmpty)
-                  _buildEmptyState('No pending tasks')
+                  _buildEmptyState(context, 'No pending tasks')
                 else ...[
                   ...pendingCourse.map((task) => _TaskCard(
                         key: ValueKey(task.id),
@@ -257,15 +257,15 @@ class TasksPage extends ConsumerWidget {
               if (!isProfessor) ...[
                 Text(
                   'Completed Tasks',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937)),
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const SizedBox(height: 12),
 
                 if (completedPersonal.isEmpty && completedCourse.isEmpty)
-                  _buildEmptyState('No completed tasks')
+                  _buildEmptyState(context, 'No completed tasks')
                 else ...[
                   ...completedCourse.map((task) => _TaskCard(
                         key: ValueKey(task.id),
@@ -300,18 +300,18 @@ class TasksPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(BuildContext context, String message) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.borderCol),
       ),
       child: Center(
         child: Text(
           message,
-          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+          style: TextStyle(color: context.mutedText, fontSize: 14),
         ),
       ),
     );
@@ -393,9 +393,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.borderCol),
       ),
       child: Column(
         children: [
@@ -407,7 +407,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            style: TextStyle(fontSize: 12, color: context.mutedText),
             textAlign: TextAlign.center,
           ),
         ],
@@ -448,7 +448,7 @@ class _TaskCard extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
+        side: BorderSide(color: context.borderCol),
       ),
       child: ListTile(
         contentPadding:
@@ -575,7 +575,7 @@ class _TaskCard extends ConsumerWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
-                  color: isCompleted ? Colors.grey : const Color(0xFF1F2937),
+                  color: isCompleted ? Colors.grey : context.navyOrWhite,
                 ),
               ),
             ),
@@ -773,7 +773,7 @@ class _NoteCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
+        side: BorderSide(color: context.borderCol),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
