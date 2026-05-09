@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -30,6 +31,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
   String? _uploadedFileUrl;
   String? _uploadedFileName;
   final TextEditingController _notesController = TextEditingController();
+  Timer? _deadlineWatcher;
 
   @override
   void initState() {
@@ -37,6 +39,31 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
     _task = widget.task;
     _initializeSubmissionData();
     _fetchTaskDetails();
+    _startDeadlineWatcher();
+  }
+
+  @override
+  void dispose() {
+    _deadlineWatcher?.cancel();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _startDeadlineWatcher() {
+    if (_task.dueDate == null) return;
+    // Check every 10 seconds — eject the student the moment the deadline passes
+    _deadlineWatcher = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!mounted) return;
+      final alreadyDone = _task.status == TaskStatus.submitted ||
+          _task.status == TaskStatus.graded;
+      if (!alreadyDone && DateTime.now().isAfter(_task.dueDate!)) {
+        _deadlineWatcher?.cancel();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Assignment deadline has passed. You can no longer submit.')),
+        );
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   void _initializeSubmissionData() {
@@ -132,17 +159,29 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
 
     setState(() => _isSubmitting = false);
 
-      if (success) {
+    if (success) {
+      _deadlineWatcher?.cancel();
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Assignment submitted successfully!')),
         );
-        // Force refresh tasks to update pending list
         ref.read(taskStateProvider.notifier).fetchTasks(force: true);
-        _fetchTaskDetails(); // Refresh local details
+        _fetchTaskDetails();
+      }
+    } else {
+      if (!mounted) return;
+      // If the deadline passed during submission, eject the student
+      if (_task.dueDate != null && DateTime.now().isAfter(_task.dueDate!)) {
+        _deadlineWatcher?.cancel();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Submission deadline has passed.')),
+        );
+        Navigator.of(context).pop();
       } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Submission failed. Please try again.')),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Submission failed. Please try again.')),
+        );
+      }
     }
   }
 

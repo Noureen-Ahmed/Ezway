@@ -53,12 +53,36 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
     super.dispose();
   }
 
+  // Returns the effective time remaining: min(duration left, time until deadline).
+  // Never negative.
+  Duration _effectiveRemaining(Duration durationLeft, DateTime? dueDate) {
+    if (dueDate == null) return durationLeft.isNegative ? Duration.zero : durationLeft;
+    final toDeadline = dueDate.difference(DateTime.now());
+    if (toDeadline <= Duration.zero) return Duration.zero;
+    final effective = durationLeft < toDeadline ? durationLeft : toDeadline;
+    return effective.isNegative ? Duration.zero : effective;
+  }
+
   Future<void> _fetchTask() async {
     try {
       final task = await DataService.getTask(widget.taskId);
       if (task == null) throw Exception('Exam not found');
 
-      // Check SharedPreferences for existing start time
+      // Block: already submitted / graded
+      if (task.status == TaskStatus.submitted || task.status == TaskStatus.graded) {
+        if (mounted) setState(() { _error = 'You have already submitted this exam.'; _isLoading = false; });
+        return;
+      }
+
+      // Block: deadline already passed
+      if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
+        if (mounted) setState(() {
+          _error = 'This exam has expired. The deadline was ${DateFormat('MMM d, h:mm a').format(task.dueDate!.toLocal())}.';
+          _isLoading = false;
+        });
+        return;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final startTimeMillis = prefs.getInt('exam_start_${widget.taskId}');
 
@@ -68,68 +92,46 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
       final totalDuration = Duration(minutes: durationMins);
 
       bool alreadyStarted = false;
-      Duration remaining = totalDuration;
+      Duration durationLeft = totalDuration;
 
       if (startTimeMillis != null) {
-        final savedStartTime = DateTime.fromMillisecondsSinceEpoch(startTimeMillis);
-        final elapsed = DateTime.now().difference(savedStartTime);
-        remaining = totalDuration - elapsed;
+        final savedStart = DateTime.fromMillisecondsSinceEpoch(startTimeMillis);
+        final elapsed = DateTime.now().difference(savedStart);
+        durationLeft = totalDuration - elapsed;
         alreadyStarted = true;
-
-        if (remaining.isNegative) {
-           // Time expired while away
-           _timeLeft = Duration.zero;
-           _task = task;
-           _isExamStarted = true;
-           WidgetsBinding.instance.addPostFrameCallback((_) {
-             _submitExam(autoSubmit: true);
-           });
-           return;
-        }
       }
 
-      // BLOCKED: Already submitted check
-      if (task.status == TaskStatus.submitted || task.status == TaskStatus.graded) {
-        setState(() {
-          _error = 'You have already submitted this exam.';
-          _isLoading = false;
-        });
-        return;
-      }
+      // Cap remaining time against the hard deadline
+      final effective = _effectiveRemaining(durationLeft, task.dueDate);
 
-      // BLOCKED: Deadline check
-      if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
-        setState(() {
-          _error = 'This exam has expired. The deadline was ${DateFormat('MMM d, h:mm a').format(task.dueDate!.toLocal())}.';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      setState(() {
+      if (effective <= Duration.zero && alreadyStarted) {
+        // Time expired while student was away — auto-submit immediately
         _task = task;
-        _isLoading = false;
+        _isExamStarted = true;
+        _timeLeft = Duration.zero;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _submitExam(autoSubmit: true));
+        return;
+      }
 
-        if (task.submission?['answers'] != null) {
-          _answers = Map<String, dynamic>.from(task.submission!['answers']);
-        }
-
-        if (alreadyStarted) {
-          _timeLeft = remaining;
-          _startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMillis!);
-          _isExamStarted = true;
-          _startTimer();
-        } else {
-          _timeLeft = totalDuration;
-        }
-      });
-    } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _task = task;
           _isLoading = false;
+          if (task.submission?['answers'] != null) {
+            _answers = Map<String, dynamic>.from(task.submission!['answers']);
+          }
+          if (alreadyStarted) {
+            _timeLeft = effective;
+            _startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMillis!);
+            _isExamStarted = true;
+            _startTimer();
+          } else {
+            _timeLeft = effective;
+          }
         });
       }
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
     }
   }
 
@@ -138,21 +140,42 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
     final now = DateTime.now();
     await prefs.setInt('exam_start_${widget.taskId}', now.millisecondsSinceEpoch);
 
+    // Recalculate effective time at start moment (cap against deadline)
+    final durationMins = (_task!.settings?.containsKey('durationMinutes') == true)
+        ? _task!.settings!['durationMinutes'] as int
+        : 60;
+    final effective = _effectiveRemaining(Duration(minutes: durationMins), _task!.dueDate);
+
+    if (effective <= Duration.zero) {
+      // Deadline passed between page load and pressing Start — eject immediately
+      _submitExam(autoSubmit: true);
+      return;
+    }
+
     setState(() {
       _startTime = now;
+      _timeLeft = effective;
       _isExamStarted = true;
     });
     _startTimer();
   }
 
   void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+
+      // Hard wall-clock deadline check — takes priority over duration countdown
+      if (_task?.dueDate != null && DateTime.now().isAfter(_task!.dueDate!)) {
+        timer.cancel();
+        _submitExam(autoSubmit: true);
+        return;
+      }
+
       if (_timeLeft.inSeconds > 0) {
-        setState(() {
-          _timeLeft = _timeLeft - const Duration(seconds: 1);
-        });
+        setState(() => _timeLeft = _timeLeft - const Duration(seconds: 1));
       } else {
-        _timer?.cancel();
+        timer.cancel();
         _submitExam(autoSubmit: true);
       }
     });
@@ -600,7 +623,13 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
   }
 
   Future<void> _submitExam({bool autoSubmit = false}) async {
+    if (_isSubmitting) return; // Guard against double-submit
+    _timer?.cancel();
     setState(() => _isSubmitting = true);
+
+    // Always clear the saved start time so the student cannot re-enter
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('exam_start_${widget.taskId}');
 
     final success = await DataService.submitTask(
       taskId: widget.taskId,
@@ -609,28 +638,34 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
       startedAt: _startTime,
     );
 
+    if (!mounted) return;
+
     if (success) {
-      if (mounted) {
-        if (autoSubmit) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Time is up! Exam submitted.')));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam submitted successfully!')));
-        }
-
-        ref.read(taskStateProvider.notifier).fetchTasks(force: true);
-        ref.invalidate(courseByIdProvider(widget.courseId));
-
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/home');
-        }
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(autoSubmit ? 'Time is up! Exam submitted.' : 'Exam submitted successfully!'),
+      ));
     } else {
-      if (mounted) {
+      // On manual submit failure: stay on page and let student retry
+      if (!autoSubmit) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to submit exam. Please try again.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit. Please try again.')),
+        );
+        return;
       }
+      // On auto-submit failure (deadline/timeout): eject the student regardless
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exam session ended.')),
+      );
+    }
+
+    // Invalidate providers and navigate out
+    ref.read(taskStateProvider.notifier).fetchTasks(force: true);
+    ref.invalidate(courseByIdProvider(widget.courseId));
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
     }
   }
 

@@ -141,12 +141,13 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TableCalendar(
-                        firstDay: DateTime.now(),
+                        firstDay: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
                         lastDay: DateTime.now().add(const Duration(days: 365)),
                         focusedDay: tempDate,
                         selectedDayPredicate: (day) => isSameDay(tempDate, day),
                         onDaySelected: (selectedDay, focusedDay) {
-                          if (selectedDay.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+                          final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                          if (selectedDay.isBefore(today)) {
                             return; // Block past dates
                           }
                           setDialogState(() {
