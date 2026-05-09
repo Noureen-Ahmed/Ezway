@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'Study_programs.dart';
 import 'departmentcard.dart';
 import 'department_details_screen.dart';
@@ -39,6 +40,10 @@ class _ExplainProgramState extends State<ExplainProgram> {
           fontWeight: FontWeight.bold,
         ),
         iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF002147)),
+          onPressed: () => context.go('/guest/ar'),
+        ),
       ),
       body: SafeArea(
         child: Padding(

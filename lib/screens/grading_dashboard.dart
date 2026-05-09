@@ -138,17 +138,20 @@ class _GradingDashboardState extends ConsumerState<GradingDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF002147),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Grading Dashboard', style: TextStyle(fontSize: 16)),
+            const Text('Grading Dashboard', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
             Text(
               widget.taskTitle,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Colors.white70),
             ),
           ],
         ),

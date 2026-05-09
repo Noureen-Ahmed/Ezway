@@ -55,7 +55,6 @@ const formatUserResponse = (user) => ({
   programId: user.programId,
   semester: user.semester,
   academicYear: user.academicYear,
-  gpa: user.gpa,
   level: user.level,
   isVerified: user.isVerified,
   isOnboardingComplete: user.isOnboardingComplete,

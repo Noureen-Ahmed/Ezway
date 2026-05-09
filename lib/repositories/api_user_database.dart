@@ -85,7 +85,6 @@ class ApiUserDatabase {
           'avatar': user.avatar,
           'major': user.major,
           'department': user.department,
-          'gpa': user.gpa,
           'level': user.level,
           'mode': user.mode.name,
           'isOnboardingComplete': user.isOnboardingComplete,

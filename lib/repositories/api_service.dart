@@ -199,7 +199,6 @@ class ApiService {
           'avatar': user.avatar,
           'major': user.major,
           'department': user.department,
-          'gpa': user.gpa,
           'level': user.level,
           'isOnboardingComplete': user.isOnboardingComplete,
           'enrolledCourses': user.enrolledCourses,

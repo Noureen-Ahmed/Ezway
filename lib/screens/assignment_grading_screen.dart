@@ -44,9 +44,9 @@ class _AssignmentGradingScreenState extends State<AssignmentGradingScreen> {
   }
 
   Future<void> _openFile(String url) async {
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open file')),

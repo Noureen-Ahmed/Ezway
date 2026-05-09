@@ -193,7 +193,6 @@ class _SelectCoursePageState extends ConsumerState<SelectCoursePage> {
         program: programName,
         programId: _selectedProgramId,
         level: _selectedLevel,
-        gpa: gpa,
         enrolledCourses: selectedCourseIds,
         isOnboardingComplete: true,
       );

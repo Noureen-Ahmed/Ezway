@@ -80,7 +80,6 @@ model User {
   phone                String?
   role                 UserRole            @default(STUDENT)
   studentId            String?             @unique @map("student_id")
-  gpa                  Float?
   level                Int?
   programId            String?             @map("program_id")
   departmentId         String?             @map("department_id")

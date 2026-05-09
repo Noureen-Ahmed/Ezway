@@ -103,10 +103,17 @@ final courseByIdProvider = FutureProvider.family<Course?, String>((ref, courseId
   return DataService.getCourse(courseId);
 });
 
-/// Professor ungraded submission counts — { total, byCourse: {courseId: count} }
-final professorUngradedProvider = FutureProvider<({int total, Map<String, int> byCourse})>((ref) async {
+/// Professor ungraded submission counts — { total, byCourse, byTask }
+/// byTask: courseId -> [{taskId, title, type, count}]
+final professorUngradedProvider = FutureProvider<({
+  int total,
+  Map<String, int> byCourse,
+  Map<String, List<Map<String, dynamic>>> byTask,
+})>((ref) async {
   final user = ref.watch(currentUserProvider).valueOrNull;
-  if (user == null || user.mode != AppMode.doctor) return (total: 0, byCourse: <String, int>{});
+  if (user == null || user.mode != AppMode.doctor) {
+    return (total: 0, byCourse: <String, int>{}, byTask: <String, List<Map<String, dynamic>>>{});
+  }
 
   final response = await http.get(
     Uri.parse('${ApiConfig.baseUrl}/tasks/professor-ungraded-counts'),
@@ -116,18 +123,26 @@ final professorUngradedProvider = FutureProvider<({int total, Map<String, int> b
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (data['success'] == true) {
-      final raw = (data['byCourse'] as Map<String, dynamic>?) ?? {};
+      final rawCourse = (data['byCourse'] as Map<String, dynamic>?) ?? {};
       final byCourse = <String, int>{};
-      for (final e in raw.entries) {
+      for (final e in rawCourse.entries) {
         byCourse[e.key] = (e.value as num).toInt();
       }
+
+      final rawTask = (data['byTask'] as Map<String, dynamic>?) ?? {};
+      final byTask = <String, List<Map<String, dynamic>>>{};
+      for (final e in rawTask.entries) {
+        byTask[e.key] = (e.value as List).cast<Map<String, dynamic>>();
+      }
+
       return (
         total: (data['total'] as num?)?.toInt() ?? 0,
         byCourse: byCourse,
+        byTask: byTask,
       );
     }
   }
-  return (total: 0, byCourse: <String, int>{});
+  return (total: 0, byCourse: <String, int>{}, byTask: <String, List<Map<String, dynamic>>>{});
 });
 
 /// Course filter state

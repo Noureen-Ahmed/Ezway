@@ -31,7 +31,6 @@ const formatUserResponse = (user) => ({
   programId: user.programId || null,
   semester: user.semester,
   academicYear: user.academicYear,
-  gpa: user.gpa,
   level: user.level,
   isVerified: user.isVerified,
   isOnboardingComplete: user.isOnboardingComplete,
@@ -273,7 +272,6 @@ router.put('/:email',
     body('major').optional(),
     body('department').optional(),
     body('program').optional(),
-    body('gpa').optional(),
     body('level').optional(),
     validate
   ],
@@ -295,8 +293,7 @@ router.put('/:email',
         departmentId, // Use IDs for relations
         programId,
         program, // Added destructuring specifically to avoid ReferenceError
-        gpa, 
-        level, 
+        level,
         isOnboardingComplete, 
         enrolledCourses 
       } = req.body;
@@ -315,7 +312,6 @@ router.put('/:email',
           ...(programId && { programId }),
           // If the frontend sends program string but no ID, save it to major
           ...((program && !programId) && { major: program }),
-          ...(gpa !== undefined && { gpa }),
           ...(level !== undefined && { level }),
           ...(isOnboardingComplete !== undefined && { isOnboardingComplete })
         },

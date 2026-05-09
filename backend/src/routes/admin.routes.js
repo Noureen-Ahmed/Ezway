@@ -103,7 +103,6 @@ router.get('/users', async (req, res, next) => {
           avatar: true,
           role: true,
           studentId: true,
-          gpa: true,
           level: true,
           department: {
             select: { id: true, code: true, name: true }
@@ -201,7 +200,7 @@ router.post('/users',
   ],
   async (req, res, next) => {
     try {
-      const { email, password, name, role, studentId, departmentId, programId, level, gpa } = req.body;
+      const { email, password, name, role, studentId, departmentId, programId, level } = req.body;
 
       // Check existing
       const existing = await prisma.user.findUnique({ where: { email } });
@@ -221,7 +220,6 @@ router.post('/users',
           departmentId,
           programId: role === 'STUDENT' ? programId : null,
           level,
-          gpa,
           isVerified: true, // Admin-created users are verified
           isOnboardingComplete: role !== 'STUDENT' // Non-students don't need onboarding
         },
@@ -258,7 +256,7 @@ router.put('/users/:id',
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { name, email, role, isActive, isVerified, departmentId, programId, level, gpa } = req.body;
+      const { name, email, role, isActive, isVerified, departmentId, programId, level } = req.body;
 
       const user = await prisma.user.update({
         where: { id },
@@ -270,8 +268,7 @@ router.put('/users/:id',
           ...(isVerified !== undefined && { isVerified }),
           ...(departmentId !== undefined && { departmentId }),
           ...(programId !== undefined && { programId }),
-          ...(level !== undefined && { level }),
-          ...(gpa !== undefined && { gpa })
+          ...(level !== undefined && { level })
         },
         include: {
           department: { select: { id: true, code: true, name: true } },

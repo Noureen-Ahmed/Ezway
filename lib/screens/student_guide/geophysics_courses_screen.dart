@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
 
-// ===== بيانات الكورسات =====
-const List<Map<String, String>> _mathCourses = [
-  // ---- المستوى الأول ----
+const List<Map<String, String>> _geophysicsCourses = [
+  // ========== المستوى الأول ==========
+  {
+    "level": "1",
+    "department": "متطلبات الجامعة",
+    "course_name": "الأم والسمامة",
+    "course_code": "SAFS 101",
+    "credit_hours": "1",
+    "prerequisites": "-",
+    "type": "mandatory",
+  },
+  {
+    "level": "1",
+    "department": "متطلبات الجامعة",
+    "course_name": "حقوق الإنسان",
+    "course_code": "HURI 101",
+    "credit_hours": "1",
+    "prerequisites": "-",
+    "type": "mandatory",
+  },
   {
     "level": "1",
     "department": "الرياضيات (متطلبات الكلية)",
@@ -41,16 +58,16 @@ const List<Map<String, String>> _mathCourses = [
   },
   {
     "level": "1",
-    "department": "الإحصاء (متطلبات الكلية)",
-    "course_name": "مقدمة في الإحصاء",
-    "course_code": "STAT 101",
-    "credit_hours": "3",
+    "department": "الجيولوجيا",
+    "course_name": "جيولوجيا طبيعية",
+    "course_code": "GEOL 101",
+    "credit_hours": "4",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
     "level": "1",
-    "department": "متطلبات جامعة",
+    "department": "متطلبات الجامعة",
     "course_name": "لغة إنجليزية (1)",
     "course_code": "ENGL 102",
     "credit_hours": "2",
@@ -59,8 +76,8 @@ const List<Map<String, String>> _mathCourses = [
   },
   {
     "level": "1",
-    "department": "متطلبات جامعة",
-    "course_name": "مدخل في الحاسب الآلي",
+    "department": "الحاسب الآلي",
+    "course_name": "مدخل إلى الحاسب الآلي",
     "course_code": "INCO 102",
     "credit_hours": "1",
     "prerequisites": "-",
@@ -68,35 +85,8 @@ const List<Map<String, String>> _mathCourses = [
   },
   {
     "level": "1",
-    "department": "الرياضيات (متطلبات الكلية)",
-    "course_name": "تفاضل وتكامل (2)",
-    "course_code": "MATH 102",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "1",
-    "department": "الرياضيات (متطلبات الكلية)",
-    "course_name": "مفاهيم أساسية في الرياضيات",
-    "course_code": "MATH 104",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "1",
-    "department": "الرياضيات (متطلبات الكلية)",
-    "course_name": "ميكانيكا (1)",
-    "course_code": "MATH 112",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "1",
-    "department": "الفيزياء (متطلبات الكلية)",
-    "course_name": "فيزياء عامة (3)",
+    "department": "الفيزياء",
+    "course_name": "فيزياء عامة (2)",
     "course_code": "PHYS 102",
     "credit_hours": "3",
     "prerequisites": "-",
@@ -104,343 +94,189 @@ const List<Map<String, String>> _mathCourses = [
   },
   {
     "level": "1",
-    "department": "علوم الحاسب (متطلبات الكلية)",
-    "course_name": "علوم حاسب آلي للرياضيات (حزم + برمجة)",
-    "course_code": "COMP 108",
+    "department": "الجيولوجيا",
+    "course_name": "مبادئ علم الحفريات والجيولوجيا التاريخية",
+    "course_code": "GEOL 102",
     "credit_hours": "3",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
     "level": "1",
-    "department": "متطلبات جامعة",
+    "department": "الجيولوجيا",
+    "course_name": "علم البلورات والمعادن",
+    "course_code": "GEOL 104",
+    "credit_hours": "4",
+    "prerequisites": "-",
+    "type": "mandatory",
+  },
+  {
+    "level": "1",
+    "department": "الجيوفيزياء",
+    "course_name": "أساسيات الجيوفيزياء",
+    "course_code": "GEOP 102",
+    "credit_hours": "3",
+    "prerequisites": "-",
+    "type": "mandatory",
+  },
+  // ========== المستوى الثاني ==========
+  {
+    "level": "2",
+    "department": "متطلبات الجامعة",
     "course_name": "لغة إنجليزية (2)",
     "course_code": "ENGL 201",
     "credit_hours": "2",
     "prerequisites": "ENGL 102",
     "type": "mandatory",
   },
-  // ---- المستوى الثاني ----
   {
     "level": "2",
-    "department": "الرياضيات",
-    "course_name": "التحليل الرياضي",
-    "course_code": "MATH 201",
+    "department": "الجيولوجيا",
+    "course_name": "بصريات المعادن",
+    "course_code": "GEOL 201",
     "credit_hours": "3",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
     "level": "2",
-    "department": "الرياضيات",
-    "course_name": "جبر خطي",
-    "course_code": "MATH 203",
+    "department": "الجيولوجيا",
+    "course_name": "علم الحفريات (1)",
+    "course_code": "GEOL 213",
     "credit_hours": "3",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
     "level": "2",
-    "department": "الرياضيات",
-    "course_name": "التحليل الاتجاهي وحساب الممتدات",
-    "course_code": "MATH 211",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات",
-    "course_name": "ميكانيكا (2)",
-    "course_code": "MATH 213",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات",
-    "course_name": "تاريخ الرياضيات",
-    "course_code": "MATH 207",
+    "department": "الجيولوجيا",
+    "course_name": "علم الحفريات (2)",
+    "course_code": "GEOL 215",
     "credit_hours": "1",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
     "level": "2",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "نظرية الأعداد",
-    "course_code": "MATH 205",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات",
-    "course_name": "معادلات تفاضلية عادية",
-    "course_code": "MATH 202",
-    "credit_hours": "3",
-    "prerequisites": "MATH 101 أو 102",
-    "type": "mandatory",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات",
-    "course_name": "تحليل حقيقي",
-    "course_code": "MATH 204",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات",
-    "course_name": "النظرية الكهرومغناطيسية",
-    "course_code": "MATH 212",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات",
-    "course_name": "ميكانيكا (3)",
-    "course_code": "MATH 214",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "2",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "نظرية الألعاب",
-    "course_code": "MATH 206",
+    "department": "علم الحيوان",
+    "course_name": "تصنيف الفقاريات",
+    "course_code": "ZOOL 217",
     "credit_hours": "2",
     "prerequisites": "-",
     "type": "elective",
   },
   {
     "level": "2",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "البرمجة الخطية",
-    "course_code": "MATH 208",
-    "credit_hours": "2",
-    "prerequisites": "-",
+    "department": "الفيزياء",
+    "course_name": "أساسيات الفيزياء الذرية والنووية",
+    "course_code": "PHYS 267",
+    "credit_hours": "1",
+    "prerequisites": "PHYS 101",
     "type": "elective",
   },
   {
     "level": "2",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "المنطق الرياضي",
-    "course_code": "MATH 222",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "2",
-    "department": "الإحصاء (اختياري)",
-    "course_name": "مبادئ نظرية الاحتمالات",
-    "course_code": "STAT 228",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  // ---- المستوى الثالث ----
-  {
-    "level": "3",
-    "department": "متطلبات جامعة",
-    "course_name": "التفكير العلمي",
-    "course_code": "SCTH 301",
+    "department": "الإحصاء",
+    "course_name": "مفاهيم إحصائية",
+    "course_code": "STAT 209",
     "credit_hours": "1",
     "prerequisites": "-",
+    "type": "elective",
+  },
+  {
+    "level": "2",
+    "department": "الجيوفيزياء",
+    "course_name": "طرق تثاقلية",
+    "course_code": "GEOP 201",
+    "credit_hours": "3",
+    "prerequisites": "GEOP 102",
     "type": "mandatory",
   },
   {
-    "level": "3",
+    "level": "2",
+    "department": "الفيزياء",
+    "course_name": "مبادئ الفيزياء الحديثة",
+    "course_code": "PHYS 215",
+    "credit_hours": "2",
+    "prerequisites": "PHYS 102",
+    "type": "mandatory",
+  },
+  {
+    "level": "2",
     "department": "الرياضيات",
-    "course_name": "الجبر المجرد (1) – نظرية الزمر",
-    "course_code": "MATH 301",
+    "course_name": "معادلات تفاضلية",
+    "course_code": "MATH 209",
+    "credit_hours": "2",
+    "prerequisites": "MATH 101",
+    "type": "mandatory",
+  },
+  {
+    "level": "2",
+    "department": "الجيولوجيا",
+    "course_name": "صخور نارية",
+    "course_code": "GEOL 202",
+    "credit_hours": "3",
+    "prerequisites": "GEOL 104",
+    "type": "mandatory",
+  },
+  {
+    "level": "2",
+    "department": "الجيولوجيا",
+    "course_name": "ترسيب وصخور رسوبية",
+    "course_code": "GEOL 204",
+    "credit_hours": "4",
+    "prerequisites": "GEOL 104",
+    "type": "mandatory",
+  },
+  {
+    "level": "2",
+    "department": "النبات",
+    "course_name": "علم النبات ونباتات حفرية",
+    "course_code": "BOTA 226",
+    "credit_hours": "2",
+    "prerequisites": "-",
+    "type": "elective",
+  },
+  {
+    "level": "2",
+    "department": "الحاسب",
+    "course_name": "مقدمة في تطبيقات الحاسب الآلي",
+    "course_code": "COMP 216",
+    "credit_hours": "2",
+    "prerequisites": "-",
+    "type": "elective",
+  },
+  {
+    "level": "2",
+    "department": "الجيوفيزياء",
+    "course_name": "أسس الطرق المغناطيسية",
+    "course_code": "GEOP 204",
     "credit_hours": "3",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "التحليل العددي",
-    "course_code": "MATH 303",
-    "credit_hours": "3",
+    "level": "2",
+    "department": "الجيوفيزياء",
+    "course_name": "أسس الطرق الكهربية",
+    "course_code": "GEOP 206",
+    "credit_hours": "2",
     "prerequisites": "-",
     "type": "mandatory",
   },
   {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "ميكانيكا الأوساط المتصلة",
-    "course_code": "MATH 311",
-    "credit_hours": "3",
+    "level": "2",
+    "department": "الجيوفيزياء",
+    "course_name": "مفاهيم الخواص الفيزيائية للصخور",
+    "course_code": "GEOP 208",
+    "credit_hours": "2",
     "prerequisites": "-",
     "type": "mandatory",
   },
-  {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "ميكانيكا الكم (1)",
-    "course_code": "MATH 313",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "الهندسة التفاضلية",
-    "course_code": "MATH 305",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "نظرية الخوارزميات",
-    "course_code": "MATH 307",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "مبادئ حساب التغيرات",
-    "course_code": "MATH 331",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "الدوال الخاصة",
-    "course_code": "MATH 317",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "مبادئ النمذجة الرياضية",
-    "course_code": "MATH 319",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "متطلبات جامعة",
-    "course_name": "أخلاقيات البحث العلمي",
-    "course_code": "ETHR 302",
-    "credit_hours": "1",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "التوبولوجي العام",
-    "course_code": "MATH 302",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "نظرية القياس",
-    "course_code": "MATH 304",
-    "credit_hours": "3",
-    "prerequisites": "MATH 204",
-    "type": "mandatory",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "الإلكتروديناميكا",
-    "course_code": "MATH 312",
-    "credit_hours": "3",
-    "prerequisites": "MATH 212",
-    "type": "mandatory",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات",
-    "course_name": "ميكانيكا الكم (2)",
-    "course_code": "MATH 314",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "بحوث العمليات",
-    "course_code": "MATH 306",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "التشفير الرياضي",
-    "course_code": "MATH 308",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "تآلفيات (Combinatorics)",
-    "course_code": "MATH 322",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "ميكانيكا الموائع",
-    "course_code": "MATH 316",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "نظرية المرونة",
-    "course_code": "MATH 318",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "3",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "ديناميكا الغازات",
-    "course_code": "MATH 332",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  // ---- المستوى الرابع ----
+  // ========== المستوى الرابع ==========
   {
     "level": "4",
-    "department": "متطلبات جامعة (اختياري)",
+    "department": "متطلبات الجامعة",
     "course_name": "مهارات العمل",
     "course_code": "SKIL 401",
     "credit_hours": "1",
@@ -449,7 +285,7 @@ const List<Map<String, String>> _mathCourses = [
   },
   {
     "level": "4",
-    "department": "متطلبات جامعة (اختياري)",
+    "department": "متطلبات الجامعة",
     "course_name": "ثقافة بيئية",
     "course_code": "ENCU 401",
     "credit_hours": "1",
@@ -458,186 +294,94 @@ const List<Map<String, String>> _mathCourses = [
   },
   {
     "level": "4",
-    "department": "متطلبات جامعة (اختياري)",
-    "course_name": "نشأة وتاريخ وتطور العلوم",
-    "course_code": "GHDS 401",
+    "department": "الجيولوجيا",
+    "course_name": "جيولوجيا المياه",
+    "course_code": "GEOL 407",
+    "credit_hours": "3",
+    "prerequisites": "GEOL 301",
+    "type": "mandatory",
+  },
+  {
+    "level": "4",
+    "department": "الجيولوجيا",
+    "course_name": "جيولوجية مصر",
+    "course_code": "GEOL 421",
+    "credit_hours": "4",
+    "prerequisites": "GEOL 326",
+    "type": "mandatory",
+  },
+  {
+    "level": "4",
+    "department": "الجيولوجيا",
+    "course_name": "جيولوجيا البترول",
+    "course_code": "GEOL 410",
+    "credit_hours": "3",
+    "prerequisites": "GEOL 204 OR GEOL 301",
+    "type": "mandatory",
+  },
+  {
+    "level": "4",
+    "department": "الجيولوجيا",
+    "course_name": "أساسيات جيولوجيا المناجم",
+    "course_code": "GEOL 420",
     "credit_hours": "1",
-    "prerequisites": "-",
-    "type": "elective",
+    "prerequisites": "GEOL 322",
+    "type": "mandatory",
   },
   {
     "level": "4",
-    "department": "الرياضيات",
-    "course_name": "التحليل الدالي",
-    "course_code": "MATH 401",
+    "department": "الجيولوجيا",
+    "course_name": "أسس الجيولوجيا الهندسية",
+    "course_code": "GEOL 422",
+    "credit_hours": "2",
+    "prerequisites": "GEOL 301",
+    "type": "mandatory",
+  },
+  {
+    "level": "4",
+    "department": "الجيوفيزياء",
+    "course_name": "تطبيقات جيولوجية لتسجيلات الآبار",
+    "course_code": "GEOP 412",
+    "credit_hours": "2",
+    "prerequisites": "GEOP 313",
+    "type": "mandatory",
+  },
+  {
+    "level": "4",
+    "department": "الجيوفيزياء",
+    "course_name": "تقييم تكاوين البترول",
+    "course_code": "GEOP 416",
     "credit_hours": "3",
-    "prerequisites": "-",
+    "prerequisites": "GEOP 313",
     "type": "mandatory",
   },
   {
     "level": "4",
-    "department": "الرياضيات",
-    "course_name": "التحليل المركب",
-    "course_code": "MATH 403",
-    "credit_hours": "3",
-    "prerequisites": "MATH 204",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "نظرية الجوامد",
-    "course_code": "MATH 411",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "النظرية النسبية",
-    "course_code": "MATH 413",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "مشروع بحثي رياضيات بحتة",
-    "course_code": "MATH 405",
-    "credit_hours": "4",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "الهندسة الجبرية",
-    "course_code": "MATH 407",
+    "department": "الجيوفيزياء",
+    "course_name": "ديناميكا الموائع في الخزنات البترولية",
+    "course_code": "GEOP 410",
     "credit_hours": "2",
     "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "نظرية الرسوم",
-    "course_code": "MATH 409",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "جبر خطي عددي",
-    "course_code": "MATH 421",
-    "credit_hours": "2",
-    "prerequisites": "MATH 203",
-    "type": "elective",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "الرياضيات البيولوجية (العمليات المتقطعة)",
-    "course_code": "MATH 415",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "الجبر المجرد (2) – الحلقات والحقول",
-    "course_code": "MATH 402",
-    "credit_hours": "3",
-    "prerequisites": "MATH 301",
     "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "المعادلات التفاضلية الجزئية",
-    "course_code": "MATH 404",
-    "credit_hours": "3",
-    "prerequisites": "MATH 202",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "الميكانيكا الإحصائية",
-    "course_code": "MATH 412",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "الميكانيكا الفضائية",
-    "course_code": "MATH 414",
-    "credit_hours": "3",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات",
-    "course_name": "مشروع بحثي رياضيات تطبيقية",
-    "course_code": "MATH 416",
-    "credit_hours": "4",
-    "prerequisites": "-",
-    "type": "mandatory",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "كوزمولوجي",
-    "course_code": "MATH 418",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "الضوء الكمي",
-    "course_code": "MATH 432",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
-  },
-  {
-    "level": "4",
-    "department": "الرياضيات (اختياري)",
-    "course_name": "ميكانيكا الكم النسبية",
-    "course_code": "MATH 434",
-    "credit_hours": "2",
-    "prerequisites": "-",
-    "type": "elective",
   },
 ];
 
-// ===== الشاشة الرئيسية =====
-class MathCoursesScreen extends StatefulWidget {
-  const MathCoursesScreen({super.key});
+class GeophysicsCoursesScreen extends StatefulWidget {
+  const GeophysicsCoursesScreen({super.key});
 
   @override
-  State<MathCoursesScreen> createState() => _MathCoursesScreenState();
+  State<GeophysicsCoursesScreen> createState() => _GeophysicsCoursesScreenState();
 }
 
-class _MathCoursesScreenState extends State<MathCoursesScreen>
+class _GeophysicsCoursesScreenState extends State<GeophysicsCoursesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String _filterType = 'all'; // all, mandatory, elective
+  String _filterType = 'all';
 
-  static const List<String> _levels = ['1', '2', '3', '4'];
+  static const List<String> _levels = ['1', '2', '4'];
   static const List<String> _levelLabels = [
     'المستوى الأول',
     'المستوى الثاني',
-    'المستوى الثالث',
     'المستوى الرابع',
   ];
 
@@ -654,16 +398,11 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
   }
 
   List<Map<String, String>> _getCoursesForLevel(String level) {
-    return _mathCourses.where((c) {
+    return _geophysicsCourses.where((c) {
       final matchLevel = c['level'] == level;
       if (_filterType == 'all') return matchLevel;
       return matchLevel && c['type'] == _filterType;
     }).toList();
-  }
-
-  int _totalHoursForLevel(String level) {
-    return _getCoursesForLevel(level).fold(
-        0, (sum, c) => sum + (int.tryParse(c['credit_hours'] ?? '0') ?? 0));
   }
 
   @override
@@ -672,7 +411,7 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: const Text(
-          'رياضيات – تخصص منفرد',
+          'جيولوجيا وبترول',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -697,9 +436,7 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
       ),
       body: Column(
         children: [
-          // ---- شريط الفلتر ----
           _buildFilterBar(),
-          // ---- محتوى التابز ----
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -717,7 +454,6 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
   static const List<String> _levelNames = [
     'الأولى',
     'الثانية',
-    'الثالثة',
     'الرابعة'
   ];
 
@@ -755,7 +491,6 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
 
   Widget _buildLevelPage(String level, String label) {
     final courses = _getCoursesForLevel(level);
-    final totalHours = _totalHoursForLevel(level);
 
     if (courses.isEmpty) {
       return Center(
@@ -775,7 +510,6 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
 
     return CustomScrollView(
       slivers: [
-        // ---- بطاقة ملخص المستوى ----
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -825,7 +559,6 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
             ),
           ),
         ),
-        // ---- قائمة الكورسات ----
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           sliver: SliverList(
@@ -845,7 +578,6 @@ class _MathCoursesScreenState extends State<MathCoursesScreen>
   }
 }
 
-// ===== بطاقة الكورس =====
 class _CourseCard extends StatelessWidget {
   final Map<String, String> course;
 
@@ -880,11 +612,9 @@ class _CourseCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // ---- الصف الأول: الكود + النوع ----
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // نوع المقرر
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -901,7 +631,6 @@ class _CourseCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // كود المادة
                 Text(
                   course['course_code'] ?? '',
                   style: const TextStyle(
@@ -914,7 +643,6 @@ class _CourseCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            // ---- اسم المادة ----
             Text(
               course['course_name'] ?? '',
               textDirection: TextDirection.rtl,
@@ -926,7 +654,6 @@ class _CourseCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            // ---- القسم ----
             Text(
               course['department'] ?? '',
               textDirection: TextDirection.rtl,
@@ -937,11 +664,9 @@ class _CourseCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // ---- الساعات والمتطلبات ----
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // المتطلب السابق
                 if (hasPrereq)
                   Flexible(
                     child: Row(
@@ -965,7 +690,6 @@ class _CourseCard extends StatelessWidget {
                   )
                 else
                   const SizedBox.shrink(),
-                // الساعات المعتمدة
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -998,7 +722,6 @@ class _CourseCard extends StatelessWidget {
   }
 }
 
-// ===== زر الفلتر =====
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool isSelected;

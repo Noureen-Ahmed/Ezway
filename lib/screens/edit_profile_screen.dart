@@ -14,8 +14,6 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _gpaController;
   String? _avatarUrl;
   final ImagePicker _picker = ImagePicker();
 
@@ -23,14 +21,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void initState() {
     super.initState();
     final user = ref.read(currentUserProvider).value;
-    _gpaController = TextEditingController(text: user?.gpa?.toString() ?? '');
     _avatarUrl = user?.avatar;
-  }
-
-  @override
-  void dispose() {
-    _gpaController.dispose();
-    super.dispose();
   }
 
   Future<void> _changePhoto() async {
@@ -98,13 +89,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-
     final currentUser = ref.read(currentUserProvider).value;
     if (currentUser == null) return;
 
     final updatedUser = currentUser.copyWith(
-      gpa: double.tryParse(_gpaController.text),
       avatar: _avatarUrl ?? currentUser.avatar,
     );
 
@@ -147,10 +135,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
+        child: Column(
             children: [
+
               // Avatar with camera button
               Center(
                 child: Stack(
@@ -213,44 +200,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // GPA field
-              TextFormField(
-                controller: _gpaController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(color: context.navyOrWhite),
-                decoration: InputDecoration(
-                  labelText: 'GPA',
-                  labelStyle: TextStyle(color: navyColor.withValues(alpha: 0.6)),
-                  prefixIcon: const Icon(Icons.star_border, color: goldColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: navyColor.withValues(alpha: 0.1)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: navyColor.withValues(alpha: 0.1)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: navyColor, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: context.inputFill,
-                  helperText: 'Enter your cumulative GPA (e.g. 3.5)',
-                ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return null; // optional
-                  final gpa = double.tryParse(v);
-                  if (gpa == null || gpa < 0 || gpa > 4) return 'Enter a valid GPA (0-4)';
-                  return null;
-                },
-              ),
               const SizedBox(height: 40),
             ],
           ),
-        ),
       ),
     );
   }

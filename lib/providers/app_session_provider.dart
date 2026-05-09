@@ -223,7 +223,6 @@ final mergedUser = updatedUser.copyWith(
             academicYear: updatedUser.academicYear ?? user.academicYear,
             advisorName: updatedUser.advisorName ?? user.advisorName,
             advisorEmail: updatedUser.advisorEmail ?? user.advisorEmail,
-            gpa: updatedUser.gpa ?? user.gpa,
           );
 
          // Update with merged response

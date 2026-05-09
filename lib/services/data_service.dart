@@ -5,6 +5,7 @@ library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../core/api_config.dart';
 import '../models/course.dart';
 import '../models/task.dart';
@@ -196,7 +197,6 @@ class DataService {
           'programId': user.programId,
           'departmentId': user.departmentId,
           'level': user.level,
-          'gpa': user.gpa,
           'avatar': user.avatar,
           'isOnboardingComplete': user.isOnboardingComplete,
           'enrolledCourses': user.enrolledCourses,
@@ -1063,10 +1063,24 @@ class DataService {
          request.headers['Authorization'] = authHeader;
       }
 
+      final ext = filename.split('.').last.toLowerCase();
+      final contentType = switch (ext) {
+        'jpg' || 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'pdf' => 'application/pdf',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'ppt' => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        _ => 'application/octet-stream',
+      };
+
       request.files.add(http.MultipartFile.fromBytes(
         'file',
         bytes,
         filename: filename,
+        contentType: MediaType.parse(contentType),
       ));
 
       var streamedResponse = await request.send().timeout(const Duration(seconds: 90));

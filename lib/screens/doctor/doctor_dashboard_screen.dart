@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/app_session_provider.dart';
 import '../../providers/course_provider.dart';
@@ -37,7 +38,16 @@ class _DoctorDashboardScreenState
     final userAsync = ref.watch(currentUserProvider);
     final user = userAsync.valueOrNull;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+        } else if (!didPop && _currentIndex == 0) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         backgroundColor: const Color(0xFF002147),
@@ -89,6 +99,7 @@ class _DoctorDashboardScreenState
              _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile'),
            ],
          ),
+      ),
       ),
     );
   }
@@ -719,7 +730,9 @@ class _CoursesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final coursesAsync = ref.watch(professorCoursesProvider);
-    final ungradedByCourse = ref.watch(professorUngradedProvider).valueOrNull?.byCourse ?? {};
+    final ungradedData = ref.watch(professorUngradedProvider).valueOrNull;
+    final ungradedByCourse = ungradedData?.byCourse ?? {};
+    final ungradedByTask = ungradedData?.byTask ?? {};
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -737,7 +750,11 @@ class _CoursesTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ...courses.map((c) => _CourseCard(course: c, ungraded: ungradedByCourse[c.id] ?? 0)),
+                ...courses.map((c) => _CourseCard(
+                  course: c,
+                  ungraded: ungradedByCourse[c.id] ?? 0,
+                  ungradedTasks: ungradedByTask[c.id] ?? [],
+                )),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: () => _showClaimCoursesDialog(context, ref, user),
@@ -950,8 +967,9 @@ class _CoursesTab extends ConsumerWidget {
 class _CourseCard extends StatelessWidget {
   final Course course;
   final int ungraded;
+  final List<Map<String, dynamic>> ungradedTasks;
 
-  const _CourseCard({required this.course, this.ungraded = 0});
+  const _CourseCard({required this.course, this.ungraded = 0, this.ungradedTasks = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -970,66 +988,93 @@ class _CourseCard extends StatelessWidget {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFe5e7eb)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFeff6ff),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.school, color: Color(0xFF002147)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  Text(
-                    course.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFeff6ff),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.school, color: Color(0xFF002147)),
                   ),
-                  Text(
-                    course.code,
-                    style: const TextStyle(
-                      fontSize: 12, color: Color(0xFF6B7280),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(course.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(course.code, style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                        if (students > 0)
+                          Text('$students students', style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                      ],
                     ),
                   ),
-                  if (students > 0)
-                    Text(
-                      '$students students',
-                      style: const TextStyle(
-                        fontSize: 12, color: Color(0xFF9CA3AF),
+                  if (ungraded > 0)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Text(
+                        '$ungraded ungraded',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.red.shade700),
                       ),
                     ),
+                  const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
                 ],
               ),
             ),
-            if (ungraded > 0)
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Text(
-                  '$ungraded ungraded',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.red.shade700,
-                  ),
+            if (ungradedTasks.isNotEmpty) ...[
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: ungradedTasks.map((t) {
+                    final type = (t['type'] as String? ?? 'ASSIGNMENT').toUpperCase();
+                    final isExam = type == 'EXAM' || type == 'QUIZ';
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isExam ? Icons.quiz_outlined : Icons.assignment_outlined,
+                            size: 14,
+                            color: Colors.red.shade400,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              t['title'] as String? ?? '',
+                              style: TextStyle(fontSize: 12, color: Colors.red.shade700),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            '${t['count']} pending',
+                            style: TextStyle(fontSize: 11, color: Colors.red.shade400, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
-            const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+            ],
           ],
         ),
       ),
@@ -1087,8 +1132,9 @@ class _NotesTab extends ConsumerWidget {
                   return _NoteCard(
                     key: ValueKey(note.id),
                     note: note,
+                    onTap: () => _viewNote(context, ref, note),
                     onEdit: () => _editNote(context, ref, note),
-                    onDelete: () => ref.read(noteStateProvider.notifier).deleteNote(note.id),
+                    onDelete: () => _confirmDelete(context, ref, note),
                   );
                 },
               ),
@@ -1115,6 +1161,22 @@ class _NotesTab extends ConsumerWidget {
     }
   }
 
+  Future<void> _viewNote(BuildContext context, WidgetRef ref, Note note) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => _NoteViewPage(
+          note: note,
+          onEdit: () => _editNote(context, ref, note),
+          onDelete: () {
+            Navigator.pop(context);
+            ref.read(noteStateProvider.notifier).deleteNote(note.id);
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _editNote(BuildContext context, WidgetRef ref, Note note) async {
     final result = await Navigator.push(
       context,
@@ -1133,16 +1195,38 @@ class _NotesTab extends ConsumerWidget {
       );
     }
   }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Note note) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: Text('Delete "${note.title}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      ref.read(noteStateProvider.notifier).deleteNote(note.id);
+    }
+  }
 }
 
 class _NoteCard extends StatelessWidget {
   final Note note;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _NoteCard({
     super.key,
     required this.note,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
@@ -1156,43 +1240,167 @@ class _NoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFBEB),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.note, color: Color(0xFFF59E0B)),
-        ),
-        title: Text(
-          note.title,
-          style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2937)),
-        ),
-        subtitle: note.content != null && note.content!.isNotEmpty
-            ? Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  note.content!,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              )
-            : null,
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            const PopupMenuItem(value: 'delete', child: Text('Delete')),
-          ],
-          onSelected: (value) {
-            if (value == 'edit') onEdit();
-            if (value == 'delete') onDelete();
-          },
+                child: const Icon(Icons.note, color: Color(0xFFF59E0B), size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      note.title,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF1F2937)),
+                    ),
+                    if (note.content != null && note.content!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        note.content!,
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 20, color: Color(0xFF6B7280)),
+                onPressed: onEdit,
+                tooltip: 'Edit',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                onPressed: onDelete,
+                tooltip: 'Delete',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+class _NoteViewPage extends StatelessWidget {
+  final Note note;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _NoteViewPage({required this.note, required this.onEdit, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFFBEB),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF002147),
+        foregroundColor: Colors.white,
+        title: const Text('Note'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Edit',
+            onPressed: () {
+              Navigator.pop(context);
+              onEdit();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Delete',
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.note, color: Color(0xFFF59E0B), size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    note.title,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _formatDate(note.updatedAt),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: note.content != null && note.content!.isNotEmpty
+                  ? Text(
+                      note.content!,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF374151),
+                        height: 1.7,
+                      ),
+                    )
+                  : const Text(
+                      'No content',
+                      style: TextStyle(fontSize: 15, color: Color(0xFF9CA3AF), fontStyle: FontStyle.italic),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime dt) {
+    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }
 

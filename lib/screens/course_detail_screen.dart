@@ -6,7 +6,6 @@ import '../core/theme_extensions.dart';
 import '../providers/course_provider.dart';
 import '../models/course.dart';
 import '../models/task.dart';
-import '../services/data_service.dart';
 import 'assignment_detail_screen.dart';
 import 'create_exam_screen.dart';
 import 'exam_runner_screen.dart';
@@ -473,10 +472,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                                 const SizedBox(height: 8),
                                 ...c.attachments.map((url) => InkWell(
                                   onTap: () async {
-                                    final uri = Uri.parse(url);
-                                    if (await canLaunchUrl(uri)) {
-                                      await launchUrl(uri);
-                                    }
+                                    try {
+                                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                    } catch (_) {}
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
@@ -566,80 +564,130 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
       );
     }
 
+    final ungradedByTask = widget.isDoctorView
+        ? (ref.watch(professorUngradedProvider).valueOrNull?.byTask[widget.courseId] ?? <Map<String, dynamic>>[])
+        : <Map<String, dynamic>>[];
+
     return Column(
       children: course.assignments.map((a) {
         final isGraded = a.status == 'GRADED' || a.grade != null;
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          color: isGraded ? Colors.green[50] : context.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: isGraded ? BorderSide(color: Colors.green[200]!) : BorderSide(color: context.borderCol),
-          ),
-          child: InkWell(
-            onTap: () {
-              if (widget.isDoctorView) {
-                Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute(builder: (context) => GradingDashboard(taskId: a.id, taskTitle: a.title, maxPoints: a.maxScore)),
-                );
-              } else {
-                Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute(
-                    builder: (context) => AssignmentDetailScreen(
-                      task: Task(
-                        id: a.id,
-                        title: a.title,
-                        subject: course.name,
-                        dueDate: a.dueDate,
-                        status: a.status == 'GRADED' ? TaskStatus.graded : a.isSubmitted ? TaskStatus.submitted : TaskStatus.pending,
-                        submission: (a.grade != null || a.status == 'GRADED') ? {'grade': a.grade, 'points': a.grade} : null,
-                        priority: TaskPriority.medium,
-                        description: a.description,
-                        createdAt: DateTime.now(),
-                        taskType: TaskType.assignment,
-                        attachments: a.attachments,
+        final isExpired = DateTime.now().isAfter(a.dueDate);
+        final isSubmitted = a.isSubmitted;
+
+        int ungradedCount = 0;
+        if (widget.isDoctorView) {
+          final taskEntry = ungradedByTask.where((t) => t['taskId'] == a.id).firstOrNull;
+          ungradedCount = (taskEntry?['count'] as int?) ?? 0;
+        }
+
+        final Color cardColor;
+        final Color borderColor;
+        if (widget.isDoctorView) {
+          cardColor = context.cardBg;
+          borderColor = context.borderCol;
+        } else if (isGraded) {
+          cardColor = Colors.green[50]!;
+          borderColor = Colors.green[200]!;
+        } else if (isSubmitted) {
+          cardColor = Colors.blue[50]!;
+          borderColor = Colors.blue[200]!;
+        } else if (isExpired) {
+          cardColor = Colors.grey[100]!;
+          borderColor = Colors.grey.shade300;
+        } else {
+          cardColor = context.cardBg;
+          borderColor = context.borderCol;
+        }
+
+        return Opacity(
+          opacity: !widget.isDoctorView && isExpired && !isSubmitted ? 0.55 : 1.0,
+          child: Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            elevation: 2,
+            color: cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: borderColor),
+            ),
+            child: InkWell(
+              onTap: () {
+                if (widget.isDoctorView) {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(builder: (context) => GradingDashboard(taskId: a.id, taskTitle: a.title, maxPoints: a.maxScore)),
+                  );
+                } else if (isExpired && !isSubmitted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('This assignment has expired and is no longer accessible.')),
+                  );
+                } else {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(
+                      builder: (context) => AssignmentDetailScreen(
+                        task: Task(
+                          id: a.id,
+                          title: a.title,
+                          subject: course.name,
+                          dueDate: a.dueDate,
+                          status: a.status == 'GRADED' ? TaskStatus.graded : a.isSubmitted ? TaskStatus.submitted : TaskStatus.pending,
+                          submission: (a.grade != null || a.status == 'GRADED') ? {'grade': a.grade, 'points': a.grade} : null,
+                          priority: TaskPriority.medium,
+                          description: a.description,
+                          createdAt: DateTime.now(),
+                          taskType: TaskType.assignment,
+                          attachments: a.attachments,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text(a.title, style: const TextStyle(fontWeight: FontWeight.w700))),
-                      if (a.status == 'GRADED' && a.grade != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                          decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.green[200]!)),
-                          child: Text('${a.grade} pts', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.green[700])),
-                        )
-                      else
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                          decoration: BoxDecoration(color: const Color(0xFFEFF4FF), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFF2E6AFF).withOpacity(0.15))),
-                          child: Text('${a.maxScore} pts', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF2E6AFF))),
-                        )
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(a.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.mutedText)),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_month_outlined, size: 16),
-                      const SizedBox(width: 8),
-                      Text('Due: ${_formatDate(a.dueDate)}', style: TextStyle(color: context.mutedText)),
-                      const Spacer(),
-                      Icon(Icons.chevron_right, color: Colors.grey[400]),
-                    ],
-                  ),
-                ],
+                  );
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: Text(a.title, style: const TextStyle(fontWeight: FontWeight.w700))),
+                        if (!widget.isDoctorView && isGraded && a.grade != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.green[200]!)),
+                            child: Text('${a.grade} pts', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.green[700])),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(color: const Color(0xFFEFF4FF), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFF2E6AFF).withOpacity(0.15))),
+                            child: Text('${a.maxScore} pts', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF2E6AFF))),
+                          )
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(a.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.mutedText)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_month_outlined, size: 16),
+                        const SizedBox(width: 8),
+                        Text('Due: ${_formatDate(a.dueDate)}', style: TextStyle(color: context.mutedText)),
+                        const Spacer(),
+                        if (widget.isDoctorView && ungradedCount > 0)
+                          Chip(label: Text('$ungradedCount ungraded'), backgroundColor: Colors.orange[100], labelStyle: TextStyle(color: Colors.orange[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)
+                        else if (!widget.isDoctorView && isGraded)
+                          Chip(label: const Text('Graded'), backgroundColor: Colors.green[100], labelStyle: TextStyle(color: Colors.green[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)
+                        else if (!widget.isDoctorView && isSubmitted)
+                          Chip(label: const Text('Submitted'), backgroundColor: Colors.blue[100], labelStyle: TextStyle(color: Colors.blue[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)
+                        else if (!widget.isDoctorView && isExpired)
+                          Chip(label: const Text('Expired'), backgroundColor: Colors.grey[200], labelStyle: const TextStyle(color: Colors.grey, fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)
+                        else
+                          const SizedBox.shrink(),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right, color: Colors.grey[400]),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -651,13 +699,17 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
   Widget _buildExamsSection(Course course) {
     final sessionState = ref.watch(appSessionControllerProvider);
     final isProfessor = sessionState is AppSessionAuthenticated && sessionState.user.isProfessor;
-    
+
     if (course.exams.isEmpty && !isProfessor) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 28),
         child: Center(child: Text('No exams scheduled', style: TextStyle(color: Colors.grey.shade600))),
       );
     }
+
+    final ungradedByTask = widget.isDoctorView
+        ? (ref.watch(professorUngradedProvider).valueOrNull?.byTask[widget.courseId] ?? <Map<String, dynamic>>[])
+        : <Map<String, dynamic>>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,6 +733,14 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         ...course.exams.map((e) {
           final isSubmitted = e.isSubmitted;
           final isGraded = e.status == 'GRADED';
+          final isExpired = DateTime.now().isAfter(e.date);
+
+          int ungradedCount = 0;
+          if (widget.isDoctorView) {
+            final taskEntry = ungradedByTask.where((t) => t['taskId'] == e.id).firstOrNull;
+            ungradedCount = (taskEntry?['count'] as int?) ?? 0;
+          }
+
           return InkWell(
             onTap: () {
               if (isProfessor) {
@@ -690,7 +750,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                   String msg = 'You have already submitted this exam.';
                   if (e.status == 'GRADED' && e.grade != null) msg += ' Grade: ${e.grade}';
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-                } else if (e.date != null && DateTime.now().isAfter(e.date)) {
+                } else if (isExpired) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('This exam has expired and is no longer accessible.'))
                   );
@@ -699,27 +759,39 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                 }
               }
             },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: isSubmitted ? Colors.green[50] : context.cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: isSubmitted ? Colors.green[200]! : context.borderCol)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(child: Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700))),
-                      if (isSubmitted) Chip(label: Text(isGraded ? 'Graded' : 'Submitted'), backgroundColor: Colors.green[100], labelStyle: TextStyle(color: Colors.green[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Date: ${_formatDate(e.date)}', style: TextStyle(color: context.mutedText)),
-                  const SizedBox(height: 6),
-                  Text('Format: ${e.format}', style: TextStyle(color: context.mutedText)),
-                  const SizedBox(height: 6),
-                  Text('Grading: ${e.gradingBreakdown}', style: TextStyle(color: context.mutedText)),
-                ],
+            child: Opacity(
+              opacity: !isProfessor && isExpired && !isSubmitted ? 0.55 : 1.0,
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isSubmitted ? Colors.green[50] : isExpired && !isProfessor ? Colors.grey[100] : context.cardBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: isSubmitted ? Colors.green[200]! : isExpired && !isProfessor ? Colors.grey.shade300 : context.borderCol),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: Text(e.title, style: const TextStyle(fontWeight: FontWeight.w700))),
+                        if (widget.isDoctorView && ungradedCount > 0)
+                          Chip(label: Text('$ungradedCount ungraded'), backgroundColor: Colors.orange[100], labelStyle: TextStyle(color: Colors.orange[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)
+                        else if (isSubmitted)
+                          Chip(label: Text(isGraded ? 'Graded' : 'Submitted'), backgroundColor: Colors.green[100], labelStyle: TextStyle(color: Colors.green[900], fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact)
+                        else if (isExpired && !isProfessor)
+                          Chip(label: const Text('Expired'), backgroundColor: Colors.grey[200], labelStyle: const TextStyle(color: Colors.grey, fontSize: 12), padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Deadline: ${_formatDate(e.date)}', style: TextStyle(color: context.mutedText)),
+                    const SizedBox(height: 6),
+                    Text('Format: ${e.format}', style: TextStyle(color: context.mutedText)),
+                    const SizedBox(height: 6),
+                    Text('Grading: ${e.gradingBreakdown}', style: TextStyle(color: context.mutedText)),
+                  ],
+                ),
               ),
             ),
           );
@@ -767,8 +839,14 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
   }
 
   Future<void> _openFile(String url) async {
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open file')),
+        );
+      }
     }
   }
 

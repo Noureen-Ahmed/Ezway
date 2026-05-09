@@ -157,31 +157,11 @@ class _GpaCalculatorScreenState extends ConsumerState<GpaCalculatorScreen> {
     if (_cgpa == null) return;
     final cgpaStr = _cgpa!.toStringAsFixed(3);
     await StorageService.setCGPA(cgpaStr);
-
-    // Update user GPA in backend
-    final sessionNotifier = ref.read(appSessionControllerProvider.notifier);
-    final sessionState = ref.read(appSessionControllerProvider);
-    bool apiSuccess = false;
-    if (sessionState is AppSessionAuthenticated) {
-      final updatedUser = sessionState.user.copyWith(gpa: _cgpa);
-      apiSuccess = await sessionNotifier.updateUser(updatedUser);
-    }
-
-    // Refresh provider (local save succeeded)
     ref.invalidate(storedCGPAProvider);
-
-    if (!apiSuccess) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('CGPA $cgpaStr saved locally. Server update failed.')),
-        );
-      }
-      return;
-    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('CGPA $cgpaStr saved to profile')),
+        SnackBar(content: Text('CGPA $cgpaStr saved')),
       );
     }
   }

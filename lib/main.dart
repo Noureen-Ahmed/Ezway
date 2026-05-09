@@ -17,7 +17,6 @@ import 'screens/auth/register_screen.dart';
 import 'screens/auth/course_selection_screen.dart';
 import 'screens/auth/verification_page.dart';
 import 'screens/auth/reset_password_screen.dart';
-import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'storage_services.dart';
 import 'notification_service.dart';
@@ -110,12 +109,8 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
     super.initState();
     _router = GoRouter(
       navigatorKey: _navigatorKey,
-      initialLocation: '/splash',
+      initialLocation: '/welcome',
       routes: [
-        GoRoute(
-          path: '/splash',
-          builder: (context, state) => const SplashScreen(),
-        ),
         GoRoute(
           path: '/welcome',
           builder: (context, state) => const WelcomeScreen(),
@@ -250,7 +245,6 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
       final currentLocation = _router.routerDelegate.currentConfiguration.uri.path;
       final isAuthRoute = currentLocation == '/login' ||
           currentLocation == '/register' ||
-          currentLocation == '/splash' ||
           currentLocation == '/welcome' ||
           currentLocation.startsWith('/guest/'); 
       final isVerificationRoute = currentLocation == '/verification';
@@ -288,7 +282,7 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
           }
         } else {
           // Students go to home
-          if (isAuthRoute || isOnboardingRoute || isVerificationRoute || currentLocation == '/splash') {
+          if (isAuthRoute || isOnboardingRoute || isVerificationRoute) {
             _router.go('/home');
           }
         }

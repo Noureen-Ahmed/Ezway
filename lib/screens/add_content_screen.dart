@@ -134,12 +134,12 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TableCalendar(
-                    firstDay:
-                        DateTime.now().subtract(const Duration(days: 365)),
+                    firstDay: DateTime.now(),
                     lastDay: DateTime.now().add(const Duration(days: 365 * 5)),
-                    focusedDay: tempDate,
+                    focusedDay: tempDate.isBefore(DateTime.now()) ? DateTime.now() : tempDate,
                     selectedDayPredicate: (day) => isSameDay(tempDate, day),
                     onDaySelected: (selectedDay, focusedDay) {
+                      if (selectedDay.isBefore(DateTime.now().subtract(const Duration(days: 1)))) return;
                       setDialogState(() {
                         tempDate = selectedDay;
                       });
@@ -255,9 +255,10 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
         result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+          withData: true,
         );
       } else {
-        result = await FilePicker.platform.pickFiles(type: FileType.any);
+        result = await FilePicker.platform.pickFiles(type: FileType.any, withData: true);
       }
 
       if (result != null) {
@@ -332,9 +333,30 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
       _showMessage('Please select a course', isError: true);
       return;
     }
+
+    // Require at least one file for assignment, lecture, and grades
+    if (_selectedType == ContentType.assignment ||
+        _selectedType == ContentType.lectureMaterial ||
+        _selectedType == ContentType.grades) {
+      if (_uploadedFiles.isEmpty) {
+        _showMessage('Please attach at least one file', isError: true);
+        return;
+      }
+    }
+
     if (_showDeadlineSection && _dueDate == null) {
-      _showMessage('Please select a date', isError: true);
+      _showMessage('Please select a due date', isError: true);
       return;
+    }
+
+    // Reject past deadlines for assignments
+    if (_showDeadlineSection && _dueDate != null) {
+      final time = _dueTime ?? const TimeOfDay(hour: 23, minute: 59);
+      final deadline = DateTime(_dueDate!.year, _dueDate!.month, _dueDate!.day, time.hour, time.minute);
+      if (deadline.isBefore(DateTime.now())) {
+        _showMessage('Deadline must be in the future', isError: true);
+        return;
+      }
     }
 
     setState(() => _isSubmitting = true);

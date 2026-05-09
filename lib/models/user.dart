@@ -19,7 +19,6 @@ class User {
   final String? faculty;
   final String? semester;
   final String? academicYear;
-  final double? gpa;
   final int? level;
   final List<String> enrolledCourses;
   final AppMode mode;
@@ -44,7 +43,6 @@ class User {
     this.faculty,
     this.semester,
     this.academicYear,
-    this.gpa,
     this.level,
     this.enrolledCourses = const [],
     this.mode = AppMode.student,
@@ -116,7 +114,6 @@ class User {
       faculty: json['faculty'],
       semester: json['semester'],
       academicYear: json['academicYear'],
-      gpa: json['gpa'] != null ? (json['gpa'] as num).toDouble() : null,
       level: json['level'],
       enrolledCourses: json['enrolledCourses'] != null 
           ? List<String>.from(json['enrolledCourses'])
@@ -147,7 +144,6 @@ class User {
       'faculty': faculty,
       'semester': semester,
       'academicYear': academicYear,
-      'gpa': gpa,
       'level': level,
       'enrolledCourses': enrolledCourses,
       'mode': mode.name,
@@ -175,7 +171,6 @@ class User {
     String? faculty,
     String? semester,
     String? academicYear,
-    double? gpa,
     int? level,
     List<String>? enrolledCourses,
     AppMode? mode,
@@ -200,7 +195,6 @@ class User {
       faculty: faculty ?? this.faculty,
       semester: semester ?? this.semester,
       academicYear: academicYear ?? this.academicYear,
-      gpa: gpa ?? this.gpa,
       level: level ?? this.level,
       enrolledCourses: enrolledCourses ?? this.enrolledCourses,
       mode: mode ?? this.mode,

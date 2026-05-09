@@ -844,26 +844,6 @@ class _StatsCSCoursesScreenState extends State<StatsCSCoursesScreen>
                               color: Colors.white70, fontSize: 14)),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Text('$totalHours',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold)),
-                        const Text('ساعة',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 12)),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

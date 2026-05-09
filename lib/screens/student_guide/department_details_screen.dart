@@ -20,6 +20,7 @@ import 'medical_entomology_courses_screen.dart';
 import 'biochemistry_courses_screen.dart';
 import 'biochem_chem_courses_screen.dart';
 import 'microbiology_courses_screen.dart';
+import 'geophysics_courses_screen.dart';
 
 class DepartmentDetailsScreen extends StatefulWidget {
   final String title;
@@ -310,6 +311,14 @@ class _DepartmentDetailsScreenState extends State<DepartmentDetailsScreen> {
                         MaterialPageRoute(
                           builder: (context) =>
                               const MicrobiologyCoursesScreen(),
+                        ),
+                      );
+                    } else if (programAR.trim() == 'جيولوجيا وبترول') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const GeophysicsCoursesScreen(),
                         ),
                       );
                     } else {

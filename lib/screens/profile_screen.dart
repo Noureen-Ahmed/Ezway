@@ -9,7 +9,6 @@ import 'professor/professor_profile_screen.dart';
 import '../providers/task_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/schedule_provider.dart';
-import '../providers/cgpa_provider.dart';
 import '../providers/theme_provider.dart';
 import '../core/theme_extensions.dart';
 
@@ -194,9 +193,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Color(0xFFFDC800)),
-        onPressed: () {
-          context.go('/home');
-        },
+        onPressed: () => context.go('/home'),
       ),
     );
   }
@@ -220,7 +217,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           const SizedBox(height: 10),
           _buildInfoCard(
             icon: Icons.credit_card,
-            title: 'Student ID',
+            title: _idLabel(user.studentId),
             value: user.studentId ?? user.email.split('@').first,
           ),
           const SizedBox(height: 10),
@@ -340,7 +337,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             _buildSettingsTile(
               icon: Icons.person_outline,
               title: 'Edit Profile',
-              subtitle: 'Update your GPA or profile photo',
+              subtitle: 'Update your profile photo',
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -458,14 +455,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final coursesAsync = ref.watch(enrolledCoursesProvider);
     final courseCount =
         coursesAsync.whenOrNull(data: (courses) => courses.length) ?? 0;
-    final cgpaAsync = ref.watch(storedCGPAProvider);
-    String displayedGPA = cgpaAsync.whenOrNull(data: (cgpa) => cgpa) ?? user.gpa?.toString() ?? 'N/A';
     return Row(
       children: [
-        Expanded(
-            child: _buildStatItem(
-                'GPA', displayedGPA, Colors.amber)),
-        const SizedBox(width: 12),
         Expanded(
             child: _buildStatItem(
                 'Level', user.level?.toString() ?? 'N/A', Colors.green)),
@@ -513,6 +504,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ],
       ),
     );
+  }
+
+  // Egyptian national IDs are exactly 14 digits starting with 2 or 3.
+  // Anything else (shorter, contains letters, starts with other digits) is treated as a passport ID.
+  String _idLabel(String? studentId) {
+    if (studentId == null || studentId.isEmpty) return 'Student ID';
+    final nationalIdPattern = RegExp(r'^[23]\d{13}$');
+    return nationalIdPattern.hasMatch(studentId) ? 'National ID' : 'Passport ID';
   }
 
   Widget _buildSectionHeader(String title) {

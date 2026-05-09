@@ -13,7 +13,7 @@ const { createNotification } = require('../services/notification.service');
 const logger = require('../utils/logger');
 
 // ============ GET PROFESSOR UNGRADED COUNTS ============
-// Returns total ungraded submissions and a breakdown by courseId.
+// Returns total ungraded submissions broken down by courseId and by taskId.
 
 router.get('/professor-ungraded-counts',
   authenticate,
@@ -25,21 +25,33 @@ router.get('/professor-ungraded-counts',
           status: 'SUBMITTED',
         },
         select: {
-          task: { select: { courseId: true } },
+          task: { select: { id: true, title: true, taskType: true, courseId: true } },
         },
       });
 
       const byCourse = {};
+      const taskCounts = {}; // taskId -> { courseId, title, type, count }
       let total = 0;
+
       for (const sub of submissions) {
-        const courseId = sub.task?.courseId;
-        if (courseId) {
-          byCourse[courseId] = (byCourse[courseId] || 0) + 1;
-          total++;
+        const { id: taskId, title, taskType, courseId } = sub.task ?? {};
+        if (!courseId || !taskId) continue;
+        byCourse[courseId] = (byCourse[courseId] || 0) + 1;
+        if (!taskCounts[taskId]) {
+          taskCounts[taskId] = { courseId, title: title || 'Untitled', type: taskType || 'ASSIGNMENT', count: 0 };
         }
+        taskCounts[taskId].count++;
+        total++;
       }
 
-      res.json({ success: true, total, byCourse });
+      // Group by courseId: { courseId: [{taskId, title, type, count}] }
+      const byTask = {};
+      for (const [taskId, info] of Object.entries(taskCounts)) {
+        if (!byTask[info.courseId]) byTask[info.courseId] = [];
+        byTask[info.courseId].push({ taskId, title: info.title, type: info.type, count: info.count });
+      }
+
+      res.json({ success: true, total, byCourse, byTask });
     } catch (error) {
       next(error);
     }
