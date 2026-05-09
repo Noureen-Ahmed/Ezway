@@ -134,12 +134,12 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TableCalendar(
-                    firstDay: DateTime.now(),
+                    firstDay: DateTime.now().add(const Duration(days: 3)),
                     lastDay: DateTime.now().add(const Duration(days: 365 * 5)),
-                    focusedDay: tempDate.isBefore(DateTime.now()) ? DateTime.now() : tempDate,
+                    focusedDay: tempDate.isBefore(DateTime.now().add(const Duration(days: 3))) ? DateTime.now().add(const Duration(days: 3)) : tempDate,
                     selectedDayPredicate: (day) => isSameDay(tempDate, day),
                     onDaySelected: (selectedDay, focusedDay) {
-                      if (selectedDay.isBefore(DateTime.now().subtract(const Duration(days: 1)))) return;
+                      if (selectedDay.isBefore(DateTime.now().add(const Duration(days: 3)))) return;
                       setDialogState(() {
                         tempDate = selectedDay;
                       });
@@ -349,12 +349,13 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
       return;
     }
 
-    // Reject past deadlines for assignments
+    // Assignments must be published at least 3 days before the deadline
     if (_showDeadlineSection && _dueDate != null) {
       final time = _dueTime ?? const TimeOfDay(hour: 23, minute: 59);
       final deadline = DateTime(_dueDate!.year, _dueDate!.month, _dueDate!.day, time.hour, time.minute);
-      if (deadline.isBefore(DateTime.now())) {
-        _showMessage('Deadline must be in the future', isError: true);
+      final minDeadline = DateTime.now().add(const Duration(days: 3));
+      if (deadline.isBefore(minDeadline)) {
+        _showMessage('Assignment deadline must be at least 3 days from now.', isError: true);
         return;
       }
     }

@@ -173,6 +173,14 @@ router.post('/assignment',
         throw new ApiError(403, 'You do not teach this course');
       }
 
+      // Enforce minimum 3-day notice before the deadline
+      const deadline = new Date(dueDate);
+      const minDeadline = new Date();
+      minDeadline.setDate(minDeadline.getDate() + 3);
+      if (deadline < minDeadline) {
+        throw new ApiError(400, 'Assignment deadline must be at least 3 days from now.');
+      }
+
       // Get course
       const course = await prisma.course.findUnique({
         where: { id: courseId },
