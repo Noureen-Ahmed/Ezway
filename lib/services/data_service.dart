@@ -482,7 +482,7 @@ class DataService {
         'taskType': type,
       };
       if (description != null && description.isNotEmpty) body['description'] = description;
-      if (dueDate != null) body['dueDate'] = dueDate.toIso8601String();
+      if (dueDate != null) body['dueDate'] = dueDate.toUtc().toIso8601String();
       if (courseId != null) body['courseId'] = courseId;
 
       final response = await http.post(
@@ -519,7 +519,7 @@ class DataService {
           if (title != null) 'title': title,
           if (description != null) 'description': description,
           if (priority != null) 'priority': priority,
-          if (dueDate != null) 'dueDate': dueDate.toIso8601String(),
+          if (dueDate != null) 'dueDate': dueDate.toUtc().toIso8601String(),
         }),
       );
       
@@ -1168,11 +1168,11 @@ class DataService {
         'courseId': courseId,
         'title': title,
         'description': description,
-        'dueDate': dueDate.toIso8601String(),
+        'dueDate': dueDate.toUtc().toIso8601String(),
         'points': maxPoints,
         if (attachments != null) 'attachments': attachments,
       };
-      
+
       body.removeWhere((key, value) => value == null);
 
       final response = await http.post(
@@ -1240,7 +1240,7 @@ class DataService {
         'courseId': courseId,
         'title': title,
         'description': description,
-        'examDate': examDate.toIso8601String(),
+        'examDate': examDate.toUtc().toIso8601String(),
         'points': maxPoints,
         if (attachments != null) 'attachments': attachments,
         if (questions != null) 'questions': questions,

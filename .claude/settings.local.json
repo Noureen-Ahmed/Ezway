@@ -3,7 +3,8 @@
     "allow": [
       "PowerShell(ls -Path \"d:\\\\Ezway\" | ForEach-Object { \"$\\($_.Name\\) $\\(if\\($_.PSIsContainer\\){'[DIR]'} else {'[FILE]'}\\)\" })",
       "Bash(npx prisma *)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Bash(xargs grep -l \"TaskStatus\\\\|assignment.*deadline\\\\|exam.*deadline\\\\|pending.*task\\\\|task.*list\")"
     ]
   }
 }

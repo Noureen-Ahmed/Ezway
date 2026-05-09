@@ -27,6 +27,7 @@ const scheduleRoutes = require('./routes/schedule.routes');
 const adminRoutes = require('./routes/admin.routes');
 const contentRoutes = require('./routes/content.routes');
 const uploadRoutes = require('./routes/upload.routes');
+const filesRoutes = require('./routes/files.routes');
 const umsRoutes = require('./routes/ums.routes');
 const scheduleImportRoutes = require('./routes/scheduleImport.routes');
 const noteRoutes = require('./routes/note.routes');
@@ -120,6 +121,7 @@ app.use('/api/schedule', scheduleRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/files', filesRoutes);
 app.use('/api/ums', umsRoutes);
 app.use('/api/admin/schedule', scheduleImportRoutes);
 app.use('/api/admin/schedule-import', scheduleImportRoutes); // Flutter admin panel alias

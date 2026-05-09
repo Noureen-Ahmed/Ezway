@@ -362,56 +362,65 @@ const notifyCourseStudents = async ({
       }))
     });
 
-    // Send push notifications (best-effort)
+    // Send push notifications using the SAME user IDs already resolved above.
+    // We do NOT re-run the enrollment lookup — that second query used a different
+    // course-code matching path and could miss students found here.
     let pushResult = { sent: 0, failed: 0 };
     try {
-      pushResult = await sendToCourseEnrollees(courseId, { title, body: message }, excludeUserId);
-      
-      // Update isPushed flag for notifications that were successfully pushed
-      // We need to find the notifications we just created and update them
-      if (pushResult.sent > 0) {
-        // Get the notifications we just created by matching the criteria
-        const recentNotifications = await prisma.notification.findMany({
-          where: {
-            title,
-            message,
-            type,
-            referenceType,
-            referenceId,
-            userId: { in: uniqueUserIds }
-          },
-          select: { id: true, userId: true }
-        });
-
-        // Get users with FCM tokens who should have received push
+      if (firebaseApp && uniqueUserIds.length > 0) {
+        // Fetch FCM tokens for the exact set of students we notified
         const usersWithTokens = await prisma.user.findMany({
-          where: {
-            id: { in: uniqueUserIds },
-            fcmToken: { not: null }
-          },
-          select: { id: true }
+          where: { id: { in: uniqueUserIds }, fcmToken: { not: null } },
+          select: { id: true, fcmToken: true }
         });
 
-        const userIdsWithTokens = new Set(usersWithTokens.map(u => u.id));
+        const tokens = usersWithTokens.map(u => u.fcmToken);
+        logger.info(`[Push] ${uniqueUserIds.length} students targeted, ${tokens.length} have FCM tokens`);
 
-        // Update isPushed for users who have tokens
-        const notificationIdsToUpdate = recentNotifications
-          .filter(n => userIdsWithTokens.has(n.userId))
-          .map(n => n.id);
+        if (tokens.length > 0) {
+          const batchSize = 500;
+          for (let i = 0; i < tokens.length; i += batchSize) {
+            const batch = tokens.slice(i, i + batchSize);
+            try {
+              const response = await admin.messaging().sendEachForMulticast({
+                notification: { title, body: message },
+                tokens: batch
+              });
+              pushResult.sent += response.successCount;
+              pushResult.failed += response.failureCount;
 
-        if (notificationIdsToUpdate.length > 0) {
-          await prisma.notification.updateMany({
-            where: { id: { in: notificationIdsToUpdate } },
-            data: { isPushed: true }
-          });
-          logger.info(`✅ Updated isPushed=true for ${notificationIdsToUpdate.length} notifications`);
+              // Clear invalid tokens to keep the DB clean
+              response.responses.forEach((r, idx) => {
+                if (!r.success && r.error?.code === 'messaging/registration-token-not-registered') {
+                  prisma.user.updateMany({
+                    where: { fcmToken: batch[idx] },
+                    data: { fcmToken: null }
+                  }).catch(() => {});
+                }
+              });
+            } catch (batchErr) {
+              logger.error(`[Push] batch send error: ${batchErr.message}`);
+              pushResult.failed += batch.length;
+            }
+          }
+
+          // Mark notifications as pushed
+          if (pushResult.sent > 0) {
+            const pushedUserIds = new Set(usersWithTokens.map(u => u.id));
+            await prisma.notification.updateMany({
+              where: { title, message, type, referenceType, referenceId, userId: { in: [...pushedUserIds] } },
+              data: { isPushed: true }
+            });
+          }
         }
+      } else if (!firebaseApp) {
+        logger.warn('[Push] Firebase not initialized — skipping push');
       }
     } catch (pushError) {
-      logger.error('Push notification failed (non-fatal):', pushError.message);
+      logger.error('[Push] notification failed (non-fatal):', pushError.message);
     }
 
-    logger.info(`📢 Notified ${uniqueUserIds.length} students about: ${title} (Push sent: ${pushResult.sent}, Failed: ${pushResult.failed})`);
+    logger.info(`📢 Notified ${uniqueUserIds.length} students: "${title}" | Push sent: ${pushResult.sent}, failed: ${pushResult.failed}`);
     return { notified: uniqueUserIds.length, pushResult };
   } catch (error) {
     // Log but NEVER re-throw — notification failure must not crash the calling route

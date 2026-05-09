@@ -549,6 +549,21 @@ router.post('/:id/submit',
         throw new ApiError(404, 'Task not found');
       }
 
+      // Strict server-side deadline enforcement — no grace period
+      if (task.dueDate && new Date() > new Date(task.dueDate)) {
+        throw new ApiError(400, 'Deadline has passed. Submission is no longer accepted.');
+      }
+
+      // Prevent duplicate submission on already-graded tasks
+      if (task.taskType === 'EXAM') {
+        const existing = await prisma.taskSubmission.findUnique({
+          where: { taskId_studentId: { taskId: id, studentId: req.user.id } }
+        });
+        if (existing && (existing.status === 'SUBMITTED' || existing.status === 'GRADED')) {
+          throw new ApiError(400, 'You have already submitted this exam.');
+        }
+      }
+
       // Auto-grading logic
       let points = undefined;
       let status = 'SUBMITTED';

@@ -424,7 +424,7 @@ class _CourseFeedScreenState extends State<CourseFeedScreen> {
                           size: 13, color: config.color.withOpacity(0.7)),
                       const SizedBox(width: 4),
                       Text(
-                        'Due: ${DateFormat('MMM d, y').format(dueDate)}',
+                        'Due: ${DateFormat('MMM d, y').format(dueDate.toLocal())}',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -472,7 +472,7 @@ class _CourseFeedScreenState extends State<CourseFeedScreen> {
     } else if (diff.inDays < 7) {
       return '${diff.inDays}d ago';
     } else {
-      return DateFormat('MMM d').format(date);
+      return DateFormat('MMM d').format(date.toLocal());
     }
   }
 

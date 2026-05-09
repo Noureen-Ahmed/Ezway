@@ -100,7 +100,7 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
       // BLOCKED: Deadline check
       if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
         setState(() {
-          _error = 'This exam has expired. The deadline was ${DateFormat('MMM d, h:mm a').format(task.dueDate!)}.';
+          _error = 'This exam has expired. The deadline was ${DateFormat('MMM d, h:mm a').format(task.dueDate!.toLocal())}.';
           _isLoading = false;
         });
         return;

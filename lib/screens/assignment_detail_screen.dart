@@ -193,7 +193,7 @@ class _AssignmentDetailScreenState extends ConsumerState<AssignmentDetailScreen>
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'No due date';
-    return DateFormat('MMM d, y • h:mm a').format(date);
+    return DateFormat('MMM d, y • h:mm a').format(date.toLocal());
   }
 
   Future<void> _launchUrl(String url) async {

@@ -472,13 +472,14 @@ class _AssignmentGradingScreenState extends State<AssignmentGradingScreen> {
   }
 
   String _formatDate(DateTime date) {
+    final local = date.toLocal();
     final months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
-    final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
-    final amPm = date.hour >= 12 ? 'PM' : 'AM';
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '${months[date.month - 1]} ${date.day}, $hour:$minute $amPm';
+    final hour = local.hour > 12 ? local.hour - 12 : (local.hour == 0 ? 12 : local.hour);
+    final amPm = local.hour >= 12 ? 'PM' : 'AM';
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${months[local.month - 1]} ${local.day}, $hour:$minute $amPm';
   }
 }

@@ -633,7 +633,7 @@ class _TaskItem extends StatelessWidget {
                   ),
                   if (task.dueDate != null)
                     Text(
-                      'Due: ${DateFormat('MMM d').format(task.dueDate!)}',
+                      'Due: ${DateFormat('MMM d').format(task.dueDate!.toLocal())}',
                       style: TextStyle(
                         fontSize: 12,
                         color: isOverdue

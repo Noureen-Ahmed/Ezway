@@ -354,7 +354,7 @@ class ApiService {
           'courseId': courseId,
           'title': title,
           'description': description,
-          'dueDate': dueDate.toIso8601String(),
+          'dueDate': dueDate.toUtc().toIso8601String(),
           'points': points,
         }),
       );
@@ -384,7 +384,7 @@ class ApiService {
           'courseId': courseId,
           'title': title,
           'description': description,
-          'examDate': examDate.toIso8601String(),
+          'examDate': examDate.toUtc().toIso8601String(),
           'points': points,
         }),
       );

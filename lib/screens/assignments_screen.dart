@@ -109,7 +109,14 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
       itemBuilder: (context, index) {
         final task = tasks[index];
         final typeStr = task.taskType.name.toUpperCase();
-        return Card(
+        final isExpired = task.dueDate != null && DateTime.now().isAfter(task.dueDate!);
+        final isSubmitted = task.status == TaskStatus.submitted;
+        final isGraded = task.status == TaskStatus.graded || task.status == TaskStatus.completed;
+        final isExpiredUnsubmitted = isExpired && !isSubmitted && !isGraded;
+
+        return Opacity(
+          opacity: isExpiredUnsubmitted ? 0.55 : 1.0,
+          child: Card(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.only(bottom: 12),
@@ -118,12 +125,26 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
             child: ListTile(
               onTap: () {
                 if (task.taskType == TaskType.assignment) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => AssignmentDetailScreen(task: task)),
-                  ).then((_) =>
-                      ref.read(taskStateProvider.notifier).fetchTasks(force: true));
+                  if (task.status == TaskStatus.graded || task.status == TaskStatus.completed) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This assignment has been graded.')),
+                    );
+                  } else if (task.status == TaskStatus.submitted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('You have already submitted this assignment.')),
+                    );
+                  } else if (task.dueDate != null && DateTime.now().isAfter(task.dueDate!)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This assignment has expired and is no longer accessible.')),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AssignmentDetailScreen(task: task)),
+                    ).then((_) =>
+                        ref.read(taskStateProvider.notifier).fetchTasks(force: true));
+                  }
                 } else if (task.taskType == TaskType.exam) {
                   if (task.status == TaskStatus.submitted ||
                       task.status == TaskStatus.graded ||
@@ -176,7 +197,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
                     children: [
                       Icon(Icons.book, size: 14, color: Colors.grey[600]),
                       const SizedBox(width: 4),
-                      Text(task.subject, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Expanded(child: Text(task.subject, style: TextStyle(color: Colors.grey[600], fontSize: 13), overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                   if (task.dueDate != null) ...[
@@ -186,7 +207,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
                         Icon(Icons.access_time, size: 14, color: _getDueDateColor(task.dueDate!, task.status)),
                         const SizedBox(width: 4),
                         Text(
-                          'Due: ${DateFormat('MMM d, h:mm a').format(task.dueDate!)}', 
+                          'Due: ${DateFormat('MMM d, h:mm a').format(task.dueDate!.toLocal())}',
                           style: TextStyle(
                             color: _getDueDateColor(task.dueDate!, task.status),
                             fontSize: 13,
@@ -196,18 +217,41 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
                       ],
                     ),
                   ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      if (isGraded)
+                        _statusChip('Graded', Colors.green)
+                      else if (isSubmitted)
+                        _statusChip('Submitted', Colors.blue)
+                      else if (isExpiredUnsubmitted)
+                        _statusChip('Expired', Colors.grey),
+                    ],
+                  ),
                 ],
               ),
-              trailing: isPending 
+              trailing: isPending
                 ? const Icon(Icons.arrow_forward_ios, size: 16)
                 : const Icon(Icons.check_circle, color: Colors.green),
             ),
           ),
-        );
+        ));
       },
     );
   }
   
+  Widget _statusChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+    );
+  }
+
   Color _getTypeColor(String type) {
     switch (type.toUpperCase()) {
       case 'EXAM': return Colors.red;

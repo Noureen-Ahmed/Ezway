@@ -18,7 +18,7 @@ const R2_CONFIGURED = !!(
   process.env.R2_ENDPOINT &&
   process.env.R2_ACCESS_KEY_ID &&
   process.env.R2_SECRET_ACCESS_KEY &&
-  process.env.R2_PUBLIC_URL
+  process.env.R2_BUCKET_NAME
 );
 
 const s3 = R2_CONFIGURED
@@ -29,15 +29,15 @@ const s3 = R2_CONFIGURED
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
       },
-      requestHandler: { requestTimeout: 15000 } // 15s timeout before falling back to local disk
+      forcePathStyle: true, // R2 requires path-style: endpoint/bucket/key
+      requestHandler: { requestTimeout: 15000 }
     })
   : null;
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || '';
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'college-guide';
 
 if (R2_CONFIGURED) {
-  logger.info('✅ R2 upload configured');
+  logger.info('✅ R2 upload configured (private bucket, proxy via /files/)');
 } else {
   logger.warn('⚠️ R2 not configured — uploads will use local disk');
 }
@@ -102,7 +102,8 @@ router.post('/', authenticate, upload.single('file'), async (req, res) => {
           ContentType: req.file.mimetype
         }));
 
-        const fileUrl = `${R2_PUBLIC_URL}/${key}`;
+        const appBase = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+        const fileUrl = `${appBase}/files/${key}`;
         logger.info(`✅ Uploaded to R2: ${key}`);
 
         return res.json({
@@ -113,7 +114,8 @@ router.post('/', authenticate, upload.single('file'), async (req, res) => {
           size: req.file.size
         });
       } catch (r2Error) {
-        logger.error(`R2 upload failed, falling back to local disk: ${r2Error.message}`);
+        logger.error(`R2 upload FAILED (falling back to local disk): ${r2Error.name}: ${r2Error.message}`);
+        logger.error(`R2 config — endpoint: ${process.env.R2_ENDPOINT}, bucket: ${BUCKET_NAME}, key_id set: ${!!process.env.R2_ACCESS_KEY_ID}`);
         // Fall through to local disk
       }
     }

@@ -260,7 +260,8 @@ class TaskCard extends StatelessWidget {
     } else if (difference.inDays < 30) {
       return '${(difference.inDays / 7).floor()} weeks';
     } else {
-      return '${date.day}/${date.month}/${date.year}';
+      final local = date.toLocal();
+      return '${local.day}/${local.month}/${local.year}';
     }
   }
 }
