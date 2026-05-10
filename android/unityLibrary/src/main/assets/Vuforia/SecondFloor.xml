@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="s1" size="1.000000 1.187000" />
+    <ImageTarget name="s2" size="1.000000 1.187000" />
+    <ImageTarget name="s3" size="1.000000 1.187000" />
+    <ImageTarget name="s4" size="1.000000 1.187000" />
+    <ImageTarget name="s5" size="1.000000 1.187000" />
+    <ImageTarget name="s6" size="1.000000 1.187000" />
+    <ImageTarget name="s7" size="1.000000 1.187000" />
+    <ImageTarget name="s8" size="1.000000 1.187000" />
+    <ImageTarget name="s9" size="1.000000 1.187825" />
+    <ImageTarget name="s10" size="1.000000 1.187825" />
+    <ImageTarget name="s11" size="1.000000 1.187825" />
+    <ImageTarget name="s12" size="1.000000 1.187825" />
+    <ImageTarget name="s13" size="1.000000 1.187825" />
+    <ImageTarget name="s14" size="1.000000 1.187825" />
+    <ImageTarget name="s15" size="1.000000 1.312500" />
+    <ImageTarget name="s16" size="1.000000 1.312500" />
+    <ImageTarget name="s17" size="1.000000 1.312500" />
+    <ImageTarget name="s18" size="1.000000 1.312500" />
+    <ImageTarget name="s19" size="1.000000 1.312500" />
+    <ImageTarget name="s20" size="1.000000 1.312500" />
+    <ImageTarget name="s21" size="1.000000 1.312500" />
+    <ImageTarget name="s22" size="1.000000 1.312500" />
+    <ImageTarget name="s23" size="1.000000 1.312500" />
+    <ImageTarget name="s24" size="1.000000 1.312500" />
+    <ImageTarget name="s25" size="1.000000 1.312500" />
+    <ImageTarget name="s26" size="1.000000 1.312500" />
+    <ImageTarget name="s27" size="1.000000 1.312500" />
+    <ImageTarget name="s28" size="1.000000 1.312500" />
+    <ImageTarget name="s29" size="1.000000 1.312500" />
+    <ImageTarget name="s30" size="1.000000 1.312500" />
+    <ImageTarget name="s31" size="1.000000 1.312500" />
+    <ImageTarget name="s32" size="1.000000 1.312500" />
+    <ImageTarget name="s33" size="1.000000 1.312500" />
+    <ImageTarget name="s34" size="1.000000 1.312500" />
+    <ImageTarget name="s35" size="1.000000 1.312500" />
+    <ImageTarget name="s36" size="1.000000 1.312500" />
+    <ImageTarget name="s37" size="1.000000 1.312500" />
+    <ImageTarget name="s38" size="1.000000 1.312500" />
+    <ImageTarget name="s39" size="1.000000 1.312500" />
+    <ImageTarget name="s40" size="1.000000 1.312500" />
+    <ImageTarget name="s41" size="1.000000 1.312500" />
+    <ImageTarget name="s42" size="1.000000 1.312500" />
+    <ImageTarget name="s43" size="1.000000 1.312500" />
+    <ImageTarget name="s44" size="1.000000 1.312500" />
+    <ImageTarget name="s45" size="1.000000 1.312500" />
+    <ImageTarget name="s46" size="1.000000 1.312500" />
+    <ImageTarget name="s47" size="1.000000 1.312500" />
+    <ImageTarget name="s48" size="1.000000 1.312500" />
+    <ImageTarget name="s49" size="1.000000 1.312500" />
+    <ImageTarget name="s50" size="1.000000 1.312500" />
+    <ImageTarget name="s51" size="1.000000 1.312500" />
+    <ImageTarget name="s52" size="1.000000 1.312500" />
+    <ImageTarget name="s53" size="1.000000 1.312500" />
+  </Tracking>
+</QCARConfig>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="f1" size="1.000000 1.312500" />
+    <ImageTarget name="f2" size="1.000000 1.312500" />
+    <ImageTarget name="f3" size="1.000000 1.312500" />
+    <ImageTarget name="f4" size="1.000000 1.312500" />
+    <ImageTarget name="f5" size="1.000000 1.312500" />
+    <ImageTarget name="f6" size="1.000000 1.312500" />
+    <ImageTarget name="f7" size="1.000000 1.312500" />
+    <ImageTarget name="f8" size="1.000000 1.312500" />
+    <ImageTarget name="f9" size="1.000000 1.312500" />
+    <ImageTarget name="f10" size="1.000000 1.312500" />
+    <ImageTarget name="f11" size="1.000000 1.312500" />
+    <ImageTarget name="f12" size="1.000000 1.312500" />
+    <ImageTarget name="f13" size="1.000000 1.312500" />
+    <ImageTarget name="f14" size="1.000000 1.312500" />
+    <ImageTarget name="f15" size="1.000000 1.312500" />
+    <ImageTarget name="f16" size="1.000000 1.312500" />
+    <ImageTarget name="f17" size="1.000000 1.312500" />
+    <ImageTarget name="f18" size="1.000000 1.312500" />
+    <ImageTarget name="f19" size="1.000000 1.312500" />
+    <ImageTarget name="f20" size="1.000000 1.312500" />
+    <ImageTarget name="f21" size="1.000000 1.312500" />
+    <ImageTarget name="f22" size="1.000000 1.312500" />
+    <ImageTarget name="f23" size="1.000000 1.312500" />
+    <ImageTarget name="f24" size="1.000000 1.312500" />
+    <ImageTarget name="f25" size="1.000000 1.312500" />
+    <ImageTarget name="f26" size="1.000000 1.312500" />
+    <ImageTarget name="f27" size="1.000000 1.312500" />
+    <ImageTarget name="f28" size="1.000000 1.312500" />
+    <ImageTarget name="f29" size="1.000000 1.312500" />
+    <ImageTarget name="f30" size="1.000000 1.312500" />
+    <ImageTarget name="f31" size="1.000000 1.312500" />
+    <ImageTarget name="f32" size="1.000000 1.312500" />
+    <ImageTarget name="f33" size="1.000000 1.312500" />
+    <ImageTarget name="f34" size="1.000000 1.312500" />
+    <ImageTarget name="f35" size="1.000000 1.312500" />
+    <ImageTarget name="f36" size="1.000000 1.312500" />
+    <ImageTarget name="f37" size="1.000000 1.312500" />
+    <ImageTarget name="f38" size="1.000000 1.312500" />
+    <ImageTarget name="f39" size="1.000000 1.312500" />
+    <ImageTarget name="f40" size="1.000000 1.312500" />
+    <ImageTarget name="f41" size="1.000000 1.312500" />
+    <ImageTarget name="f42" size="1.000000 1.312500" />
+    <ImageTarget name="f43" size="1.000000 1.312500" />
+    <ImageTarget name="f44" size="1.000000 1.312500" />
+    <ImageTarget name="f45" size="1.000000 1.312500" />
+  </Tracking>
+</QCARConfig>

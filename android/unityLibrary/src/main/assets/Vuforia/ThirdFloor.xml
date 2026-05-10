@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="t1" size="1.000000 1.312500" />
+    <ImageTarget name="t2" size="1.000000 1.312500" />
+    <ImageTarget name="t3" size="1.000000 1.312500" />
+    <ImageTarget name="t4" size="1.000000 1.312500" />
+    <ImageTarget name="t6" size="1.000000 1.312500" />
+    <ImageTarget name="t7" size="1.000000 1.312500" />
+    <ImageTarget name="t8" size="1.000000 1.312500" />
+    <ImageTarget name="t9" size="1.000000 1.312500" />
+    <ImageTarget name="t10" size="1.000000 1.312500" />
+    <ImageTarget name="t11" size="1.000000 1.312500" />
+    <ImageTarget name="t12" size="1.000000 1.312500" />
+    <ImageTarget name="t13" size="1.000000 1.312500" />
+    <ImageTarget name="t5" size="1.000000 1.312500" />
+  </Tracking>
+</QCARConfig>

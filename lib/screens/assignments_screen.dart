@@ -207,7 +207,7 @@ class _AssignmentsScreenState extends ConsumerState<AssignmentsScreen> with Sing
                         Icon(Icons.access_time, size: 14, color: _getDueDateColor(task.dueDate!, task.status)),
                         const SizedBox(width: 4),
                         Text(
-                          'Due: ${DateFormat('MMM d, h:mm a').format(task.dueDate!.toLocal())}',
+                          'Due: ${DateFormat('MMM d, h:mm a').format(task.dueDate!)}', 
                           style: TextStyle(
                             color: _getDueDateColor(task.dueDate!, task.status),
                             fontSize: 13,

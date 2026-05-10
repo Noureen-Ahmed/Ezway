@@ -83,3 +83,23 @@ fastlane/test_output
 # /lib/google_sign_in.dart
 
 *.env
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Unity Android
+android/unityLibrary/build/
+android/unityLibrary/symbols/
+android/unityLibrary/src/main/jniLibs/
+android/unityLibrary/src/main/assets/bin/
+android/unityLibrary/src/main/Il2CppOutputProject/
+android/unityLibrary/src/main/jniStaticLibs/
+
+# APKs
+*.apk

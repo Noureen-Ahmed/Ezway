@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="b22" size="1.000000 1.312500" />
+    <ImageTarget name="b21" size="1.000000 1.312500" />
+    <ImageTarget name="b20" size="1.000000 1.312500" />
+    <ImageTarget name="b19" size="1.000000 1.312500" />
+    <ImageTarget name="b18" size="1.000000 1.312500" />
+    <ImageTarget name="b17" size="1.000000 1.312500" />
+    <ImageTarget name="b16" size="1.000000 1.312500" />
+    <ImageTarget name="b15" size="1.000000 1.312500" />
+    <ImageTarget name="b14" size="1.000000 1.312500" />
+    <ImageTarget name="b13" size="1.000000 1.312500" />
+    <ImageTarget name="b12" size="1.000000 1.312500" />
+    <ImageTarget name="b11" size="1.000000 1.312500" />
+    <ImageTarget name="b10" size="1.000000 1.312500" />
+    <ImageTarget name="b9" size="1.000000 1.312500" />
+    <ImageTarget name="b8" size="1.000000 1.312500" />
+    <ImageTarget name="b7" size="1.000000 1.312500" />
+    <ImageTarget name="b6" size="1.000000 1.312500" />
+    <ImageTarget name="b5" size="1.000000 1.312500" />
+    <ImageTarget name="b4" size="1.000000 1.312500" />
+    <ImageTarget name="b3" size="1.000000 1.312500" />
+    <ImageTarget name="b2" size="1.000000 1.312500" />
+    <ImageTarget name="b1" size="1.000000 1.312500" />
+  </Tracking>
+</QCARConfig>

@@ -23,15 +23,15 @@ const R2_CONFIGURED = !!(
 
 const s3 = R2_CONFIGURED
   ? new S3Client({
-      region: 'auto',
-      endpoint: process.env.R2_ENDPOINT,
-      credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
-      },
-      forcePathStyle: true, // R2 requires path-style: endpoint/bucket/key
-      requestHandler: { requestTimeout: 15000 }
-    })
+    region: 'auto',
+    endpoint: process.env.R2_ENDPOINT,
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY_ID,
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+    },
+    forcePathStyle: true, // R2 requires path-style: endpoint/bucket/key
+    requestHandler: { requestTimeout: 15000 }
+  })
   : null;
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'college-guide';

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="s14" size="1.000000 1.187000" />
+    <ImageTarget name="s13" size="1.000000 1.187000" />
+    <ImageTarget name="s12" size="1.000000 1.187000" />
+    <ImageTarget name="s11" size="1.000000 1.187000" />
+    <ImageTarget name="s10" size="1.000000 1.187000" />
+    <ImageTarget name="s9" size="1.000000 1.187000" />
+    <ImageTarget name="s8" size="1.000000 1.187000" />
+    <ImageTarget name="s7" size="1.000000 1.187000" />
+    <ImageTarget name="s6" size="1.000000 1.187000" />
+    <ImageTarget name="s5" size="1.000000 1.187000" />
+    <ImageTarget name="s4" size="1.000000 1.187000" />
+    <ImageTarget name="s2" size="1.000000 1.187000" />
+    <ImageTarget name="s1" size="1.000000 1.187000" />
+    <ImageTarget name="s3" size="1.000000 1.187000" />
+    <ImageTarget name="download2" size="1.000000 1.777778" />
+    <ImageTarget name="download" size="1.000000 1.777778" />
+  </Tracking>
+</QCARConfig>
