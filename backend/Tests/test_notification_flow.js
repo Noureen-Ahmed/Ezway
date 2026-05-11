@@ -5,7 +5,7 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
-const { notifyCourseStudents } = require('./src/services/notification.service');
+const { notifyCourseStudents } = require('../src/services/notification.service');
 const p = new PrismaClient();
 
 async function testNotificationFlow() {

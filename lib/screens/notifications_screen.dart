@@ -408,8 +408,10 @@ class NotificationCard extends StatelessWidget {
         return 'Announcement';
       case 'COURSE':
         return 'Course';
-      default: 'GRADE':
+      case 'GRADE':
         return 'Grade';
+      default:
+        return 'General';
     }
   }
 

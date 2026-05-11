@@ -1,0 +1,101 @@
+flowchart TD
+
+    %% ─── ENTRY POINT ────────────────────────────────────────────────────────────
+
+    ADMIN["Admin User\nFlutter Admin Screen\nor Web Panel at /admin"]
+    ADMIN --> UPLOAD["Select PDF file\nEnter: semester + academicYear\nOptional: dryRun flag"]
+    UPLOAD --> POST["POST /api/admin/schedule-import\nMultipart form-data\nfields: semester · academicYear · dryRun\nfile: schedule PDF up to 50 MB"]
+
+    %% ─── BACKEND RECEIVE ────────────────────────────────────────────────────────
+
+    POST --> MULTER["Multer Middleware\nReceives file into memory buffer\nValidates content-type: application/pdf"]
+    MULTER --> SAVE["Save PDF to temp path\non Railway filesystem"]
+    SAVE --> IMPORT["importScheduleFromPdf\npdfPath · semester · academicYear · dryRun"]
+
+    %% ─── PROGRAM CACHE ──────────────────────────────────────────────────────────
+
+    IMPORT --> PROG_CACHE["Load all Programs from MySQL\nprisma.program.findMany\nBuild Map: name → id + departmentId\navoids one DB query per entry"]
+
+    %% ─── PYTHON SUBPROCESS ──────────────────────────────────────────────────────
+
+    PROG_CACHE --> SPAWN["runScraper\nchild_process.spawn\nAuto-detect Python binary:\npy · python · python3"]
+    SPAWN --> PY_PROC["Python subprocess\npython/scrape_schedule.py\nArgs: pdfPath --semester X --academic-year Y"]
+
+    subgraph PYTHON["Python PDF Parser  —  scrape_schedule.py"]
+        direction TB
+        PY1["Open PDF with pdfplumber / tabula\nRead all pages"]
+        PY2["Identify page sections\nby program / department header text\ne.g. Computer Science Level 2"]
+        PY3["For each section:\nlocate schedule table\nidentify rows with time slots"]
+        PY4["Extract per row:\ncourseCode · courseName · creditHours\ndayOfWeek · startTime · endTime\nlocation · lessonType\nprogram label from page header"]
+        PY5["Normalize dayOfWeek\nto enum: SUNDAY–SATURDAY\nNormalize time format HH:MM"]
+        PY6["Output to stdout as JSON:\nsuccess: true\ntotalEntries: N\nprograms: list of names found\nschedules: array of entry objects"]
+
+        PY1 --> PY2 --> PY3 --> PY4 --> PY5 --> PY6
+    end
+
+    PY_PROC --> PY1
+    PY6 --> STDOUT["Node.js reads stdout\nJSON.parse result\nIf exit code != 0: reject with stderr"]
+
+    %% ─── DRY RUN CHECK ──────────────────────────────────────────────────────────
+
+    STDOUT --> DRY_RUN{"dryRun\nflag set?"}
+    DRY_RUN -->|"Yes"| DRY_RETURN["Return preview:\nfirst 10 entries only\nNo DB writes"]
+    DRY_RUN -->|"No — proceed"| NORMALIZE
+
+    %% ─── NORMALIZE & CLEAN ──────────────────────────────────────────────────────
+
+    NORMALIZE["Normalize all course codes\nremove whitespace · toUpperCase\nBuild importedCodes Set"]
+
+    NORMALIZE --> DELETE_OLD["Delete existing CourseSchedule rows\nfor all courses with matching codes\nprisma.courseSchedule.deleteMany\nClean-replace strategy — not append"]
+
+    %% ─── BATCH PROCESSING ───────────────────────────────────────────────────────
+
+    DELETE_OLD --> BATCH["Process entries in batches of 50\nPromise.all within each batch\nParallel upserts per batch"]
+
+    BATCH --> VALIDATE{"Validate each entry\ndayOfWeek in enum set?\nstartTime present?\nendTime present?"}
+
+    VALIDATE -->|"Invalid"| SKIP["schedulesSkipped++\nAdd to errors report\nwith reasons"]
+    VALIDATE -->|"Valid"| UPSERT_COURSE
+
+    %% ─── COURSE UPSERT ──────────────────────────────────────────────────────────
+
+    subgraph COURSE_LOGIC["upsertCourse  —  find or create Course record"]
+        direction TB
+        CL1{"Find program\nin programCache\nby page label name?"}
+        CL2["Fallback: extract code prefix\nfirst letters of courseCode\nCOMP / INCO → Computer Science\nMATH → Pure Mathematics\nSTAT → Statistics\nPHYS → Physics\nCHEM → Chemistry\nBOTA → Botany\nZOOL → Zoology\nMICR → Microbiology\nENTM → Entomology\nGEOL → Geology\nGEOP → Geophysics\nBIPH → Biophysics\nENGL → null"]
+        CL3["Resolve programRecord\nfrom cache → get id + departmentId"]
+        CL4["prisma.course.upsert\nwhere: normalized code\nUpdate: semester · academicYear\nCreate: code · name · creditHours\nprogram + department from cache"]
+        CL1 -->|"Found"| CL3
+        CL1 -->|"Not found"| CL2 --> CL3 --> CL4
+    end
+
+    UPSERT_COURSE --> CL1
+    CL4 --> CREATE_SCHED
+
+    %% ─── SCHEDULE INSERT ────────────────────────────────────────────────────────
+
+    CREATE_SCHED["prisma.courseSchedule.create\ncourseId\ndayOfWeek: SUNDAY–SATURDAY\nstartTime · endTime\nlocation · lessonType: LECTURE · LAB · TUTORIAL"]
+
+    CREATE_SCHED --> COUNTERS["schedulesInserted++\ncoursesUpdated++"]
+
+    %% ─── RE-LINK ENROLLMENTS ────────────────────────────────────────────────────
+
+    COUNTERS --> RELINK_TRIGGER["relinkEnrollments\nwith importedCodes set"]
+
+    subgraph RELINK["relinkEnrollments  —  connect existing students to new courses"]
+        direction TB
+        RL1["prisma.umsCourse.findMany\nfetch all UmsCourse rows\nselect: userId + courseCode"]
+        RL2["Normalize UMS codes\nRemove spaces · uppercase\nFilter: code in importedCodes set"]
+        RL3["Load Course records\nprisma.course.findMany\nwhere code in importedCodes"]
+        RL4["Build Map: code → courseId"]
+        RL5["For each match:\nprisma.enrollment.upsert\nuserId + courseId\nstatus: ENROLLED\nSkip silently if conflict"]
+        RL1 --> RL2 --> RL3 --> RL4 --> RL5
+    end
+
+    RELINK_TRIGGER --> RL1
+    RL5 --> REPORT
+
+    %% ─── REPORT ─────────────────────────────────────────────────────────────────
+
+    REPORT["Build import report\nscrapedEntries: total from Python\nprograms: list of programs found\ncoursesUpdated: upserted count\nschedulesInserted: created count\nschedulesSkipped: invalid count\nenrollmentsLinked: relinked count\nerrors: list with entry + reasons\ndurationMs: total time"]
+    REPORT --> RESPONSE["Return JSON report\nto Admin UI\nDisplayed as summary card"]

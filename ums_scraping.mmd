@@ -1,0 +1,102 @@
+flowchart TD
+
+    %% ─── ENTRY POINT ────────────────────────────────────────────────────────────
+
+    APP["Flutter App\nUser enters UMS credentials\nlocationName@sci.asu.edu.eg + password"]
+    APP --> API["POST /api/ums/login\nrouted to ums.routes.js"]
+    API --> PARSE["Parse credentials\nloginId = part before @\ndomain = part after @\ndefault domain: @sci.asu.edu.eg"]
+
+    %% ─── HTTP FAST PATH ─────────────────────────────────────────────────────────
+
+    PARSE --> HTTP_TRY{"Attempt\nHTTP Fast Path\n~2-5 seconds"}
+
+    HTTP_TRY --> HTTP1["GET https://ums.asu.edu.eg/App/Login_Form\naxios + CookieJar + tough-cookie\nCapture session cookie"]
+    HTTP1 --> HTTP2["Cheerio: extract\n__RequestVerificationToken\nfrom hidden input field"]
+    HTTP2 --> HTTP3["POST /App/Login_Form\nLoginName · password · DomainName\nCSRF token as form-urlencoded body"]
+    HTTP3 --> HTTP_CHECK{"Check response URL\nStill on Login_Form?\nor HTTP 401?"}
+
+    HTTP_CHECK -->|"Yes — wrong credentials"| CRED_ERR["Throw:\nUMS login failed\ninvalid credentials"]
+    HTTP_CHECK -->|"No — redirected\nto dashboard"| HTTP_COOKIES["Extract session cookies\nfrom CookieJar\nformat: key=value strings"]
+
+    %% ─── PUPPETEER FALLBACK ─────────────────────────────────────────────────────
+
+    HTTP_TRY -->|"HTTP blocked\nor timeout"| PUP_WARN["Log warning:\nHTTP login failed\nfalling back to browser"]
+    PUP_WARN --> PUP1["Detect Chrome/Chromium path\nCheck env CHROMIUM_PATH\nSearch nix profile paths on Railway\nFallback: find in nix store"]
+    PUP1 --> PUP2["puppeteer.launch\nheadless: new\n--no-sandbox\n--disable-dev-shm-usage"]
+    PUP2 --> PUP3["page.goto /App/Login_Form\nwaitUntil: load\ntimeout: 30 000 ms"]
+    PUP3 --> PUP4["page.evaluate: set Kendo DropDownList\nDomainName value via jQuery API"]
+    PUP4 --> PUP5["Type into #user-name field\nType into #pass field"]
+    PUP5 --> PUP6["Click submit button\nor press Enter as fallback\nwaitForNavigation: domcontentloaded"]
+    PUP6 --> PUP_CHECK{"page.url still\ncontains Login_Form?"}
+    PUP_CHECK -->|"Yes"| CRED_ERR
+    PUP_CHECK -->|"No — logged in"| PUP_COOKIES["Extract cookies\nvia page.cookies()\nbrowser.close()"]
+    PUP_COOKIES --> BUILD_HDR
+
+    HTTP_COOKIES --> BUILD_HDR
+
+    %% ─── DATA FETCHING ──────────────────────────────────────────────────────────
+
+    BUILD_HDR["Build request headers\nCookie: all session cookies joined\nUser-Agent: Chrome 120\nReferer: ums.asu.edu.eg"]
+
+    BUILD_HDR --> PARALLEL["Parallel HTTP Requests\nusing session cookies"]
+
+    PARALLEL --> FETCH1["GET /UserInformation/CurrentCourse\nCourse list page"]
+    PARALLEL --> FETCH2["GET /StudentGrades\nGrades history page"]
+    PARALLEL --> FETCH3["GET /RegisterElectiveCourse/Registration\nAcademic advisor page"]
+
+    FETCH1 --> PARSE_C["parseCoursesHtml via Cheerio\nStrategy 1: h5.text-dark card layout\ncourseCode extracted from text brackets\nStrategy 2: table row fallback\ncells: code · name · credits · section · instructor"]
+    FETCH2 --> PARSE_G["parseGradesHtml via Cheerio\ntable rows: code · name · grade\ngradePoints · creditHours"]
+    FETCH3 --> PARSE_A["parseAdvisorHtml\nRegex match Arabic advisor label\nmailto: regex for advisor email"]
+
+    %% ─── PROFILE SCRAPING CASCADE ───────────────────────────────────────────────
+
+    BUILD_HDR --> PROF_CASCADE["Profile Scraping Cascade\n4 strategies tried in order"]
+
+    PROF_CASCADE --> PR1["Strategy 1: Kendo JSON Endpoint\nPOST /UserInformation/Read\nX-Requested-With: XMLHttpRequest\nFastest if available"]
+    PR1 -->|"Has faculty field"| PROF_MERGE
+    PR1 -->|"Endpoint missing\nor empty"| PR2
+
+    PR2["Strategy 2: HTTP GET /UserInformation\nparse with Cheerio\n5 DOM layouts tried:\ndiv.row h5+p  ·  dl dt+dd\n2-col table  ·  12-col Kendo DataTable\nnav bar user link fallback"]
+    PR2 -->|"Has faculty field"| PROF_MERGE
+    PR2 -->|"Still missing fields"| PR3
+
+    PR3["Strategy 3: Parse landing page HTML\nHTML returned after POST login\nNavbar/header often has name + faculty"]
+    PR3 -->|"Has faculty field"| PROF_MERGE
+    PR3 -->|"Faculty and department\nstill missing"| PR4
+
+    PR4["Strategy 4: Puppeteer renders\n/UserInformation with full JS\nInject session cookies\nwaitUntil: networkidle0\nextract page.content()"]
+    PR4 --> PROF_MERGE
+
+    PROF_MERGE["Merge all profile sources\nfirst non-null value wins per field\nConvert level text to integer\nExtract advisor name + email"]
+
+    %% ─── DATABASE SYNC ──────────────────────────────────────────────────────────
+
+    PARSE_C --> SYNC
+    PARSE_G --> SYNC
+    PARSE_A --> SYNC
+    PROF_MERGE --> SYNC
+
+    SYNC["syncStudentData\nWrite all scraped data to MySQL"]
+
+    SYNC --> SYNC1["For each course:\nprisma.umsCourse.upsert\nkey: userId + courseCode + semester + year"]
+    SYNC1 --> COURSE_MATCH{"Match UmsCourse\nto App Course\nin DB?"}
+    COURSE_MATCH -->|"1. Exact code match"| ENROLL
+    COURSE_MATCH -->|"2. Name match\ncontains / equals"| ENROLL
+    COURSE_MATCH -->|"3. No match:\nCreate stub Course\ncode prefix → category\nCOMP→COMP · MATH→MATH"| ENROLL
+
+    ENROLL["prisma.enrollment.upsert\nuserId + courseId\nstatus: ENROLLED"]
+
+    SYNC --> SYNC2["For each grade:\nprisma.umsGrade.upsert\nkey: userId + courseCode + semester + year\ngrade · gradePoints · creditHours"]
+
+    SYNC --> SYNC3["prisma.umsSession.upsert\nStore session cookies\nSet isActive: true\nUpdate lastSyncAt"]
+
+    %% ─── RESPONSE ───────────────────────────────────────────────────────────────
+
+    ENROLL --> FINAL
+    SYNC2 --> FINAL
+    SYNC3 --> FINAL
+
+    FINAL["Create or update User record\nUpdate: name · level · program\ndepartment · faculty · phone\nadvisorName · advisorEmail"]
+    FINAL --> JWT["Generate JWT token\nexpiry: 7 days\nHS256 signed"]
+    JWT --> UPDATE_FCM["Flutter registers\nFCM device token\nPOST /users/update-fcm-token"]
+    UPDATE_FCM --> RETURN["Return to Flutter App\ntoken + full user profile\ncourses list + grades list"]
