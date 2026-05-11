@@ -408,8 +408,8 @@ class NotificationCard extends StatelessWidget {
         return 'Announcement';
       case 'COURSE':
         return 'Course';
-      default:
-        return 'Notification';
+      default: 'GRADE':
+        return 'Grade';
     }
   }
 
@@ -433,6 +433,11 @@ class NotificationCard extends StatelessWidget {
           'border': isDark ? const Color(0xFF065F46) : const Color(0xFFBBF7D0),
         };
       case 'ANNOUNCEMENT':
+        return {
+          'bg': isDark ? const Color(0xFF451A03) : const Color(0xFFFFFBEF),
+          'border': isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A),
+        };
+      case 'GRADE':
         return {
           'bg': isDark ? const Color(0xFF451A03) : const Color(0xFFFFFBEF),
           'border': isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A),

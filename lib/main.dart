@@ -316,7 +316,7 @@ class _StudentDashboardAppState extends ConsumerState<StudentDashboardApp> {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Student Dashboard',
+      title: 'EZWAY',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
