@@ -10,6 +10,7 @@ import 'assignment_detail_screen.dart';
 import 'create_exam_screen.dart';
 import 'exam_runner_screen.dart';
 import 'grading_dashboard.dart';
+import 'grades_files_screen.dart';
 import '../providers/app_session_provider.dart';
 
 class CourseDetailScreen extends ConsumerStatefulWidget {
@@ -819,7 +820,18 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     return Column(
       children: course.grades.map((g) {
         return InkWell(
-          onTap: () { if (g.attachments.isNotEmpty) _openFile(g.attachments.first); },
+          onTap: () {
+            if (g.attachments.isEmpty) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => GradesFilesScreen(
+                  title: g.title,
+                  attachments: g.attachments,
+                ),
+              ),
+            );
+          },
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
@@ -829,25 +841,17 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                 Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFFFEB3B).withOpacity(0.2), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.grade, color: Color(0xFFFF9800), size: 28)),
                 const SizedBox(width: 16),
                 Expanded(child: Text(g.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-                if (g.attachments.isNotEmpty) const Icon(Icons.picture_as_pdf, color: Colors.red),
+                if (g.attachments.isNotEmpty) ...[
+                  Text('${g.attachments.length}', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.attach_file, color: Colors.grey, size: 18),
+                ],
               ],
             ),
           ),
         );
       }).toList(),
     );
-  }
-
-  Future<void> _openFile(String url) async {
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open file')),
-        );
-      }
-    }
   }
 
   String _formatDate(DateTime date) {

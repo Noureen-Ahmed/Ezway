@@ -259,58 +259,53 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
         result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+          allowMultiple: true,
           withData: true,
         );
       } else {
         result = await FilePicker.platform.pickFiles(type: FileType.any, withData: true);
       }
 
-      if (result != null) {
-        setState(() => _isUploading = true);
+      if (result == null || result.files.isEmpty) return;
+      setState(() => _isUploading = true);
 
-        // Determine upload type based on content type
-        String uploadType = 'content';
-        if (_selectedType == ContentType.assignment) {
-          uploadType = 'attachment';
-        } else if (_selectedType == ContentType.grades) {
-          uploadType = 'content';
-        } else if (_selectedType == ContentType.lectureMaterial) {
-          uploadType = 'lecture';
-        }
+      String uploadType = 'content';
+      if (_selectedType == ContentType.assignment) {
+        uploadType = 'attachment';
+      } else if (_selectedType == ContentType.lectureMaterial) {
+        uploadType = 'lecture';
+      }
 
+      // Grades supports multiple files; others upload the first file only.
+      final filesToUpload = _selectedType == ContentType.grades
+          ? result.files
+          : [result.files.first];
+
+      int uploaded = 0;
+      for (final file in filesToUpload) {
         var request = http.MultipartRequest(
             'POST', Uri.parse('${ApiConfig.baseUrl}/upload?type=$uploadType'));
-
         final authHeader = ApiConfig.authHeaders['Authorization'];
-        if (authHeader != null) {
-          request.headers['Authorization'] = authHeader;
-        }
+        if (authHeader != null) request.headers['Authorization'] = authHeader;
 
-        if (result.files.first.bytes != null) {
+        if (file.bytes != null) {
           request.files.add(http.MultipartFile.fromBytes(
             'file',
-            result.files.first.bytes!,
-            filename: result.files.first.name,
+            file.bytes!,
+            filename: file.name,
           ));
-        } else if (result.files.first.path != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-            'file',
-            result.files.first.path!,
-          ));
+        } else if (file.path != null) {
+          request.files.add(await http.MultipartFile.fromPath('file', file.path!));
         }
 
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
+        final streamedResponse = await request.send();
+        final response = await http.Response.fromStream(streamedResponse);
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           final data = jsonDecode(response.body);
           if (data['success'] == true && data['fileUrl'] != null) {
-            setState(() {
-              _uploadedFiles.add(data['fileUrl']);
-              _isUploading = false;
-            });
-            _showMessage('Uploaded: ${result.files.first.name}',
-                isError: false);
+            setState(() => _uploadedFiles.add(data['fileUrl'] as String));
+            uploaded++;
           } else {
             throw Exception(data['message'] ?? 'Upload failed');
           }
@@ -318,6 +313,12 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
           throw Exception('Server error: ${response.statusCode}');
         }
       }
+
+      setState(() => _isUploading = false);
+      _showMessage(
+        uploaded == 1 ? 'Uploaded: ${filesToUpload.first.name}' : 'Uploaded $uploaded files',
+        isError: false,
+      );
     } catch (e) {
       setState(() => _isUploading = false);
       _showMessage('Error uploading: $e', isError: true);
@@ -935,6 +936,10 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
           if (_uploadedFiles.isNotEmpty)
             Column(
               children: _uploadedFiles.map((url) {
+                final lower = url.toLowerCase();
+                final isImage = lower.endsWith('.png') ||
+                    lower.endsWith('.jpg') ||
+                    lower.endsWith('.jpeg');
                 final name = url.split('/').last.split('-').length > 1
                     ? url.split('/').last.split('-').skip(1).join('-')
                     : url.split('/').last;
@@ -949,8 +954,18 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.insert_drive_file,
-                          color: Color(0xFF7A6CF5)),
+                      isImage
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.network(url,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.image,
+                                      color: Color(0xFF7A6CF5))),
+                            )
+                          : const Icon(Icons.picture_as_pdf, color: Colors.red),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -984,18 +999,18 @@ class _AddContentScreenState extends ConsumerState<AddContentScreen> {
                         const SizedBox(height: 8),
                         Text(
                           _selectedType == ContentType.grades
-                              ? 'Click to upload PDF'
+                              ? 'Click to upload files (multiple allowed)'
                               : 'Click to upload or drag and drop',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _selectedType == ContentType.grades
-                              ? 'PDF only (max 10MB)'
+                              ? 'Images & PDFs (max 10MB each)'
                               : 'PDF, DOC, DOCX, PPT, PPTX (max 10MB)',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 11, color: Colors.grey),
+                          style: const TextStyle(fontSize: 11, color: Colors.grey),
                         ),
                       ],
                     ),

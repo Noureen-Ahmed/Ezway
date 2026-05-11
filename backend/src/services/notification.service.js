@@ -204,6 +204,14 @@ const sendToCourseEnrollees = async (courseId, notification, excludeUserId = nul
               body: notification.body
             },
             data: notification.data || {},
+            android: {
+              priority: 'high',
+              notification: { channelId: 'course_channel', sound: 'default', priority: 'max' }
+            },
+            apns: {
+              headers: { 'apns-priority': '10' },
+              payload: { aps: { sound: 'default' } }
+            },
             tokens: batch
           };
 
@@ -384,6 +392,23 @@ const notifyCourseStudents = async ({
             try {
               const response = await admin.messaging().sendEachForMulticast({
                 notification: { title, body: message },
+                data: {
+                  type: String(type || 'GENERAL'),
+                  referenceType: String(referenceType || ''),
+                  referenceId: String(referenceId || '')
+                },
+                android: {
+                  priority: 'high',
+                  notification: {
+                    channelId: 'course_channel',
+                    sound: 'default',
+                    priority: 'max'
+                  }
+                },
+                apns: {
+                  headers: { 'apns-priority': '10' },
+                  payload: { aps: { sound: 'default', badge: 1 } }
+                },
                 tokens: batch
               });
               pushResult.sent += response.successCount;

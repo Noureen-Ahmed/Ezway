@@ -61,9 +61,9 @@ class Announcement {
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       message: json['message']?.toString() ?? '',
-      date: json['date'] != null 
-          ? DateTime.parse(json['date']) 
-          : (json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now()),
+      date: json['date'] != null
+          ? DateTime.parse(json['date']).toLocal()
+          : (json['createdAt'] != null ? DateTime.parse(json['createdAt']).toLocal() : DateTime.now()),
       type: AnnouncementType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => AnnouncementType.general,

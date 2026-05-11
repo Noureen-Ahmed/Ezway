@@ -245,7 +245,7 @@ class Assignment {
     return Assignment(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
-      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString()) ?? DateTime.now() : DateTime.now(),
+      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString())?.toLocal() ?? DateTime.now() : DateTime.now(),
       maxScore: json['maxScore'] is int ? json['maxScore'] : int.tryParse(json['maxScore']?.toString() ?? '100') ?? 100,
       description: json['description']?.toString() ?? '',
       isSubmitted: json['isSubmitted'] == true,
@@ -294,7 +294,7 @@ class Grades {
       attachments: (json['attachments'] as List?)
               ?.map((e) => e.toString())
               .toList() ?? [],
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now() : DateTime.now(),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString())?.toLocal() ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -342,7 +342,7 @@ class Exam {
     return Exam(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
-      date: json['date'] != null ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now() : DateTime.now(),
+      date: json['date'] != null ? DateTime.tryParse(json['date'].toString())?.toLocal() ?? DateTime.now() : DateTime.now(),
       format: json['format']?.toString() ?? '',
       gradingBreakdown: json['gradingBreakdown']?.toString() ?? '',
       maxPoints: json['maxPoints'] is int ? json['maxPoints'] : int.tryParse(json['maxPoints']?.toString() ?? '100') ?? 100,

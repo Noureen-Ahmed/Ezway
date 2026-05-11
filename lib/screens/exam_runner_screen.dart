@@ -136,21 +136,46 @@ class _ExamRunnerScreenState extends ConsumerState<ExamRunnerScreen> {
   }
 
   Future<void> _beginExam() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    await prefs.setInt('exam_start_${widget.taskId}', now.millisecondsSinceEpoch);
-
-    // Recalculate effective time at start moment (cap against deadline)
+    // Recheck deadline before beginning
     final durationMins = (_task!.settings?.containsKey('durationMinutes') == true)
         ? _task!.settings!['durationMinutes'] as int
         : 60;
     final effective = _effectiveRemaining(Duration(minutes: durationMins), _task!.dueDate);
-
     if (effective <= Duration.zero) {
-      // Deadline passed between page load and pressing Start — eject immediately
       _submitExam(autoSubmit: true);
       return;
     }
+
+    // Lock the session server-side to prevent multi-device concurrent access
+    final sessionResult = await DataService.beginExamSession(widget.taskId);
+    final sessionError = sessionResult['error'] as String?;
+
+    if (sessionError == 'already_submitted' || sessionError == 'deadline_passed') {
+      if (mounted) setState(() { _error = sessionResult['message'] as String? ?? 'Exam no longer available.'; _isLoading = false; });
+      return;
+    }
+
+    if (sessionError != null && sessionError != 'network') {
+      // Hard error — block entry
+      if (mounted) setState(() { _error = sessionResult['message'] as String? ?? 'Could not start exam.'; _isLoading = false; });
+      return;
+    }
+
+    // If server says alreadyActive, check whether THIS device owns the session
+    if (sessionResult['alreadyActive'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      final localStartMillis = prefs.getInt('exam_start_${widget.taskId}');
+      if (localStartMillis == null) {
+        // No local session — another device is running this exam
+        if (mounted) setState(() { _error = 'This exam is already in progress on another device.'; _isLoading = false; });
+        return;
+      }
+      // Local session exists → same device resuming; proceed normally
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    await prefs.setInt('exam_start_${widget.taskId}', now.millisecondsSinceEpoch);
 
     setState(() {
       _startTime = now;

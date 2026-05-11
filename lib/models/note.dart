@@ -19,10 +19,10 @@ class Note {
       title: json['title']?.toString() ?? '',
       content: json['content']?.toString(),
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'].toString())
+          ? DateTime.parse(json['createdAt'].toString()).toLocal()
           : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'].toString())
+          ? DateTime.parse(json['updatedAt'].toString()).toLocal()
           : DateTime.now(),
     );
   }

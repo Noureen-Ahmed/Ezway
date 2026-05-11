@@ -458,7 +458,25 @@ class _TaskCard extends ConsumerWidget {
           child: Checkbox(
             value: isCompleted,
             onChanged: (val) {
-              // Prevent unchecking submitted/graded ASSIGNMENTS only
+              // Exam tasks cannot be manually toggled — must be submitted
+              if (task.taskType == TaskType.exam) {
+                if (task.status == TaskStatus.submitted ||
+                    task.status == TaskStatus.graded ||
+                    task.status == TaskStatus.completed ||
+                    isOverdue) {
+                  // Already done or expired — read-only
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please take and submit the exam to complete it.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+
+              // Prevent unchecking submitted/graded assignments
               if (val == false &&
                   task.taskType == TaskType.assignment &&
                   (task.status == TaskStatus.submitted ||

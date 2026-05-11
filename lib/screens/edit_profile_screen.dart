@@ -4,7 +4,7 @@ import '../core/theme_extensions.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/app_session_provider.dart';
 import '../widgets/user_avatar.dart';
-import '../services/data_service.dart';
+import 'avatar_crop_screen.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -27,60 +27,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _changePhoto() async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        final bytes = await image.length();
-        const maxSizeBytes = 5 * 1024 * 1024;
+      if (image == null) return;
 
-        if (bytes > maxSizeBytes) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Image size exceeds 5MB limit. Please choose a smaller image.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          return;
-        }
+      final bytes = await image.length();
+      const maxSizeBytes = 5 * 1024 * 1024;
 
+      if (bytes > maxSizeBytes) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Row(
-                children: [
-                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                  SizedBox(width: 12),
-                  Text('Uploading profile picture...'),
-                ],
-              ),
-              duration: Duration(seconds: 30),
+              content: Text('Image size exceeds 5MB limit. Please choose a smaller image.'),
+              backgroundColor: Colors.red,
             ),
           );
         }
+        return;
+      }
 
-        final imageBytes = await image.readAsBytes();
-        final uploadedUrl = await DataService.uploadFile(imageBytes, image.name, type: 'profile');
+      if (!mounted) return;
+      // Navigate to crop screen — rootNavigator bypasses bottom nav shell
+      final result = await Navigator.of(context, rootNavigator: true).push<String>(
+        MaterialPageRoute(
+          builder: (context) => AvatarCropScreen(imageFile: image),
+        ),
+      );
 
-        if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-        if (uploadedUrl != null) {
-          setState(() => _avatarUrl = uploadedUrl);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile picture uploaded!'), backgroundColor: Colors.green),
-            );
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to upload profile picture'), backgroundColor: Colors.red),
-            );
-          }
-        }
+      if (mounted && result != null) {
+        setState(() => _avatarUrl = result);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated!'), backgroundColor: Colors.green),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );

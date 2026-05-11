@@ -63,8 +63,8 @@ class ScheduleEvent {
     return ScheduleEvent(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? 'Event',
-      startTime: json['startTime'] != null ? DateTime.parse(json['startTime']) : DateTime.now(),
-      endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : DateTime.now().add(const Duration(hours: 1)),
+      startTime: json['startTime'] != null ? DateTime.parse(json['startTime']).toLocal() : DateTime.now(),
+      endTime: json['endTime'] != null ? DateTime.parse(json['endTime']).toLocal() : DateTime.now().add(const Duration(hours: 1)),
       location: json['location']?.toString() ?? '',
       instructor: json['instructor']?.toString() ?? '',
       courseId: json['courseId']?.toString(),

@@ -466,6 +466,27 @@ class DataService {
     }
   }
   
+  /// Begin an exam session — locks the session server-side.
+  /// Returns: { 'startedAt': String, 'alreadyActive': bool } on success,
+  /// or { 'error': 'already_submitted'|'session_active'|'deadline_passed' } on failure.
+  static Future<Map<String, dynamic>> beginExamSession(String taskId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/tasks/$taskId/begin-exam'),
+        headers: ApiConfig.authHeaders,
+        body: '{}',
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return data;
+      }
+      return {'error': data['error'] ?? 'unknown', 'message': data['message'] ?? 'Failed to begin exam'};
+    } catch (e) {
+      print('[DataService] Begin exam session error: $e');
+      return {'error': 'network', 'message': 'Network error. Please check your connection.'};
+    }
+  }
+
   /// Create a personal task
   static Future<Task?> createTask({
     required String title,
@@ -896,8 +917,8 @@ class DataService {
         headers: ApiConfig.authHeaders,
         body: jsonEncode({
           'title': title,
-          'startTime': startTime.toIso8601String(),
-          'endTime': endTime.toIso8601String(),
+          'startTime': startTime.toUtc().toIso8601String(),
+          'endTime': endTime.toUtc().toIso8601String(),
           'description': description,
           'location': location,
         }),
@@ -1477,11 +1498,11 @@ class DataService {
   return ScheduleEvent(
     id: json['id']?.toString() ?? '',
     title: json['title']?.toString() ?? 'Event',
-    startTime: json['startTime'] != null 
-        ? DateTime.parse(json['startTime'])
+    startTime: json['startTime'] != null
+        ? DateTime.parse(json['startTime']).toLocal()
         : DateTime.now(),
-    endTime: json['endTime'] != null 
-        ? DateTime.parse(json['endTime'])
+    endTime: json['endTime'] != null
+        ? DateTime.parse(json['endTime']).toLocal()
         : DateTime.now().add(const Duration(hours: 1)),
     location: json['location']?.toString() ?? '',
     instructor: json['instructor']?.toString() ?? '',

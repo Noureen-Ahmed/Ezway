@@ -36,10 +36,10 @@ class AppNotification {
       referenceId: rawRefId?.toString(),
       isRead: rawRead == true || rawRead == 1,
       createdAt: rawDate != null
-          ? DateTime.tryParse(rawDate.toString()) ?? DateTime.now()
+          ? DateTime.tryParse(rawDate.toString())?.toLocal() ?? DateTime.now()
           : DateTime.now(),
       readAt: rawReadAt != null
-          ? DateTime.tryParse(rawReadAt.toString())
+          ? DateTime.tryParse(rawReadAt.toString())?.toLocal()
           : null,
     );
   }

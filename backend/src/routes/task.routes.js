@@ -532,6 +532,71 @@ router.post('/:id/complete',
   }
 );
 
+// ============ BEGIN EXAM SESSION ============
+// Called when student presses "Begin Exam". Creates a PENDING submission to mark
+// the session as started. Blocks if another active session is detected or if
+// the exam was already submitted/graded.
+
+router.post('/:id/begin-exam',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      const task = await prisma.task.findUnique({ where: { id } });
+      if (!task) throw new ApiError(404, 'Task not found');
+      if (task.taskType !== 'EXAM') throw new ApiError(400, 'Not an exam task');
+
+      // Block if deadline already passed
+      if (task.dueDate && new Date() > new Date(task.dueDate)) {
+        return res.status(403).json({ success: false, error: 'deadline_passed', message: 'The exam deadline has passed.' });
+      }
+
+      const existing = await prisma.taskSubmission.findUnique({
+        where: { taskId_studentId: { taskId: id, studentId: req.user.id } }
+      });
+
+      if (existing) {
+        // Already formally submitted or graded — block
+        if (['SUBMITTED', 'GRADED', 'LATE', 'RETURNED'].includes(existing.status)) {
+          return res.status(409).json({ success: false, error: 'already_submitted', message: 'You have already submitted this exam.' });
+        }
+
+        // PENDING with recent startedAt — another device may be active
+        if (existing.startedAt) {
+          const durationMins = task.settings?.durationMinutes ?? 60;
+          const maxSessionMs = durationMins * 2 * 60 * 1000; // 2× duration window
+          const sessionAge = Date.now() - new Date(existing.startedAt).getTime();
+          if (sessionAge < maxSessionMs) {
+            // Return the existing startedAt so the client can check if it owns this session
+            return res.json({
+              success: true,
+              startedAt: existing.startedAt.toISOString(),
+              alreadyActive: true
+            });
+          }
+        }
+      }
+
+      // Create or refresh the PENDING submission with startedAt = now
+      const now = new Date();
+      const submission = await prisma.taskSubmission.upsert({
+        where: { taskId_studentId: { taskId: id, studentId: req.user.id } },
+        create: { taskId: id, studentId: req.user.id, status: 'PENDING', startedAt: now },
+        update: { startedAt: now }
+      });
+
+      return res.json({
+        success: true,
+        startedAt: submission.startedAt.toISOString(),
+        alreadyActive: false
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ============ SUBMIT ASSIGNMENT ============
 
 router.post('/:id/submit',

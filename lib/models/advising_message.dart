@@ -25,7 +25,7 @@ class AdvisingMessage {
       message: json['message'],
       isBroadcast: json['is_broadcast'] == 1 || json['is_broadcast'] == true,
       isRead: json['is_read'] == 1 || json['is_read'] == true,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.parse(json['created_at']).toLocal(),
     );
   }
 

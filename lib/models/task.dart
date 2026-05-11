@@ -191,16 +191,16 @@ class Task {
       title: json['title']?.toString() ?? '',
       subject: json['course']?['name'] ?? json['courseName'] ?? 
                ((json['taskType'] ?? json['type'] ?? '').toString().toUpperCase() == 'PERSONAL' ? 'Personal Note' : 'General'),
-      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString()) : null,
+      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString())?.toLocal() : null,
       status: status,
       priority: priority,
       description: json['description']?.toString(),
       maxPoints: json['maxPoints'] as int? ?? 100,
-      createdAt: json['createdAt'] != null 
-          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())?.toLocal() ?? DateTime.now()
           : DateTime.now(),
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.tryParse(json['updatedAt'].toString()) 
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())?.toLocal()
           : null,
       taskType: taskType,
       attachments: attachments,

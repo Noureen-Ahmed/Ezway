@@ -102,10 +102,12 @@ android {
         }
     }
     afterEvaluate {
-        if (project(':unityLibrary').tasks.findByName('mergeDebugJniLibFolders'))
-            project(':unityLibrary').mergeDebugJniLibFolders.dependsOn BuildIl2CppTask
-        if (project(':unityLibrary').tasks.findByName('mergeReleaseJniLibFolders'))
-            project(':unityLibrary').mergeReleaseJniLibFolders.dependsOn BuildIl2CppTask
+        if (project(':unityLibrary').tasks.findByName('mergeDebugJniLibFolders')) {
+            // project(':unityLibrary').mergeDebugJniLibFolders.dependsOn BuildIl2CppTask
+        }
+        if (project(':unityLibrary').tasks.findByName('mergeReleaseJniLibFolders')) {
+            // project(':unityLibrary').mergeReleaseJniLibFolders.dependsOn BuildIl2CppTask
+        }
     }
     sourceSets {
         main {

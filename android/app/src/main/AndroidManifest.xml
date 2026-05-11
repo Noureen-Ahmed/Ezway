@@ -46,6 +46,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <meta-data android:name="io.flutter.embedding.android.NormalWindowAlphaLow" android:value="true" />
+        <!-- FCM default channel — must match channel ID used in NotificationService -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="course_channel" />
+        <!-- Show FCM notifications even when app is in foreground (Android 12+) -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_color" />
         <!-- <meta-data android:name="unityplayer.SkipPermissionsDialog" android:value="true" /> -->
     </application>
 

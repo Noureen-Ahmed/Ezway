@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/custom_bottom_navigation.dart';
+import '../providers/background_refresh_provider.dart';
 
 class DashboardShell extends ConsumerStatefulWidget {
   final Widget child;
@@ -29,6 +30,8 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Activate background refresh timers for the lifetime of this shell
+    ref.watch(backgroundRefreshProvider);
     final currentRoute = _getCurrentRoute();
     final isHome = currentRoute == '/home';
 
